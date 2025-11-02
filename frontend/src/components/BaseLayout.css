@@ -1,0 +1,7 @@
+/* main-content margins are set inline in BaseLayout so they can be kept in sync with sidebar collapsed state */
+.main-content {
+  margin-top: 56px; /* bằng height của navbar */
+  padding: 20px;
+  min-height: calc(100vh - 56px);
+  background-color: #f5f5f5;
+}
