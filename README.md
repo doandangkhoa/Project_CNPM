@@ -26,4 +26,7 @@
 ### Bước 2 — Cài đặt tất cả thư viện cần thiết
     pip install -r requirements.txt
 
+### Làm việc với database 
+create an .env file in root directory then update fields same with DATABASES part in the setting file of quan_li_dan_cu directory
+
 ## Frontend 
