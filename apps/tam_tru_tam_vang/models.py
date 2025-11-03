@@ -1,8 +1,7 @@
-from django.db import models
 
-# Create your models here.
 from django.db import models
 from apps.nhan_khau.models import NhanKhau
+from django.utils import timezone
 
 class PhieuTamTruTamVang(models.Model):
     LOAI_PHIEU = [
@@ -20,3 +19,9 @@ class PhieuTamTruTamVang(models.Model):
     
     def __str__(self):
         return f"{self.nhan_khau.ho_ten} - {self.get_loai_phieu_display()}"
+    
+    @property
+    def dang_hieu_luc(self):
+        # Trả về True nếu phiếu vẫn còn hiệu lực.
+        today = timezone.now().date()
+        return self.ngay_ket_thuc is None or self.ngay_ket_thuc >= today
