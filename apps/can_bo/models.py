@@ -7,7 +7,7 @@ class CanBo(models.Model):
     chuc_danh = models.CharField(max_length=100)
     so_dien_thoai = models.CharField(max_length=15)
     nhiem_vu_phu_trach = models.CharField(max_length=100)
-    ngay_nhan_chuc = models.DateField()
+    ngay_nhan_chuc = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.tai_khoan.username} - {self.chuc_danh}"
