@@ -2,7 +2,7 @@ from django.db import models
 from apps.tai_khoan.models import TaiKhoan
 
 class ThongKeNhanKhau(models.Model):
-    NGUOI_TAO = models.ForeignKey(TaiKhoan, on_delete=models.SET_NULL, null=True)
+    nguoi_tao = models.ForeignKey(TaiKhoan, on_delete=models.SET_NULL, null=True)
     ngay_thong_ke = models.DateTimeField(auto_now_add=True)
 
     tong_nhan_khau = models.PositiveIntegerField(default=0)
