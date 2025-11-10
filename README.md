@@ -30,12 +30,12 @@
 ### 1️. Quản lý Nhân khẩu
 - Mục tiêu: Quản lý thông tin cá nhân của từng người dân.
 - Chức năng:
-    - Thêm mới nhân khẩu.
-    - Cập nhật thông tin nhân khẩu.
-    - Xem chi tiết nhân khẩu.
-    - Xóa nhân khẩu (hoặc đánh dấu là đã chuyển đi / qua đời).
-    - Tìm kiếm nhân khẩu theo tên, CCCD, ngày sinh, hộ gia đình.
-    - Ghi lại lịch sử thay đổi nhân khẩu (LichSuThayDoiNhanKhau).
+    - Thêm mới nhân khẩu. Tuấn
+    - Cập nhật thông tin nhân khẩu. Tuấn
+    - Xem chi tiết nhân khẩu. Sơn
+    - Xóa nhân khẩu (hoặc đánh dấu là đã chuyển đi / qua đời). Khoa
+    - Tìm kiếm nhân khẩu theo tên, CCCD, ngày sinh, hộ gia đình. Sơn
+    - Ghi lại lịch sử thay đổi nhân khẩu (LichSuThayDoiNhanKhau). Khoa
 
 ### 2️. Quản lý Hộ gia đình
 - Mục tiêu: Quản lý thông tin hộ dân trong khu dân cư.
