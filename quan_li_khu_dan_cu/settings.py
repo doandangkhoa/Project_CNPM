@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'apps.tai_khoan.apps.TaiKhoanConfig',
     'apps.tam_tru_tam_vang.apps.TamTruTamVangConfig',
     'apps.thong_ke.apps.ThongKeConfig',
+    'apps.api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
