@@ -1,0 +1,88 @@
+/* RegisterPage.css - dựa trên phong cách LoginPage */
+
+/* Nền toàn trang */
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Hộp đăng ký */
+.register-box {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.register-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+/* Tiêu đề */
+.register-box h3 {
+  color: #2c3e50;
+  margin-bottom: 24px;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+/* Form input */
+.register-box .form-control {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.register-box .form-control:focus {
+  border-color: #2575fc;
+  box-shadow: 0 0 0 2px rgba(37, 117, 252, 0.2);
+  outline: none;
+}
+
+/* Lỗi */
+.register-box .text-danger {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* Nút */
+.register-box .btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 10px 0;
+  transition: all 0.3s ease;
+}
+
+.register-box .btn-primary {
+  background-color: #2575fc;
+  border: none;
+  color: white;
+}
+
+.register-box .btn-primary:hover {
+  background-color: #1a5edb;
+}
+
+.register-box .btn-outline-secondary {
+  border-color: #2575fc;
+  color: #2575fc;
+  background: white;
+}
+
+.register-box .btn-outline-secondary:hover {
+  background-color: #2575fc;
+  color: white;
+  border-color: #2575fc;
+}
