@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
-import './BaseLayout.css';
 
 function BaseLayout({ children }) {
   // Lift collapsed state here so Navbar and main-content can react to it

@@ -1,20 +1,39 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 
 function LoginPage({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Mock login: username=admin, password=1234
-    if (username === 'admin' && password === '1234') {
-      onLogin(); // gọi callback để vào trang chính
-    } else {
-      setError('Tên đăng nhập hoặc mật khẩu sai');
+    try {
+      const res = await fetch('http://localhost:8000/api/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        onLogin(); // Chuyển vào trang chính
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError('Không thể kết nối đến server');
     }
+  };
+
+  const handleRegister = () => {
+    navigate('/register');
   };
 
   return (
@@ -44,8 +63,17 @@ function LoginPage({ onLogin }) {
             />
           </div>
           {error && <div className="text-danger mb-2">{error}</div>}
-          <button type="submit" className="btn btn-primary w-100">
+
+          <button type="submit" className="btn btn-primary w-100 mb-2">
             Đăng nhập
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-outline-secondary w-100"
+            onClick={handleRegister}
+          >
+            Đăng ký
           </button>
         </form>
       </div>

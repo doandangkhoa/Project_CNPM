@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'apps.api.apps.ApiConfig',
 ]
 
+AUTH_USER_MODEL = 'tai_khoan.TaiKhoan'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -101,10 +103,11 @@ DATABASES = {
         'USER': os.getenv('DB_USER', ''),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', ''),
+        'PORT': os.getenv('DB_PORT', ''),  # nếu trống thì ODBC dùng mặc định
         'OPTIONS': {
             'driver': os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server'),
-            'trusted_connection': 'yes',
+            # Nếu USER/PASSWORD để trống → dùng Windows Authentication
+            'trusted_connection': 'yes' if not os.getenv('DB_USER') else 'no',
         },
     }
 }

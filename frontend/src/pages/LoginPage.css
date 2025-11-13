@@ -5,3 +5,7 @@
 .login-box {
   max-width: 400px;
 }
+
+.login-box .btn-outline-secondary:hover {
+  background-color: #1a5edb;
+}
