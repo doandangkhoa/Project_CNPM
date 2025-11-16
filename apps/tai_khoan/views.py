@@ -1,23 +1,25 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from apps.tai_khoan.models import TaiKhoan
-from apps.tai_khoan.serializers import TaiKhoanRegisterSerializer, TaiKhoanDetailSerializer
+from apps.tai_khoan.serializers import TaiKhoanRegisterSerializer, TaiKhoanDetailSerializer, ManageUserPermissionsSerializer
 
 
 @api_view(['POST'])
 def register_view(request):
-    """
-    API đăng ký người dùng mới.
-    """
-    serializer = TaiKhoanRegisterSerializer(data=request.data)
+    data = {
+        'username': request.data.get('username'),
+        'email': request.data.get('email'),
+        'password': request.data.get('password'),
+    }
+    serializer = TaiKhoanRegisterSerializer(data=data)
     if serializer.is_valid():
-        user = serializer.save()
+        user = serializer.save() # role: nguoi_dan, chuc_vu: None
         return Response({
             'status': 'success',
-            'message': f'Đăng ký thành công.',
+            'message': 'Đăng ký thành công.',
             'user': TaiKhoanDetailSerializer(user).data
         }, status=status.HTTP_201_CREATED)
     return Response({
@@ -28,9 +30,6 @@ def register_view(request):
 
 @api_view(['POST'])
 def login_view(request):
-    """
-    API đăng nhập.
-    """
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -58,10 +57,33 @@ def logout_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated]) # prevent logout when user havent login yet
 def current_user_view(request):
     """
     Lấy thông tin người dùng hiện tại (đã đăng nhập).
     """
     serializer = TaiKhoanDetailSerializer(request.user)
     return Response({'status': 'success', 'user': serializer.data})
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def manage_user_permissions(request, user_id):
+    """
+    API để admin phân quyền người dùng, thay đổi role và chuc_vu.
+    """
+    try:
+        user = TaiKhoan.objects.get(id=user_id)
+    except TaiKhoan.DoesNotExist:
+        return Response({'status': 'error', 'message': 'Người dùng không tồn tại.'},
+                        status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ManageUserPermissionsSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            'status': 'success',
+            'message': f'Người dùng {user.username} đã được cập nhật.',
+            'user': TaiKhoanDetailSerializer(user).data
+        })
+    return Response({'status': 'error', 'errors': serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST)

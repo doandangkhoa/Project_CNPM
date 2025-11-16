@@ -2,12 +2,17 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 
 class TaiKhoan(AbstractUser):
+    ROLE_CHOICES = [
+        ('can_bo', 'Cán bộ'),
+        ('nguoi_dan', 'Người dân'),
+    ]
     CHUC_VU = [
         ('to_truong', 'Tổ trưởng'),
         ('to_pho', 'Tổ phó'),
         ('can_bo', 'Cán bộ'),
     ]
-    chuc_vu = models.CharField(max_length=20, choices=CHUC_VU, default='can_bo')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='nguoi_dan')
+    chuc_vu = models.CharField(max_length=20, choices=CHUC_VU, blank=True, null=True)
 
     # Override để tránh xung đột với auth.User
     groups = models.ManyToManyField(
@@ -27,4 +32,8 @@ class TaiKhoan(AbstractUser):
     )
 
     def __str__(self):
-        return f"{self.username} ({self.get_chuc_vu_display()})"
+        if self.role == 'can_bo':
+            return f"{self.username} ({self.get_chuc_vu_display()})"
+        else:
+            return f"{self.username} ({self.get_role_display()})"
+        
