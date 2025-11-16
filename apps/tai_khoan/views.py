@@ -55,15 +55,22 @@ def logout_view(request):
     logout(request)
     return Response({'status': 'success', 'message': 'Đăng xuất thành công.'})
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def list_users(request):
+    users = TaiKhoan.objects.all()
+    serializer = TaiKhoanDetailSerializer(users, many=True)
+    return Response(serializer.data)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated]) # prevent logout when user havent login yet
-def current_user_view(request):
-    """
-    Lấy thông tin người dùng hiện tại (đã đăng nhập).
-    """
-    serializer = TaiKhoanDetailSerializer(request.user)
-    return Response({'status': 'success', 'user': serializer.data})
+@permission_classes([IsAdminUser])
+def user_detail(request, user_id):
+    try:
+        user = TaiKhoan.objects.get(id=user_id)
+    except TaiKhoan.DoesNotExist:
+        return Response({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = TaiKhoanDetailSerializer(user)
+    return Response(serializer.data)
 
 @api_view(['PATCH'])
 @permission_classes([IsAdminUser])
@@ -87,3 +94,27 @@ def manage_user_permissions(request, user_id):
         })
     return Response({'status': 'error', 'errors': serializer.errors},
                     status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def update_user(request, user_id):
+    try: 
+        user = TaiKhoan.objects.get(id=user_id)
+    except TaiKhoan.DoesNotExist:
+        return Response({'message':'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = ManageUserPermissionsSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(TaiKhoanDetailSerializer(user).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def delete_user(request, user_id):
+    try:
+        user = TaiKhoan.objects.get(id=user_id)
+        user.delete()
+        return Response({'message': 'User deleted'})
+    except TaiKhoan.DoesNotExist:
+        return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)

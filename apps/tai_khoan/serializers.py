@@ -31,37 +31,51 @@ class TaiKhoanDetailSerializer(serializers.ModelSerializer):
     chuc_vu_hien_thi = serializers.CharField(source='get_chuc_vu_display', read_only=True)
     class Meta:
         model = TaiKhoan
-        fields = ['id', 'username', 'email', 'role', 'rol_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'date_joined']
-
-
-# Serializer cho admin (CRUD đầy đủ)
-class TaiKhoanAdminSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaiKhoan
-        fields = '__all__'
-
+        fields = ['id', 'username', 'email', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'date_joined']
+        
 class ManageUserPermissionsSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=TaiKhoan.ROLE_CHOICES, required=False)
     chuc_vu = serializers.ChoiceField(choices=TaiKhoan.CHUC_VU, required=False, allow_null=True)
 
     class Meta:
         model = TaiKhoan
-        fields = ['role', 'chuc_vu']
+        fields = [
+            'username',
+            'email',
+            'role',
+            'chuc_vu',
+            'is_active',
+        ]
+        extra_kwargs = {
+            'username': {'required': False},
+            'email': {'required': False},
+        }
 
     def validate(self, attrs):
         role = attrs.get('role', self.instance.role)
         chuc_vu = attrs.get('chuc_vu', self.instance.chuc_vu)
 
-        # Nếu role là người dân thì chuc_vu phải None
+        # Người dân không có chức vụ
         if role == 'nguoi_dan' and chuc_vu is not None:
             raise serializers.ValidationError("Người dân không có chức vụ.")
+
         return attrs
 
     def update(self, instance, validated_data):
-        role = validated_data.get('role', instance.role)
-        chuc_vu = validated_data.get('chuc_vu', instance.chuc_vu)
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
 
-        instance.role = role
-        instance.chuc_vu = chuc_vu if role == 'can_bo' else None
+        # Cập nhật role
+        new_role = validated_data.get('role', instance.role)
+        instance.role = new_role
+
+        # Nếu role là người dân → xóa chức vụ
+        if new_role == 'nguoi_dan':
+            instance.chuc_vu = None
+        else:
+            instance.chuc_vu = validated_data.get('chuc_vu', instance.chuc_vu)
+
+        instance.is_active = validated_data.get('is_active', instance.is_active)
+
         instance.save()
         return instance
