@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from apps.tai_khoan.models import TaiKhoan
-
+from django.contrib.auth.hashers import check_password
 
 # Serializer dùng khi đăng ký
 class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
@@ -79,3 +79,26 @@ class ManageUserPermissionsSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class ChangePassWordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        user = self.context['user']
+        old = attrs.get('old_password')
+        new = attrs.get('new_password')
+
+        # Kiểm tra mật khẩu cũ
+        if not check_password(old, user.password):
+            raise serializers.ValidationError("Mật khẩu cũ không chính xác.")
+
+        # Kiểm tra mật khẩu mới
+        if len(new) < 6:
+            raise serializers.ValidationError("Mật khẩu mới phải ít nhất 6 ký tự.")
+
+        if old == new:
+            raise serializers.ValidationError("Mật khẩu mới không được trùng với mật khẩu cũ.")
+
+        return attrs
+    

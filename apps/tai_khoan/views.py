@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from apps.tai_khoan.models import TaiKhoan
-from apps.tai_khoan.serializers import TaiKhoanRegisterSerializer, TaiKhoanDetailSerializer, ManageUserPermissionsSerializer
+from apps.tai_khoan.serializers import TaiKhoanRegisterSerializer, TaiKhoanDetailSerializer, ManageUserPermissionsSerializer, ChangePassWordSerializer
 
 
 @api_view(['POST'])
@@ -54,6 +54,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return Response({'status': 'success', 'message': 'Đăng xuất thành công.'})
+
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -118,3 +119,19 @@ def delete_user(request, user_id):
         return Response({'message': 'User deleted'})
     except TaiKhoan.DoesNotExist:
         return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    user = request.user
+    serializer = ChangePassWordSerializer(
+        data = request.data,
+        context={"user": user}
+    )
+    
+    if serializer.is_valid():
+        new_password = serializer.validate['new_password']
+        user.set_password(new_password)
+        user.save()
+        return Response({"status":"success", "message":"Đổi mật khẩu thành công"})
+    return Response({"status": "error", "errors": serializer.errors}, status=400)
