@@ -102,10 +102,11 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', ''),
-        'OPTIONS': {
-            'driver': os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server'),
-            'trusted_connection': 'yes',
-        },
+        **(
+            {'OPTIONS': {'driver': os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server')}}
+            if os.getenv('DB_ENGINE') == 'mssql'
+            else {}
+        ),
     }
 }
 
