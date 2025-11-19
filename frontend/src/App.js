@@ -10,6 +10,7 @@ import ManagePage from './pages/ManagePage';
 import { Navigate } from 'react-router-dom';
 import BaseLayout from './components/BaseLayout';
 import HomePage from './pages/HomePage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -63,6 +64,7 @@ function App() {
                 </BaseLayout>
               }
             />
+            <Route path="/change-password" element={<ChangePasswordPage />} />
             <Route
               path="*"
               element={

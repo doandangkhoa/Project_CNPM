@@ -47,6 +47,21 @@
   flex-shrink: 0;
 }
 
+.change-password-button {
+  position: static;
+  background-color: rgba(236, 240, 241, 0.1); /* Màu nền trong suốt */
+  color: #ecf0f1; /* Màu chữ sáng đồng bộ */
+  border: 1px solid rgba(236, 240, 241, 0.2); /* Viền mỏng */
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-right: 20px;
+}
+
 .logout-button:hover {
   background-color: rgba(236, 240, 241, 0.15);
   border-color: rgba(236, 240, 241, 0.3);

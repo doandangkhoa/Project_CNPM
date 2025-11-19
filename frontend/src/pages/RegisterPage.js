@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './RegisterPage.css'; // dùng CSS riêng cho RegisterPage
+import './RegisterPage.css';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -69,10 +69,18 @@ const RegisterPage = () => {
         </button>
 
         <button
-          className="btn btn-outline-secondary w-100"
+          className="btn btn-outline-secondary w-100 mb-2"
           onClick={() => navigate('/login')}
         >
           Quay lại đăng nhập
+        </button>
+
+        {/* ✅ Nút điều hướng đến trang đổi mật khẩu */}
+        <button
+          className="btn btn-outline-secondary w-100"
+          onClick={() => navigate('/change-password')}
+        >
+          Đổi mật khẩu
         </button>
       </div>
     </div>

@@ -8,24 +8,40 @@ function LoginPage({ onLogin }) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Lấy cookie CSRF
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach((cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        if (key === name) cookieValue = decodeURIComponent(value);
+      });
+    }
+    return cookieValue;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
     try {
       const res = await fetch('http://localhost:8000/api/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'), // gửi CSRF token
         },
+        credentials: 'include', // bắt buộc để lưu session cookie
         body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
 
-      if (data.status === 'success') {
+      console.log(data.message);
+      if (res.ok && data.status === 'success') {
         onLogin(); // Chuyển vào trang chính
       } else {
-        setError(data.message);
+        setError(data.message || 'Đăng nhập thất bại');
       }
     } catch (err) {
       setError('Không thể kết nối đến server');

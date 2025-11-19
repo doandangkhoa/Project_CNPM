@@ -1,11 +1,48 @@
 import React from 'react';
 import './Navbar.css';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = ({ collapsed = false }) => {
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    window.location.href = '/login';
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/logout/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(data.message); // "Đăng xuất thành công."
+        localStorage.removeItem('authToken'); // xóa token local nếu có
+        window.location.href = '/login'; // chuyển hướng về trang login
+      } else {
+        console.error('Logout failed:', data);
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
+
+  const handleChangePassword = () => {
+    navigate('/change-password'); // chuyển hướng về trang change-password
+  };
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach((cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        if (key === name) cookieValue = decodeURIComponent(value);
+      });
+    }
+    return cookieValue;
+  }
 
   const leftOffset = collapsed ? '60px' : '220px';
   const width = `calc(100% - ${collapsed ? '60px' : '220px'})`;
@@ -20,6 +57,9 @@ const Navbar = ({ collapsed = false }) => {
       }}
     >
       <span className="navbar-brand">Ứng dụng Quản lý</span>
+      <button className="change-password-button" onClick={handleChangePassword}>
+        Đổi mật khẩu
+      </button>
       <button className="logout-button" onClick={handleLogout}>
         Đăng xuất
       </button>
