@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 
-function BaseLayout({ children }) {
+function BaseLayout({ children, currentUser }) {
   // Lift collapsed state here so Navbar and main-content can react to it
   const [collapsed, setCollapsed] = useState(false);
 
@@ -12,8 +12,12 @@ function BaseLayout({ children }) {
 
   return (
     <div>
-      <Navbar collapsed={collapsed} />
-      <Sidebar collapsed={collapsed} onToggle={handleToggle} />
+      <Navbar collapsed={collapsed} currentUser={currentUser} />
+      <Sidebar
+        collapsed={collapsed}
+        onToggle={handleToggle}
+        currentUser={currentUser}
+      />
 
       <main
         className="main-content"

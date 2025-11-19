@@ -36,4 +36,8 @@ class TaiKhoan(AbstractUser):
             return f"{self.username} ({self.get_chuc_vu_display()})"
         else:
             return f"{self.username} ({self.get_role_display()})"
+    def save(self, *args, **kwargs):
+        if self.is_superuser:
+            self.role = 'admin'
+        super().save(*args, **kwargs)
         

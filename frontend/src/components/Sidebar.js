@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 
 // Controlled if `collapsed` prop is provided; otherwise fall back to internal state
-function Sidebar({ collapsed: collapsedProp, onToggle }) {
+function Sidebar({ collapsed: collapsedProp, onToggle, currentUser }) {
   const [localCollapsed, setLocalCollapsed] = useState(false);
   const isControlled = typeof collapsedProp === 'boolean';
   const collapsed = isControlled ? collapsedProp : localCollapsed;
@@ -65,6 +65,22 @@ function Sidebar({ collapsed: collapsedProp, onToggle }) {
               <span className="link-text">Bảng điều khiển</span>
             </NavLink>
           </li>
+          {currentUser.role === 'admin' && (
+            <li className="nav-item">
+              <NavLink
+                to="/manage"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? 'active' : ''}`
+                }
+                data-short="M"
+              >
+                <span className="link-short" aria-hidden>
+                  M
+                </span>
+                <span className="link-text">Quản lý</span>
+              </NavLink>
+            </li>
+          )}
         </ul>
       </nav>
     </aside>

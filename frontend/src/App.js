@@ -15,19 +15,22 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleLogin = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const handleLogin = (currentUser) => {
     setIsLoggedIn(true);
+    setCurrentUser(currentUser);
   };
 
   return (
     <Router>
       <Routes>
-        {isLoggedIn ? (
+        {currentUser ? (
           <>
             <Route
               path="/search"
               element={
-                <BaseLayout>
+                <BaseLayout currentUser={currentUser}>
                   <SearchPage />
                 </BaseLayout>
               }
@@ -35,7 +38,7 @@ function App() {
             <Route
               path="/manage"
               element={
-                <BaseLayout>
+                <BaseLayout currentUser={currentUser}>
                   <ManagePage />
                 </BaseLayout>
               }
@@ -43,7 +46,7 @@ function App() {
             <Route
               path="/about"
               element={
-                <BaseLayout>
+                <BaseLayout currentUser={currentUser}>
                   <AboutPage />
                 </BaseLayout>
               }
@@ -51,7 +54,7 @@ function App() {
             <Route
               path="/contact"
               element={
-                <BaseLayout>
+                <BaseLayout currentUser={currentUser}>
                   <ContactPage />
                 </BaseLayout>
               }
@@ -59,7 +62,7 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                <BaseLayout>
+                <BaseLayout currentUser={currentUser}>
                   <DashboardPage />
                 </BaseLayout>
               }
@@ -68,7 +71,7 @@ function App() {
             <Route
               path="*"
               element={
-                <BaseLayout>
+                <BaseLayout currentUser={currentUser}>
                   <HomePage />
                 </BaseLayout>
               }

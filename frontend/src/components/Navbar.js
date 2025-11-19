@@ -2,7 +2,7 @@ import React from 'react';
 import './Navbar.css';
 import { useNavigate } from 'react-router-dom';
 
-const Navbar = ({ collapsed = false }) => {
+const Navbar = ({ collapsed = false, currentUser }) => {
   const navigate = useNavigate();
   const handleLogout = async () => {
     try {
@@ -30,6 +30,7 @@ const Navbar = ({ collapsed = false }) => {
   };
 
   const handleChangePassword = () => {
+    console.log(currentUser.role);
     navigate('/change-password'); // chuyển hướng về trang change-password
   };
 

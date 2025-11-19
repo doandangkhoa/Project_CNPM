@@ -39,7 +39,7 @@ function LoginPage({ onLogin }) {
 
       console.log(data.message);
       if (res.ok && data.status === 'success') {
-        onLogin(); // Chuyển vào trang chính
+        onLogin(data.user); // Chuyển vào trang chính
       } else {
         setError(data.message || 'Đăng nhập thất bại');
       }
