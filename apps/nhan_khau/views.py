@@ -87,7 +87,7 @@ def them_moi_nhan_khau(request):
     return Response({'status': 'error', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['PUT'])
+@api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def cap_nhat_nhan_khau(request, pk):
     """
@@ -117,6 +117,8 @@ def cap_nhat_nhan_khau(request, pk):
                 )
                 
             return Response({'status': 'success', 'message': 'Cập nhật thành công'}, status=status.HTTP_200_OK)
+        except CanBo.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Người dùng không phải cán bộ'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

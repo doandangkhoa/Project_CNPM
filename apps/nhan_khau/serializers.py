@@ -7,6 +7,20 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = NhanKhau
         fields = '__all__'
+        extra_kwargs = {
+            'ho_ten': {'required': False},
+            'bi_danh': {'required': False, 'allow_blank': True},
+            'so_cccd': {'required': False, 'allow_blank': True},
+            'gioi_tinh': {'required': False},
+            'ngay_sinh': {'required': False, 'allow_null': True},
+            'noi_sinh': {'required': False, 'allow_blank': True},
+            'nguyen_quan': {'required': False, 'allow_blank': True},
+            'dan_toc': {'required': False, 'allow_blank': True},
+            'nghe_nghiep': {'required': False, 'allow_blank': True},
+            'quan_he_voi_chu_ho': {'required': False, 'allow_blank': True},
+            'trang_thai': {'required': False},
+            'ghi_chu': {'required': False, 'allow_blank': True},
+        }
         
 class BienDongNhanKhauSerializer(serializers.ModelSerializer):
     nhan_khau_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
@@ -27,7 +41,7 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
                   'ngay_thay_doi'
         ]
         # frontend không cần gửi các fields này 
-        read_only_fields = ['ngay_thay_doi', 'can_bo_thuc_hien', 'nhan_khau_ten',
+        read_only_fields = ['id', 'ngay_thay_doi', 'can_bo_thuc_hien', 'nhan_khau_ten',
                             'loai_bien_dong_hien_thi', 'can_bo_thuc_hien_ten']
     
     def create(self, validated_data):
