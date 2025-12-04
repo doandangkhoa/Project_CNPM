@@ -94,7 +94,8 @@
 ## Frontend Team
 ### Frontend (React hoặc Vue)
 - Trang đăng nhập / đăng xuất.
-- Dashboard tổng quan (thống kê nhanh).
+- Trang Admin phân quyền / người dân / cán bộ riêng.
+- Dashboard tổng quan (thống kê nhanh) + hiển thị các module chức năng (Task bar).
 - Quản lý danh sách nhân khẩu.
 - Quản lý hộ gia đình (chi tiết, thành viên).
 - Quản lý tạm trú/tạm vắng (hiển thị + tìm kiếm).
