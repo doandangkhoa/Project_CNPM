@@ -1,0 +1,91 @@
+/* UserUpdatePage.css */
+
+.user-update-container {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.user-update-container h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #343a40;
+}
+
+.user-fetch {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.user-fetch label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #495057;
+}
+
+.user-fetch input,
+.user-update-container select {
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+
+.user-fetch input:focus,
+.user-update-container select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.user-fetch button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-fetch button:hover {
+  background-color: #0056b3;
+}
+
+.user-update-container div {
+  margin-bottom: 15px;
+}
+
+.text-danger {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.text-success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.user-update-container label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}

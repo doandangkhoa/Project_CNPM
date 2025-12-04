@@ -5,6 +5,7 @@ class TaiKhoan(AbstractUser):
     ROLE_CHOICES = [
         ('can_bo', 'Cán bộ'),
         ('nguoi_dan', 'Người dân'),
+        ('admin', 'Admin'),
     ]
     CHUC_VU = [
         ('to_truong', 'Tổ trưởng'),

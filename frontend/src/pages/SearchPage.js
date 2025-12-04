@@ -3,8 +3,21 @@ import './SearchPage.css';
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
 
-  const handleSearch = (e) => {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach((cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        if (key === name) cookieValue = decodeURIComponent(value);
+      });
+    }
+    return cookieValue;
+  }
+
+  const handleSearch = async (e) => {
     e.preventDefault();
     // TODO: Implement search functionality
     console.log('Searching for:', searchQuery);

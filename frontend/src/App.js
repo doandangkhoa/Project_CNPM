@@ -11,14 +11,15 @@ import { Navigate } from 'react-router-dom';
 import BaseLayout from './components/BaseLayout';
 import HomePage from './pages/HomePage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
+import AdminManagePage from './pages/admin/ManagePage';
+import AdminUserListPage from './pages/admin/UserListPage';
+import AdminUserFindPage from './pages/admin/UserFindPage';
+import AdminUserUpdatePage from './pages/admin/UserUpdatePage';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   const [currentUser, setCurrentUser] = useState(null);
 
   const handleLogin = (currentUser) => {
-    setIsLoggedIn(true);
     setCurrentUser(currentUser);
   };
 
@@ -76,6 +77,42 @@ function App() {
                 </BaseLayout>
               }
             />
+            {currentUser.role === 'admin' && (
+              <>
+                <Route
+                  path="/admin/manage"
+                  element={
+                    <BaseLayout currentUser={currentUser}>
+                      <AdminManagePage />
+                    </BaseLayout>
+                  }
+                />
+                <Route
+                  path="/admin/userlist"
+                  element={
+                    <BaseLayout currentUser={currentUser}>
+                      <AdminUserListPage />
+                    </BaseLayout>
+                  }
+                />
+                <Route
+                  path="/admin/userfind"
+                  element={
+                    <BaseLayout currentUser={currentUser}>
+                      <AdminUserFindPage />
+                    </BaseLayout>
+                  }
+                />
+                <Route
+                  path="/admin/userupdate"
+                  element={
+                    <BaseLayout currentUser={currentUser}>
+                      <AdminUserUpdatePage />
+                    </BaseLayout>
+                  }
+                />
+              </>
+            )}
           </>
         ) : (
           <>

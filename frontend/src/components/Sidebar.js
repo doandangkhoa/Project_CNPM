@@ -68,7 +68,7 @@ function Sidebar({ collapsed: collapsedProp, onToggle, currentUser }) {
           {currentUser.role === 'admin' && (
             <li className="nav-item">
               <NavLink
-                to="/manage"
+                to="/admin/manage"
                 className={({ isActive }) =>
                   `nav-link ${isActive ? 'active' : ''}`
                 }
