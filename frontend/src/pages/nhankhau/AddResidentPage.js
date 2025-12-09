@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AddResidentPage.css';
 
-const AddResidentPage = () => {
+const AddResidentPage = ({ currentUser }) => {
   const navigate = useNavigate();
 
   // State cho form data
@@ -175,6 +175,17 @@ const AddResidentPage = () => {
     setLoading(true);
 
     try {
+      console.log('currentUser at submit:', currentUser);
+      if (!currentUser) {
+        setError('Vui lòng đăng nhập để thực hiện thao tác này.');
+        setLoading(false);
+        return;
+      }
+      if (currentUser.role !== 'can_bo') {
+        setError('Bạn không có quyền. Chỉ tài khoản "Cán bộ" được phép thêm nhân khẩu.');
+        setLoading(false);
+        return;
+      }
       // Format data đúng với API
       const submitData = {
         ...formData,
@@ -198,50 +209,79 @@ const AddResidentPage = () => {
 
       console.log('Submitting data:', submitData); // Debug
 
-      const response = await fetch(
-        'http://localhost:8000/api/nhan-khau/them-moi/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),
-          },
-          credentials: 'include',
-          body: JSON.stringify(submitData),
-        }
-      );
+      const csrftoken = getCookie('csrftoken');
+      if (!csrftoken) {
+        console.warn('CSRF token not found. If backend requires CSRF, request may be rejected.');
+      }
 
-      const data = await response.json();
-      console.log('Response:', data); // Debug
+      // Build headers and include Authorization if a token (JWT) exists
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken || '',
+      };
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('Added Authorization header with token');
+      }
+
+      const response = await fetch('http://localhost:8000/api/nhan-khau/them-moi/', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(submitData),
+      });
+
+      // Parse response safely (handle non-JSON responses)
+      let data = null;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (err) {
+          console.warn('Failed to parse JSON response', err);
+          data = { message: 'Không thể đọc dữ liệu phản hồi từ server' };
+        }
+      } else {
+        // try to read text and coerce to object
+        const text = await response.text();
+        try {
+          data = text ? JSON.parse(text) : { message: text || '' };
+        } catch (err) {
+          data = { message: text };
+        }
+      }
+
+      console.log('Response status', response.status, 'data', data); // Debug
 
       if (response.ok) {
-        if (data.status === 'success') {
+        if (data && data.status === 'success') {
           setSuccess(data.message || 'Thêm mới nhân khẩu thành công');
           // Reset form sau 2 giây
           setTimeout(() => {
             handleReset();
           }, 2000);
         } else {
-          setError(data.message || 'Có lỗi xảy ra khi thêm nhân khẩu');
+          setError((data && data.message) || 'Có lỗi xảy ra khi thêm nhân khẩu');
         }
       } else {
+        // Non-OK responses
         if (response.status === 400) {
-          // Hiển thị lỗi từ server
-          if (data.errors) {
+          if (data && data.errors) {
             setErrors(data.errors);
-          } else if (data.message) {
+          } else if (data && data.message) {
             setError(data.message);
           } else {
             setError('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.');
           }
         } else if (response.status === 403) {
-          setError('Chỉ cán bộ mới có quyền thêm mới nhân khẩu');
+          setError((data && data.message) || 'Chỉ cán bộ mới có quyền thêm mới nhân khẩu');
         } else if (response.status === 401) {
-          setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+          setError((data && data.message) || 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
           console.log('Unauthorized, redirecting to login');
           navigate('/login');
         } else {
-          setError(`Lỗi server: ${response.status}`);
+          setError((data && data.message) || `Lỗi server: ${response.status}`);
         }
       }
     } catch (err) {

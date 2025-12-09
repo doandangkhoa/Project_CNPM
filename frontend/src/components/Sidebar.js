@@ -19,9 +19,6 @@ function Sidebar({ collapsed: collapsedProp, onToggle, currentUser }) {
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <h4 className="mb-2 text-center">
-          {collapsed ? 'TQL' : 'Trang quản lý'}
-        </h4>
         <button
           className="toggle-btn"
           onClick={toggle}

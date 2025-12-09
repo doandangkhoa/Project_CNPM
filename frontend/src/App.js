@@ -5,7 +5,7 @@ import ContactPage from './pages/ContactPage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import SearchPage from './pages/SearchPage';
+import SearchPage from './pages/nhankhau/FindResidentPage';
 import ManagePage from './pages/ManagePage';
 import { Navigate } from 'react-router-dom';
 import BaseLayout from './components/BaseLayout';
@@ -16,9 +16,9 @@ import AdminUserListPage from './pages/admin/UserListPage';
 import AdminUserFindPage from './pages/admin/UserFindPage';
 import AdminUserUpdatePage from './pages/admin/UserUpdatePage';
 import AddResidentPage from './pages/nhankhau/AddResidentPage';
-import FindResidentPage from './pages/nhankhau/FindResidentByIDPage';
-import FindResidentByIDPage from './pages/nhankhau/FindResidentPage';
+import FindResidentPage from './pages/nhankhau/FindResidentPage';
 import UpdateResidentPage from './pages/nhankhau/UpdateResidentPage';
+import UserProfilePage from './pages/UserProfilePage';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -44,7 +44,7 @@ function App() {
               path="/search"
               element={
                 <BaseLayout currentUser={currentUser}>
-                  <SearchPage />
+                  <SearchPage currentUser={currentUser} />
                 </BaseLayout>
               }
             />
@@ -94,7 +94,7 @@ function App() {
               path="/resident-findbyid"
               element={
                 <BaseLayout currentUser={currentUser}>
-                  <FindResidentByIDPage />
+                  <FindResidentPage />
                 </BaseLayout>
               }
             />
@@ -121,6 +121,14 @@ function App() {
               element={
                 <BaseLayout currentUser={currentUser}>
                   <ChangePasswordPage />
+                </BaseLayout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <BaseLayout currentUser={currentUser}>
+                  <UserProfilePage />
                 </BaseLayout>
               }
             />

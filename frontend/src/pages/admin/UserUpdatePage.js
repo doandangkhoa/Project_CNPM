@@ -11,7 +11,6 @@ const UserUpdatePage = () => {
   const roleOptions = [
     { value: 'can_bo', label: 'Cán bộ' },
     { value: 'nguoi_dan', label: 'Người dân' },
-    { value: 'admin', label: 'Admin' },
   ];
 
   const chucVuOptions = [

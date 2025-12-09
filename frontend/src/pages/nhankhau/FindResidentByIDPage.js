@@ -323,7 +323,7 @@ const SearchPage = () => {
                   paddingBottom: '5px',
                 }}
               >
-                📋 Thông tin cá nhân
+                Thông tin cá nhân
               </h3>
               <div
                 style={{
@@ -345,7 +345,7 @@ const SearchPage = () => {
                         gap: '5px',
                       }}
                     >
-                      <span>👤</span> Giới tính
+                      Giới tính
                     </div>
                     <div
                       style={{
@@ -370,7 +370,7 @@ const SearchPage = () => {
                         gap: '5px',
                       }}
                     >
-                      <span>🎂</span> Ngày sinh
+                      Ngày sinh
                     </div>
                     <div
                       style={{
@@ -408,7 +408,7 @@ const SearchPage = () => {
                         gap: '5px',
                       }}
                     >
-                      <span>🏥</span> Nơi sinh
+                      Nơi sinh
                     </div>
                     <div
                       style={{
@@ -433,7 +433,7 @@ const SearchPage = () => {
                         gap: '5px',
                       }}
                     >
-                      <span>📍</span> Nguyên quán
+                      Nguyên quán
                     </div>
                     <div
                       style={{
@@ -460,7 +460,7 @@ const SearchPage = () => {
                         gap: '5px',
                       }}
                     >
-                      <span>👨‍👩‍👧‍👦</span> Dân tộc
+                      Dân tộc
                     </div>
                     <div
                       style={{
@@ -485,7 +485,7 @@ const SearchPage = () => {
                         gap: '5px',
                       }}
                     >
-                      <span>👨‍👩‍👧‍👦</span> Quan hệ với chủ hộ
+                      Quan hệ với chủ hộ
                     </div>
                     <div
                       style={{
@@ -511,7 +511,7 @@ const SearchPage = () => {
                           gap: '5px',
                         }}
                       >
-                        <span>💼</span> Nghề nghiệp
+                        Nghề nghiệp
                       </div>
                       <div
                         style={{
@@ -538,7 +538,7 @@ const SearchPage = () => {
                           gap: '5px',
                         }}
                       >
-                        <span>🏢</span> Nơi làm việc
+                        Nơi làm việc
                       </div>
                       <div
                         style={{

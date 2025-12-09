@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 
-const HomePage = () => {
+const HomePage = ({ currentUser }) => {
   const navigate = useNavigate();
 
   const handleCardClick = (path) => {
@@ -20,10 +20,13 @@ const HomePage = () => {
           <p>Tìm kiếm và xem thông tin chi tiết</p>
         </div>
 
-        <div className="card" onClick={() => handleCardClick('/manage')}>
-          <h2>Quản lý</h2>
-          <p>Thêm, sửa, xóa và cập nhật thông tin</p>
-        </div>
+        {/* Hide management card for regular users (nguoi_dan) or when not logged in */}
+        {currentUser && currentUser.role !== 'nguoi_dan' && (
+          <div className="card" onClick={() => handleCardClick('/manage')}>
+            <h2>Quản lý</h2>
+            <p>Thêm, sửa, xóa và cập nhật thông tin</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,10 +1,12 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from apps.tai_khoan.models import TaiKhoan
 from apps.tai_khoan.serializers import TaiKhoanRegisterSerializer, TaiKhoanDetailSerializer, ManageUserPermissionsSerializer, ChangePassWordSerializer
+from apps.tai_khoan.serializers import MeUpdateSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 @api_view(['POST'])
@@ -75,29 +77,6 @@ def user_detail(request, user_id):
 
 @api_view(['PATCH'])
 @permission_classes([IsAdminUser])
-def manage_user_permissions(request, user_id):
-    """
-    API để admin phân quyền người dùng, thay đổi role và chuc_vu.
-    """
-    try:
-        user = TaiKhoan.objects.get(id=user_id)
-    except TaiKhoan.DoesNotExist:
-        return Response({'status': 'error', 'message': 'Người dùng không tồn tại.'},
-                        status=status.HTTP_404_NOT_FOUND)
-
-    serializer = ManageUserPermissionsSerializer(user, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({
-            'status': 'success',
-            'message': f'Người dùng {user.username} đã được cập nhật.',
-            'user': TaiKhoanDetailSerializer(user).data
-        })
-    return Response({'status': 'error', 'errors': serializer.errors},
-                    status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['PATCH'])
-@permission_classes([IsAdminUser])
 def update_user(request, user_id):
     try: 
         user = TaiKhoan.objects.get(id=user_id)
@@ -135,3 +114,25 @@ def change_password(request):
         user.save()
         return Response({"status":"success", "message":"Đổi mật khẩu thành công"})
     return Response({"status": "error", "errors": serializer.errors}, status=400)
+
+
+@api_view(['GET', 'PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def me_view(request):
+    user = request.user
+    if request.method == 'GET':
+        serializer = TaiKhoanDetailSerializer(user)
+        return Response({'user': serializer.data})
+
+    # For PUT/PATCH allow multipart form (avatar)
+    # Use serializer that accepts avatar
+    parser_classes = (MultiPartParser, FormParser)
+    # Build serializer with files + data
+    data = {**request.data}
+    # If file present, it will be in request.FILES and included by serializer when passed request.data
+    serializer = MeUpdateSerializer(user, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'status': 'success', 'user': TaiKhoanDetailSerializer(user).data})
+    return Response({'status': 'error', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

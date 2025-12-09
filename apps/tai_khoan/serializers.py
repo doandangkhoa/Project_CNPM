@@ -29,9 +29,17 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
 class TaiKhoanDetailSerializer(serializers.ModelSerializer):
     role_hien_thi = serializers.CharField(source='get_role_display', read_only=True)
     chuc_vu_hien_thi = serializers.CharField(source='get_chuc_vu_display', read_only=True)
+    avatar = serializers.ImageField(read_only=True)
+    ho_ten = serializers.SerializerMethodField(read_only=True)
+    created_at = serializers.DateTimeField(source='date_joined', read_only=True)
     class Meta:
         model = TaiKhoan
-        fields = ['id', 'username', 'email', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'date_joined']
+        fields = ['id', 'username', 'email', 'ho_ten', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'created_at', 'avatar']
+
+    def get_ho_ten(self, obj):
+        # Prefer a dedicated full-name field if present, else combine first/last name
+        full = getattr(obj, 'ho_ten', None) or ' '.join(filter(None, [obj.first_name, obj.last_name]))
+        return full if full.strip() else None
         
 class ManageUserPermissionsSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=TaiKhoan.ROLE_CHOICES, required=False)
@@ -101,4 +109,21 @@ class ChangePassWordSerializer(serializers.Serializer):
             raise serializers.ValidationError("Mật khẩu mới không được trùng với mật khẩu cũ.")
 
         return attrs
+
+
+class MeUpdateSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = TaiKhoan
+        fields = ['username', 'email', 'avatar']
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        # handle avatar
+        if 'avatar' in validated_data:
+            instance.avatar = validated_data.get('avatar')
+        instance.save()
+        return instance
     

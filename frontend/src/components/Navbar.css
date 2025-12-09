@@ -18,7 +18,7 @@
 }
 
 .navbar-brand {
-  font-size: 20px;
+  font-size: 25px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -36,7 +36,7 @@
 .logout-button {
   position: static;
   background-color: rgba(236, 240, 241, 0.1); /* Màu nền trong suốt */
-  color: #ecf0f1; /* Màu chữ sáng đồng bộ */
+  color: #474949; /* Màu chữ sáng đồng bộ */
   border: 1px solid rgba(236, 240, 241, 0.2); /* Viền mỏng */
   padding: 6px 14px;
   border-radius: 6px;
@@ -50,7 +50,7 @@
 .change-password-button {
   position: static;
   background-color: rgba(236, 240, 241, 0.1); /* Màu nền trong suốt */
-  color: #ecf0f1; /* Màu chữ sáng đồng bộ */
+  color: #505151; /* Màu chữ sáng đồng bộ */
   border: 1px solid rgba(236, 240, 241, 0.2); /* Viền mỏng */
   padding: 6px 14px;
   border-radius: 6px;
@@ -66,4 +66,91 @@
   background-color: rgba(236, 240, 241, 0.15);
   border-color: rgba(236, 240, 241, 0.3);
   transform: translateY(-1px);
+}
+
+.profile-button {
+  position: static;
+  background-color: rgba(86, 202, 231, 0.871);
+  color: #ecf0f1;
+  border: 1px solid rgba(236,240,241,0.12);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+.profile-button:hover {
+  background-color: rgba(236, 240, 241, 0.12);
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  margin-right: 12px; /* move circle slightly left from right edge */
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 28px; /* align dropdown under shifted avatar */
+  top: 60px;
+  background: #fff;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  width: 300px;
+  overflow: hidden;
+  z-index: 2000;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-avatar-preview img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-circle-small {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #2c3e50;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.navbar-bell {
+  position: relative;
+  color: #fff;
+  font-size: 18px;
+}
+
+.bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ff5b5b;
+  color: #fff;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
 }

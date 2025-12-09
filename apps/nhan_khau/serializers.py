@@ -47,11 +47,12 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # user called api 
         user = self.context['request'].user
-        try:
-            can_bo = CanBo.objects.get(tai_khoan=user)    
-        except CanBo.DoesNotExist:
-            raise serializers.ValidationError("Người dùng hiện tại không phải cán bộ")
-        
+        # Only allow cán bộ positions (tổ trưởng, tổ phó, cán bộ) or superuser
+        allowed_positions = ['to_truong', 'to_pho', 'can_bo']
+        if not (user.is_superuser or (getattr(user, 'role', None) == 'can_bo' and getattr(user, 'chuc_vu', None) in allowed_positions)):
+            raise serializers.ValidationError("Người dùng hiện tại không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ)")
+
+        can_bo = CanBo.objects.filter(tai_khoan=user).first()
         validated_data['can_bo_thuc_hien'] = can_bo
         loai_bien_dong = validated_data.get('loai_bien_dong')
         nhan_khau = validated_data.get('nhan_khau')

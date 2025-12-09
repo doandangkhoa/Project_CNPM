@@ -27,7 +27,9 @@ function BaseLayout({ children, currentUser }) {
           transition: 'margin-left 0.25s',
         }}
       >
-        {children}
+        {React.Children.map(children, (child) =>
+          React.isValidElement(child) ? React.cloneElement(child, { currentUser }) : child
+        )}
       </main>
     </div>
   );

@@ -14,6 +14,19 @@ from apps.ho_gia_dinh.models import HoGiaDinh
 from .serializers import NhanKhauSerializer, BienDongNhanKhauSerializer, NhanKhauCreateUpdateSerializer
 
 
+def _user_is_authorized_can_bo(user):
+    """Return True if user is allowed to perform can_bo actions.
+    Allowed when user is superuser OR user.role == 'can_bo' AND user.chuc_vu in allowed list.
+    """
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    if user.is_superuser:
+        return True
+    # positions that are considered authorized: tổ trưởng, tổ phó, cán bộ
+    allowed_positions = ['to_truong', 'to_pho', 'can_bo']
+    return getattr(user, 'role', None) == 'can_bo' and getattr(user, 'chuc_vu', None) in allowed_positions
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def them_moi_nhan_khau(request):
@@ -53,18 +66,24 @@ def them_moi_nhan_khau(request):
             pass # Nếu ngày sinh sai định dạng thì để Serializer lo validate
         
     # 1. Validate dữ liệu đầu vào
-    serializer = NhanKhauCreateUpdateSerializer(data=request.data)
-    
+    # NOTE: use the modified `data` (we adjusted newborn/default fields above)
+    serializer = NhanKhauCreateUpdateSerializer(data=data)
+
     if serializer.is_valid():
+        # 3. Kiểm tra quyền: chỉ `can_bo` (hoặc staff/superuser) được phép
+        user = request.user
+        if not _user_is_authorized_can_bo(user):
+            return Response({'status': 'error', 'message': 'User không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ được phép)'}, status=status.HTTP_403_FORBIDDEN)
+
         try:
             with transaction.atomic():
                 # 2. Lưu nhân khẩu mới
                 nhan_khau = serializer.save()
-                
-                # 3. Tìm cán bộ thực hiện
-                can_bo = CanBo.objects.get(tai_khoan=request.user)
 
-                # 4. Ghi log biến động TAO_MOI
+                # 4. Lấy CanBo nếu tồn tại (một số tài khoản cán bộ có thể chưa có bản ghi CanBo)
+                can_bo = CanBo.objects.filter(tai_khoan=user).first()
+
+                # 5. Ghi log biến động TAO_MOI (can_bo có thể là None; field FK cho phép null)
                 BienDongNhanKhau.objects.create(
                     nhan_khau=nhan_khau,
                     ho_khau=nhan_khau.ho_gia_dinh,
@@ -79,9 +98,8 @@ def them_moi_nhan_khau(request):
                 'data': NhanKhauSerializer(nhan_khau).data
             }, status=status.HTTP_201_CREATED)
 
-        except CanBo.DoesNotExist:
-             return Response({'status': 'error', 'message': 'User không phải cán bộ'}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
+            # Any unexpected error
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'status': 'error', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -100,14 +118,19 @@ def cap_nhat_nhan_khau(request, pk):
         return Response({'status': 'error', 'message': 'Không tìm thấy nhân khẩu'}, status=status.HTTP_404_NOT_FOUND)
 
     serializer = NhanKhauCreateUpdateSerializer(nhan_khau, data=request.data, partial=True)
-    
+
     if serializer.is_valid():
+        # Kiểm tra quyền trước khi lưu
+        user = request.user
+        if not _user_is_authorized_can_bo(user):
+            return Response({'status': 'error', 'message': 'Người dùng không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ được phép)'}, status=status.HTTP_403_FORBIDDEN)
+
         try:
             with transaction.atomic():
                 serializer.save()
-                
+
                 # Ghi log CAP_NHAT
-                can_bo = CanBo.objects.get(tai_khoan=request.user)
+                can_bo = CanBo.objects.filter(tai_khoan=user).first()
                 BienDongNhanKhau.objects.create(
                     nhan_khau=nhan_khau,
                     ho_khau=nhan_khau.ho_gia_dinh,
@@ -115,10 +138,8 @@ def cap_nhat_nhan_khau(request, pk):
                     loai_bien_dong='CAP_NHAT',
                     mo_ta="Cập nhật thông tin nhân khẩu"
                 )
-                
+
             return Response({'status': 'success', 'message': 'Cập nhật thành công'}, status=status.HTTP_200_OK)
-        except CanBo.DoesNotExist:
-            return Response({'status': 'error', 'message': 'Người dùng không phải cán bộ'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -161,6 +182,14 @@ def tim_kiem_nhan_khau(request):
     so_cccd = request.query_params.get('so_cccd', '').strip()
     ngay_sinh = request.query_params.get('ngay_sinh')
     so_ho_khau = request.query_params.get('so_ho_khau', '').strip()
+    noi_sinh = request.query_params.get('noi_sinh', '').strip()
+    nguyen_quan = request.query_params.get('nguyen_quan', '').strip()
+    dan_toc = request.query_params.get('dan_toc', '').strip()
+    nghe_nghiep = request.query_params.get('nghe_nghiep', '').strip()
+    noi_lam_viec = request.query_params.get('noi_lam_viec', '').strip()
+    dia_chi_thuong_tru_truoc_day = request.query_params.get('dia_chi_thuong_tru_truoc_day', '').strip()
+    trang_thai = request.query_params.get('trang_thai', '').strip()
+    quan_he_voi_chu_ho = request.query_params.get('quan_he_voi_chu_ho', '').strip()
 
     if ho_ten:
         queryset = queryset.filter(Q(ho_ten__icontains=ho_ten) | Q(bi_danh__icontains=ho_ten))
@@ -170,6 +199,24 @@ def tim_kiem_nhan_khau(request):
         queryset = queryset.filter(ngay_sinh=ngay_sinh)
     if so_ho_khau:
         queryset = queryset.filter(ho_gia_dinh__so_ho_khau__icontains=so_ho_khau)
+
+    # Additional filters: only apply when parameter provided (non-empty)
+    if noi_sinh:
+        queryset = queryset.filter(noi_sinh__icontains=noi_sinh)
+    if nguyen_quan:
+        queryset = queryset.filter(nguyen_quan__icontains=nguyen_quan)
+    if dan_toc:
+        queryset = queryset.filter(dan_toc__icontains=dan_toc)
+    if nghe_nghiep:
+        queryset = queryset.filter(nghe_nghiep__icontains=nghe_nghiep)
+    if noi_lam_viec:
+        queryset = queryset.filter(noi_lam_viec__icontains=noi_lam_viec)
+    if dia_chi_thuong_tru_truoc_day:
+        queryset = queryset.filter(dia_chi_thuong_tru_truoc_day__icontains=dia_chi_thuong_tru_truoc_day)
+    if trang_thai:
+        queryset = queryset.filter(trang_thai=trang_thai)
+    if quan_he_voi_chu_ho:
+        queryset = queryset.filter(quan_he_voi_chu_ho__icontains=quan_he_voi_chu_ho)
 
     # phân trang
     page = int(request.query_params.get('page', 1))
@@ -206,8 +253,12 @@ def xoa_nhan_khau(request, pk):
 
     try:
         with transaction.atomic():
-            # 1. Tạo biến động loại XOA
-            can_bo = CanBo.objects.get(tai_khoan=request.user)
+            # 1. Tạo biến động loại XOA (kiểm tra quyền và lấy CanBo nếu có)
+            user = request.user
+            if not _user_is_authorized_can_bo(user):
+                return Response({'status': 'error', 'message': 'User không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ được phép)'}, status=status.HTTP_403_FORBIDDEN)
+
+            can_bo = CanBo.objects.filter(tai_khoan=user).first()
             BienDongNhanKhau.objects.create(
                 nhan_khau=nhan_khau,
                 ho_khau=nhan_khau.ho_gia_dinh,
@@ -230,15 +281,20 @@ def xoa_nhan_khau(request, pk):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def tao_bien_dong_nhan_khau(request):
-    serializer = BienDongNhanKhauSerializer(data=request.data, context={'request':request})
+    # Only allow cán bộ (to_truong/to_pho/can_bo) or superuser to create bien dong
+    user = request.user
+    if not _user_is_authorized_can_bo(user):
+        return Response({'status': 'error', 'message': 'User không có quyền tạo biến động nhân khẩu'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = BienDongNhanKhauSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         bien_dong = serializer.save()
         return Response({
-            'status':'success',
+            'status': 'success',
             'message': 'Tạo biến động nhân khẩu thành công',
             'bien_dong': BienDongNhanKhauSerializer(bien_dong).data
         }, status=status.HTTP_201_CREATED)
-    return Response({'status':'error', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'status': 'error', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
