@@ -6,6 +6,7 @@ const ManagePage = () => {
   const navigate = useNavigate();
 
   const handleCardClick = (path) => {
+    console.log('Navigating to:', path);
     navigate(path);
   };
 
@@ -13,12 +14,12 @@ const ManagePage = () => {
     {
       title: 'Thêm nhân khẩu',
       description: 'Thêm thông tin nhân khẩu mới vào hệ thống',
-      path: '/manage/add-resident',
+      path: '/resident-add',
     },
     {
-      title: 'Thay đổi nhân khẩu',
+      title: 'Cập nhật nhân khẩu',
       description: 'Cập nhật thông tin nhân khẩu',
-      path: '/manage/edit-resident',
+      path: '/resident-update',
     },
     {
       title: 'Tách hộ khẩu',

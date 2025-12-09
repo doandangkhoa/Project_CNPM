@@ -5,7 +5,7 @@ from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from apps.tai_khoan.models import TaiKhoan
 from apps.tai_khoan.serializers import TaiKhoanRegisterSerializer, TaiKhoanDetailSerializer, ManageUserPermissionsSerializer, ChangePassWordSerializer
-from django.contrib.auth import update_session_auth_hash
+
 
 @api_view(['POST'])
 def register_view(request):
@@ -130,9 +130,8 @@ def change_password(request):
     )
     
     if serializer.is_valid():
-        new_password = serializer.validated_data['new_password']
+        new_password = serializer.validate['new_password']
         user.set_password(new_password)
         user.save()
-        update_session_auth_hash(request, user)
         return Response({"status":"success", "message":"Đổi mật khẩu thành công"})
     return Response({"status": "error", "errors": serializer.errors}, status=400)

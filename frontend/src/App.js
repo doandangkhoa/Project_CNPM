@@ -15,6 +15,10 @@ import AdminManagePage from './pages/admin/ManagePage';
 import AdminUserListPage from './pages/admin/UserListPage';
 import AdminUserFindPage from './pages/admin/UserFindPage';
 import AdminUserUpdatePage from './pages/admin/UserUpdatePage';
+import AddResidentPage from './pages/nhankhau/AddResidentPage';
+import FindResidentPage from './pages/nhankhau/FindResidentByIDPage';
+import FindResidentByIDPage from './pages/nhankhau/FindResidentPage';
+import UpdateResidentPage from './pages/nhankhau/UpdateResidentPage';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -28,6 +32,14 @@ function App() {
       <Routes>
         {currentUser ? (
           <>
+            <Route
+              path="/"
+              element={
+                <BaseLayout currentUser={currentUser}>
+                  <HomePage />
+                </BaseLayout>
+              }
+            />
             <Route
               path="/search"
               element={
@@ -68,12 +80,47 @@ function App() {
                 </BaseLayout>
               }
             />
-            <Route path="/change-password" element={<ChangePasswordPage />} />
+
+            {/* Nhân khẩu routes */}
             <Route
-              path="*"
+              path="/resident-add"
               element={
                 <BaseLayout currentUser={currentUser}>
-                  <HomePage />
+                  <AddResidentPage />
+                </BaseLayout>
+              }
+            />
+            <Route
+              path="/resident-findbyid"
+              element={
+                <BaseLayout currentUser={currentUser}>
+                  <FindResidentByIDPage />
+                </BaseLayout>
+              }
+            />
+            <Route
+              path="/resident-find"
+              element={
+                <BaseLayout currentUser={currentUser}>
+                  <FindResidentPage />
+                </BaseLayout>
+              }
+            />
+            <Route
+              path="/resident-update"
+              element={
+                <BaseLayout currentUser={currentUser}>
+                  <UpdateResidentPage />
+                </BaseLayout>
+              }
+            />
+
+            {/* Đổi mật khẩu */}
+            <Route
+              path="/change-password"
+              element={
+                <BaseLayout currentUser={currentUser}>
+                  <ChangePasswordPage />
                 </BaseLayout>
               }
             />
@@ -113,6 +160,7 @@ function App() {
                 />
               </>
             )}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
           <>

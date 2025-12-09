@@ -1,52 +1,46 @@
-import React, { useState } from 'react';
-import './SearchPage.css';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import './ManagePage.css';
 
-const SearchPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [data, setData] = useState(null);
-  const [error, setError] = useState('');
+const ManagePage = () => {
+  const navigate = useNavigate();
 
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      document.cookie.split(';').forEach((cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        if (key === name) cookieValue = decodeURIComponent(value);
-      });
-    }
-    return cookieValue;
-  }
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    // TODO: Implement search functionality
-    console.log('Searching for:', searchQuery);
+  const handleCardClick = (path) => {
+    console.log('Navigating to:', path);
+    navigate(path);
   };
 
+  const managementOptions = [
+    {
+      title: 'Tìm theo ID',
+      description: 'Tìm nhân khẩu theo ID',
+      path: '/resident-findbyid',
+    },
+    {
+      title: 'Tìm theo cách khác',
+      description: 'Tìm theo họ tên, CCCD, ngày sinh hoặc số hộ khẩu',
+      path: '/resident-find',
+    },
+  ];
+
   return (
-    <div className="search-container">
-      <h1 className="search-title">Tra cứu thông tin</h1>
+    <div className="manage-container">
+      <h1 className="manage-title">Quản lý</h1>
 
-      <form className="search-form" onSubmit={handleSearch}>
-        <div className="search-input-container">
-          <input
-            type="text"
-            className="search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Nhập CCCD/CMND nhân khẩu hoặc chủ hộ khẩu"
-          />
-          <button type="submit" className="search-button">
-            Tìm kiếm
-          </button>
-        </div>
-      </form>
-
-      <div className="search-results">
-        {/* Search results will be displayed here */}
+      <div className="manage-cards-container">
+        {managementOptions.map((option, index) => (
+          <div
+            key={index}
+            className="manage-card"
+            onClick={() => handleCardClick(option.path)}
+          >
+            <h2>{option.title}</h2>
+            <p>{option.description}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-export default SearchPage;
+export default ManagePage;

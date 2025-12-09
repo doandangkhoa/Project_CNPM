@@ -6,6 +6,7 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   const handleCardClick = (path) => {
+    console.log('Navigating to:', path);
     navigate(path);
   };
 
