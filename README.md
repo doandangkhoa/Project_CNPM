@@ -23,7 +23,7 @@
     pip install -r requirements.txt
 
 ### Làm việc với database 
-    create an .env file in root directory then update fields same with DATABASES part in the setting file of quan_li_dan_cu directory
+    tạo file .env ở thư mục chính rồi copy file env_example vào
 
 ## Chức năng hệ thống Quản lý Khu Dân Cư
 
