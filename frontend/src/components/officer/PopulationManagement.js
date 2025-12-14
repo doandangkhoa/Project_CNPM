@@ -473,94 +473,99 @@ const OfficerPopulationManagement = () => {
       </div>
 
       {/* Advanced Search */}
-      <div className="advanced-search" style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px', marginBottom: '15px', border: '1px solid #dee2e6' }}>
-        <h5 style={{ marginTop: 0, marginBottom: '15px' }}>Tiêu Chí Tìm Kiếm</h5>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-            <div>
-              <label>Họ Tên:</label>
+      <div className="advanced-search" style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '5px', marginBottom: '15px', border: '1px solid #dee2e6' }}>
+        <h5 style={{ marginTop: 0, marginBottom: '12px', fontSize: '14px' }}>Tiêu Chí Tìm Kiếm</h5>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '4px', display: 'block' }}>Họ Tên:</label>
               <input
                 type="text"
                 name="ho_ten"
                 value={advancedSearch.ho_ten}
                 onChange={handleAdvancedSearch}
                 placeholder="Họ tên"
+                style={{ width: '70%', padding: '6px', fontSize: '13px', boxSizing: 'border-box' }}
               />
             </div>
-            <div>
-              <label>CCCD:</label>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '4px', display: 'block' }}>CCCD:</label>
               <input
                 type="text"
                 name="so_cccd"
                 value={advancedSearch.so_cccd}
                 onChange={handleAdvancedSearch}
                 placeholder="Số CCCD"
+                style={{ width: '70%', padding: '6px', fontSize: '13px', boxSizing: 'border-box' }}
               />
             </div>
-            <div>
-              <label>Dân Tộc:</label>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '4px', display: 'block' }}>Dân Tộc:</label>
               <input
                 type="text"
                 name="dan_toc"
                 value={advancedSearch.dan_toc}
                 onChange={handleAdvancedSearch}
                 placeholder="Dân tộc"
+                style={{ width: '70%', padding: '6px', fontSize: '13px', boxSizing: 'border-box' }}
               />
             </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-            <div>
-              <label>Nghề Nghiệp:</label>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '4px', display: 'block' }}>Nghề Nghiệp:</label>
               <input
                 type="text"
                 name="nghe_nghiep"
                 value={advancedSearch.nghe_nghiep}
                 onChange={handleAdvancedSearch}
                 placeholder="Nghề nghiệp"
+                style={{ width: '70%', padding: '6px', fontSize: '13px', boxSizing: 'border-box' }}
               />
             </div>
-            <div>
-              <label>Giới Tính:</label>
-              <select
-                name="gioi_tinh"
-                value={advancedSearch.gioi_tinh}
-                onChange={handleAdvancedSearch}
-              >
-                <option value="">Tất cả</option>
-                <option value="Nam">Nam</option>
-                <option value="Nữ">Nữ</option>
-              </select>
-            </div>
-            <div>
-              <label>Trạng Thái:</label>
-              <select
-                name="trang_thai"
-                value={advancedSearch.trang_thai}
-                onChange={handleAdvancedSearch}
-              >
-                <option value="">Tất cả</option>
-                <option value="song">Còn sống</option>
-                <option value="chet">Đã chết</option>
-                <option value="tam_tru">Tạm trú</option>
-                <option value="tam_vang">Tạm vắng</option>
-                <option value="chuyen_di">Chuyển đi</option>
-              </select>
-            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-            <div>
-              <label>Địa Chỉ:</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '4px', display: 'block' }}>Địa Chỉ:</label>
               <input
                 type="text"
                 name="dia_chi"
                 value={advancedSearch.dia_chi}
                 onChange={handleAdvancedSearch}
                 placeholder="Địa chỉ hộ khẩu"
+                style={{ width: '70%', padding: '6px', fontSize: '13px', boxSizing: 'border-box' }}
               />
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '4px', display: 'block' }}>Giới Tính:</label>
+              <select
+                name="gioi_tinh"
+                value={advancedSearch.gioi_tinh}
+                onChange={handleAdvancedSearch}
+                style={{ width: '70%', padding: '3px', fontSize: '13px', boxSizing: 'border-box' }}
+              >
+                <option value="">Tất cả</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ fontSize: '13px', marginBottom: '4px', display: 'block' }}>Trạng Thái:</label>
+              <select
+                name="trang_thai"
+                value={advancedSearch.trang_thai}
+                onChange={handleAdvancedSearch}
+                style={{ width: '70%', padding: '3px', fontSize: '13px', boxSizing: 'border-box' }}
+              >
+                <option value="">Tất cả</option>
+                <option value="song">Còn sống</option>
+                <option value="chet">Đã chết</option> 
+                <option value="tam_tru">Tạm trú</option>
+                <option value="tam_vang">Tạm vắng</option>
+                <option value="chuyen_di">Chuyển đi</option>
+              </select>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="btn btn-primary" onClick={handleApplyAdvancedSearch}>Tìm Kiếm</button>
-            <button className="btn btn-secondary" onClick={handleResetAdvancedSearch}>Đặt Lại</button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-primary" onClick={handleApplyAdvancedSearch} style={{ padding: '8px 16px', fontSize: '13px' }}>Tìm Kiếm</button>
+            <button className="btn btn-secondary" onClick={handleResetAdvancedSearch} style={{ padding: '8px 16px', fontSize: '13px' }}>Đặt Lại</button>
           </div>
         </div>
 
