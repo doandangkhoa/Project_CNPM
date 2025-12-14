@@ -17,15 +17,20 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
             'nguyen_quan': {'required': False, 'allow_blank': True},
             'dan_toc': {'required': False, 'allow_blank': True},
             'nghe_nghiep': {'required': False, 'allow_blank': True},
+            'noi_lam_viec': {'required': False, 'allow_blank': True},
+            'ngay_cap': {'required': False, 'allow_null': True},
+            'noi_cap': {'required': False, 'allow_blank': True},
+            'thoi_gian_dang_ki_thuong_tru': {'required': False, 'allow_null': True},
             'quan_he_voi_chu_ho': {'required': False, 'allow_blank': True},
             'trang_thai': {'required': False},
             'ghi_chu': {'required': False, 'allow_blank': True},
+            'ho_gia_dinh': {'required': False, 'allow_null': True},
         }
         
 class BienDongNhanKhauSerializer(serializers.ModelSerializer):
     nhan_khau_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
     loai_bien_dong_hien_thi = serializers.CharField(source='get_loai_bien_dong_display', read_only=True)
-    can_bo_thuc_hien_ten = serializers.CharField(source='can_bo_thuc_hien.tai_khoan.username', read_only=True)
+    can_bo_thuc_hien_ten = serializers.SerializerMethodField()
     
     class Meta:
         model = BienDongNhanKhau
@@ -43,6 +48,12 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
         # frontend không cần gửi các fields này 
         read_only_fields = ['id', 'ngay_thay_doi', 'can_bo_thuc_hien', 'nhan_khau_ten',
                             'loai_bien_dong_hien_thi', 'can_bo_thuc_hien_ten']
+    
+    def get_can_bo_thuc_hien_ten(self, obj):
+        """Handle case when can_bo_thuc_hien is None"""
+        if obj.can_bo_thuc_hien and obj.can_bo_thuc_hien.tai_khoan:
+            return obj.can_bo_thuc_hien.tai_khoan.username
+        return "Hệ thống"
     
     def create(self, validated_data):
         # user called api 
@@ -106,8 +117,11 @@ class NhanKhauSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'ho_ten', 'bi_danh', 'so_cccd', 'gioi_tinh', 'gioi_tinh_hien_thi',
             'ngay_sinh', 'tuoi', 'noi_sinh', 'nguyen_quan', 'dan_toc',
+            'ngay_cap', 'noi_cap', 'noi_lam_viec',
             'nghe_nghiep', 'quan_he_voi_chu_ho', 'trang_thai', 'trang_thai_hien_thi',
-            'ten_ho_khau', 'dia_chi_ho_khau', 'ghi_chu', 'bien_dong'
+            'thoi_gian_dang_ki_thuong_tru', 'dia_chi_thuong_tru_truoc_day',
+            'ten_ho_khau', 'dia_chi_ho_khau', 'ho_gia_dinh',
+            'ghi_chu', 'created_at', 'updated_at', 'bien_dong'
         ]
 
     def get_tuoi(self, obj):

@@ -44,6 +44,7 @@ class TaiKhoanDetailSerializer(serializers.ModelSerializer):
 class ManageUserPermissionsSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=TaiKhoan.ROLE_CHOICES, required=False)
     chuc_vu = serializers.ChoiceField(choices=TaiKhoan.CHUC_VU, required=False, allow_null=True)
+    password = serializers.CharField(write_only=True, required=False, min_length=6)
 
     class Meta:
         model = TaiKhoan
@@ -53,6 +54,7 @@ class ManageUserPermissionsSerializer(serializers.ModelSerializer):
             'role',
             'chuc_vu',
             'is_active',
+            'password',
         ]
         extra_kwargs = {
             'username': {'required': False},
@@ -84,6 +86,10 @@ class ManageUserPermissionsSerializer(serializers.ModelSerializer):
             instance.chuc_vu = validated_data.get('chuc_vu', instance.chuc_vu)
 
         instance.is_active = validated_data.get('is_active', instance.is_active)
+
+        # Cập nhật mật khẩu nếu được cung cấp
+        if 'password' in validated_data and validated_data['password']:
+            instance.set_password(validated_data['password'])
 
         instance.save()
         return instance

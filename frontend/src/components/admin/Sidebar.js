@@ -27,12 +27,6 @@ const AdminSidebar = ({ currentUser, isCollapsed, onToggleCollapse }) => {
         </ul>
       </nav>
 
-      <div className="sidebar-footer">
-        <div className="menu-item">
-          <span className="icon">👤</span>
-          {!isCollapsed && <span className="label">{currentUser?.username || 'User'}</span>}
-        </div>
-      </div>
     </aside>
   );
 };

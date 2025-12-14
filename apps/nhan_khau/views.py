@@ -171,11 +171,14 @@ def chi_tiet_nhan_khau(request, pk):
 def danh_sach_nhan_khau(request):
     """
     API lấy danh sách tất cả nhân khẩu với phân trang
-    Hỗ trợ tìm kiếm theo: ho_ten, so_cccd, nghe_nghiep
+    Hỗ trợ tìm kiếm nâng cao theo nhiều tiêu chí:
+    ho_ten, so_cccd, ngay_sinh, so_ho_khau, noi_sinh, nguyen_quan,
+    dan_toc, gioi_tinh, nghe_nghiep, noi_lam_viec, dia_chi_thuong_tru_truoc_day,
+    trang_thai, quan_he_voi_chu_ho
     """
     queryset = NhanKhau.objects.select_related('ho_gia_dinh').prefetch_related('bien_dong_nhan_khau')
     
-    # Tìm kiếm
+    # Tìm kiếm nhanh (basic search)
     search = request.query_params.get('search', '').strip()
     if search:
         queryset = queryset.filter(
@@ -184,9 +187,64 @@ def danh_sach_nhan_khau(request):
             Q(nghe_nghiep__icontains=search)
         )
     
-    # Phân trang
-    page = int(request.query_params.get('page', 1))
-    limit = int(request.query_params.get('limit', 10))
+    # Tìm kiếm nâng cao - lấy các tham số từ query string
+    ho_ten = request.query_params.get('ho_ten', '').strip()
+    so_cccd = request.query_params.get('so_cccd', '').strip()
+    ngay_sinh = request.query_params.get('ngay_sinh', '').strip()
+    so_ho_khau = request.query_params.get('so_ho_khau', '').strip()
+    noi_sinh = request.query_params.get('noi_sinh', '').strip()
+    nguyen_quan = request.query_params.get('nguyen_quan', '').strip()
+    dan_toc = request.query_params.get('dan_toc', '').strip()
+    gioi_tinh = request.query_params.get('gioi_tinh', '').strip()
+    nghe_nghiep = request.query_params.get('nghe_nghiep', '').strip()
+    noi_lam_viec = request.query_params.get('noi_lam_viec', '').strip()
+    dia_chi_thuong_tru_truoc_day = request.query_params.get('dia_chi_thuong_tru_truoc_day', '').strip()
+    trang_thai = request.query_params.get('trang_thai', '').strip()
+    quan_he_voi_chu_ho = request.query_params.get('quan_he_voi_chu_ho', '').strip()
+
+    # Áp dụng các bộ lọc nâng cao - chỉ khi tham số không trống
+    if ho_ten:
+        queryset = queryset.filter(Q(ho_ten__icontains=ho_ten) | Q(bi_danh__icontains=ho_ten))
+    if so_cccd:
+        queryset = queryset.filter(so_cccd__icontains=so_cccd)
+    if ngay_sinh:
+        queryset = queryset.filter(ngay_sinh=ngay_sinh)
+    if so_ho_khau:
+        queryset = queryset.filter(ho_gia_dinh__so_ho_khau__icontains=so_ho_khau)
+    if noi_sinh:
+        queryset = queryset.filter(noi_sinh__icontains=noi_sinh)
+    if nguyen_quan:
+        queryset = queryset.filter(nguyen_quan__icontains=nguyen_quan)
+    if dan_toc:
+        queryset = queryset.filter(dan_toc__icontains=dan_toc)
+    if gioi_tinh:
+        queryset = queryset.filter(gioi_tinh=gioi_tinh)
+    if nghe_nghiep:
+        queryset = queryset.filter(nghe_nghiep__icontains=nghe_nghiep)
+    if noi_lam_viec:
+        queryset = queryset.filter(noi_lam_viec__icontains=noi_lam_viec)
+    if dia_chi_thuong_tru_truoc_day:
+        queryset = queryset.filter(dia_chi_thuong_tru_truoc_day__icontains=dia_chi_thuong_tru_truoc_day)
+    if trang_thai:
+        queryset = queryset.filter(trang_thai=trang_thai)
+    if quan_he_voi_chu_ho:
+        queryset = queryset.filter(quan_he_voi_chu_ho__icontains=quan_he_voi_chu_ho)
+    
+    # Phân trang - với error handling
+    try:
+        page = int(request.query_params.get('page', 1))
+        limit = int(request.query_params.get('limit', 10))
+        if page < 1 or limit < 1:
+            return Response({
+                'status': 'error',
+                'message': 'page và limit phải lớn hơn 0'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except (ValueError, TypeError):
+        return Response({
+            'status': 'error',
+            'message': 'page và limit phải là số nguyên'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
     start = (page - 1) * limit
     end = start + limit
 
@@ -223,6 +281,7 @@ def tim_kiem_nhan_khau(request):
     noi_sinh = request.query_params.get('noi_sinh', '').strip()
     nguyen_quan = request.query_params.get('nguyen_quan', '').strip()
     dan_toc = request.query_params.get('dan_toc', '').strip()
+    gioi_tinh = request.query_params.get('gioi_tinh', '').strip()
     nghe_nghiep = request.query_params.get('nghe_nghiep', '').strip()
     noi_lam_viec = request.query_params.get('noi_lam_viec', '').strip()
     dia_chi_thuong_tru_truoc_day = request.query_params.get('dia_chi_thuong_tru_truoc_day', '').strip()
@@ -245,6 +304,8 @@ def tim_kiem_nhan_khau(request):
         queryset = queryset.filter(nguyen_quan__icontains=nguyen_quan)
     if dan_toc:
         queryset = queryset.filter(dan_toc__icontains=dan_toc)
+    if gioi_tinh:
+        queryset = queryset.filter(gioi_tinh=gioi_tinh)
     if nghe_nghiep:
         queryset = queryset.filter(nghe_nghiep__icontains=nghe_nghiep)
     if noi_lam_viec:
@@ -256,9 +317,21 @@ def tim_kiem_nhan_khau(request):
     if quan_he_voi_chu_ho:
         queryset = queryset.filter(quan_he_voi_chu_ho__icontains=quan_he_voi_chu_ho)
 
-    # phân trang
-    page = int(request.query_params.get('page', 1))
-    limit = int(request.query_params.get('limit', 20))
+    # phân trang - với error handling
+    try:
+        page = int(request.query_params.get('page', 1))
+        limit = int(request.query_params.get('limit', 20))
+        if page < 1 or limit < 1:
+            return Response({
+                'status': 'error',
+                'message': 'page và limit phải lớn hơn 0'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except (ValueError, TypeError):
+        return Response({
+            'status': 'error',
+            'message': 'page và limit phải là số nguyên'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
     start = (page - 1) * limit
     end = start + limit
 
@@ -279,8 +352,8 @@ def tim_kiem_nhan_khau(request):
 @permission_classes([IsAuthenticated])
 def xoa_nhan_khau(request, pk):
     """
-    API Xóa nhân khẩu (Thực chất là Soft Delete - Đánh dấu là đã xóa).
-    Dùng cho trường hợp nhập sai hoặc xóa nhầm, không phải chuyển đi/chết.
+    API Xóa nhân khẩu (Hard Delete - Xóa hoàn toàn dữ liệu).
+    Dùng cho trường hợp nhập sai hoặc xóa nhầm.
     """
     try:
         nhan_khau = NhanKhau.objects.get(pk=pk)
@@ -291,11 +364,12 @@ def xoa_nhan_khau(request, pk):
 
     try:
         with transaction.atomic():
-            # 1. Tạo biến động loại XOA (kiểm tra quyền và lấy CanBo nếu có)
+            # 1. Kiểm tra quyền
             user = request.user
             if not _user_is_authorized_can_bo(user):
                 return Response({'status': 'error', 'message': 'User không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ được phép)'}, status=status.HTTP_403_FORBIDDEN)
 
+            # 2. Tạo biến động loại XOA (ghi log trước khi xóa)
             can_bo = CanBo.objects.filter(tai_khoan=user).first()
             BienDongNhanKhau.objects.create(
                 nhan_khau=nhan_khau,
@@ -305,13 +379,10 @@ def xoa_nhan_khau(request, pk):
                 mo_ta=ly_do
             )
 
-            # 2. Xử lý trạng thái (Có thể xóa hẳn record hoặc để Null hộ khẩu)
-            # Ở đây mình chọn cách xóa quan hệ với Hộ khẩu nhưng giữ record
-            nhan_khau.ho_gia_dinh = None
-            nhan_khau.ghi_chu = f"Đã xóa. Lý do: {ly_do}"
-            nhan_khau.save()
+            # 3. Xóa hẳn nhân khẩu từ database
+            nhan_khau.delete()
 
-        return Response({'status': 'success', 'message': 'Đã xóa nhân khẩu khỏi hộ gia đình'}, status=status.HTTP_200_OK)
+        return Response({'status': 'success', 'message': 'Đã xóa nhân khẩu thành công'}, status=status.HTTP_200_OK)
     
     except Exception as e:
         return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -365,7 +436,7 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     return Response({
         'status': 'success',
         'ho_gia_dinh': ho_gia_dinh.so_ho_khau, # Trả về số sổ để frontend hiển thị tiêu đề
-        'chu_ho': ho_gia_dinh.chu_ho.ho_ten if ho_gia_dinh.chu_ho else "Chưa có chủ hộ",
+        'chu_ho': ho_gia_dinh.id_chu_ho.ho_ten if ho_gia_dinh.id_chu_ho else "Chưa có chủ hộ",
         'tong_so_bien_dong': lich_su.count(),
         'data': serializer.data
     }, status=status.HTTP_200_OK)

@@ -1,13 +1,41 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/OfficerPopulationManagement.css';
+import './PopulationManagement.css';
 
 const API_BASE_URL = 'http://localhost:8000/api';
+
+// Helper function to get CSRF token from cookies
+const getCsrfToken = () => {
+  const name = 'csrftoken';
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  console.log('getCsrfToken result:', cookieValue ? 'Found' : 'Not found');
+  return cookieValue || '';
+};
 
 const OfficerPopulationManagement = () => {
   const [populations, setPopulations] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterGender, setFilterGender] = useState('');
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [advancedSearch, setAdvancedSearch] = useState({
+    ho_ten: '',
+    so_cccd: '',
+    nghe_nghiep: '',
+    trang_thai: '',
+    gioi_tinh: '',
+    dan_toc: '',
+  });
   const [selectedPopulation, setSelectedPopulation] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -20,12 +48,13 @@ const OfficerPopulationManagement = () => {
   const [formData, setFormData] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [editingId, setEditingId] = useState(null);
   const searchTimeoutRef = useRef(null);
 
   const itemsPerPage = 10;
 
   // Fetch populations from API
-  const fetchPopulations = async (page = 1, search = '') => {
+  const fetchPopulations = async (page = 1, search = '', advSearch = null) => {
     try {
       setLoading(true);
       setError(null);
@@ -33,8 +62,22 @@ const OfficerPopulationManagement = () => {
       const params = new URLSearchParams({
         page: page,
         limit: itemsPerPage,
-        search: search,
       });
+
+      // Add basic search if provided
+      if (search) {
+        params.append('search', search);
+      }
+
+      // Add advanced search parameters if provided
+      if (advSearch) {
+        if (advSearch.ho_ten) params.append('ho_ten', advSearch.ho_ten);
+        if (advSearch.so_cccd) params.append('so_cccd', advSearch.so_cccd);
+        if (advSearch.nghe_nghiep) params.append('nghe_nghiep', advSearch.nghe_nghiep);
+        if (advSearch.trang_thai) params.append('trang_thai', advSearch.trang_thai);
+        if (advSearch.gioi_tinh) params.append('gioi_tinh', advSearch.gioi_tinh);
+        if (advSearch.dan_toc) params.append('dan_toc', advSearch.dan_toc);
+      }
 
       const response = await fetch(`${API_BASE_URL}/nhan-khau/?${params}`, {
         method: 'GET',
@@ -75,8 +118,45 @@ const OfficerPopulationManagement = () => {
     }, 500);
   };
 
+  // Handle advanced search
+  const handleAdvancedSearch = (e) => {
+    const { name, value } = e.target;
+    setAdvancedSearch(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Apply advanced search
+  const handleApplyAdvancedSearch = () => {
+    fetchPopulations(1, '', advancedSearch);
+    setShowAdvancedSearch(false);
+  };
+
+  // Reset advanced search
+  const handleResetAdvancedSearch = () => {
+    setAdvancedSearch({
+      ho_ten: '',
+      so_cccd: '',
+      nghe_nghiep: '',
+      trang_thai: '',
+      gioi_tinh: '',
+      dan_toc: '',
+    });
+    fetchPopulations(1, '');
+  };
+
   // Load data on mount
   useEffect(() => {
+    // First, do a GET request to initialize CSRF token
+    fetch(`${API_BASE_URL}/nhan-khau/`, {
+      method: 'GET',
+      credentials: 'include',
+    }).then(() => {
+      // CSRF token should now be in cookies after GET request
+      console.log('CSRF initialized');
+    }).catch(err => console.error('Error initializing CSRF:', err));
+    
     fetchPopulations(1, '');
     
     return () => {
@@ -140,17 +220,34 @@ const OfficerPopulationManagement = () => {
   const handleConfirmDelete = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      if (!deleteConfirmId) {
+        throw new Error('Không tìm thấy ID để xóa');
+      }
+      
+      const csrfToken = getCsrfToken();
+      console.log('Delete CSRF Token:', csrfToken);
+      
       const response = await fetch(`${API_BASE_URL}/nhan-khau/${deleteConfirmId}/xoa/`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken || '',
         },
-        body: JSON.stringify({ ly_do: '' }),
+        body: JSON.stringify({ ly_do: 'Xóa do người dùng yêu cầu' }),
       });
 
+      console.log('Delete response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || errorData.message || `HTTP error! status: ${response.status}`);
+        } catch (jsonError) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
       }
 
       // Refresh list
@@ -158,9 +255,8 @@ const OfficerPopulationManagement = () => {
       alert('Xóa nhân khẩu thành công');
       setShowDeleteConfirm(false);
       setDeleteConfirmId(null);
-      setError(null);
     } catch (err) {
-      setError('Lỗi khi xóa nhân khẩu');
+      setError(err.message || 'Lỗi khi xóa nhân khẩu');
       console.error('Error deleting:', err);
     } finally {
       setLoading(false);
@@ -188,6 +284,9 @@ const OfficerPopulationManagement = () => {
       quan_he_voi_chu_ho: 'Con trai',
       nghe_nghiep: '',
       noi_lam_viec: '',
+      trang_thai: 'song',
+      thoi_gian_dang_ki_thuong_tru: '',
+      dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
       ho_gia_dinh: '',
     });
@@ -211,9 +310,13 @@ const OfficerPopulationManagement = () => {
       quan_he_voi_chu_ho: population.quan_he_voi_chu_ho || '',
       nghe_nghiep: population.nghe_nghiep || '',
       noi_lam_viec: population.noi_lam_viec || '',
+      trang_thai: population.trang_thai || 'song',
+      thoi_gian_dang_ki_thuong_tru: population.thoi_gian_dang_ki_thuong_tru || '',
+      dia_chi_thuong_tru_truoc_day: population.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: population.ghi_chu || '',
       ho_gia_dinh: population.ho_gia_dinh?.id || population.ho_gia_dinh || '',
     });
+    setEditingId(population.id);
     setIsEditMode(true);
     setFormErrors({});
     setShowFormModal(true);
@@ -253,24 +356,42 @@ const OfficerPopulationManagement = () => {
       setLoading(true);
       setError(null);
 
+      // Validate editingId when in edit mode
+      if (isEditMode && !editingId) {
+        throw new Error('Không tìm thấy ID để cập nhật');
+      }
+
       const url = isEditMode
-        ? `${API_BASE_URL}/nhan-khau/${selectedPopulation.id}/cap-nhat/`
+        ? `${API_BASE_URL}/nhan-khau/${editingId}/cap-nhat/`
         : `${API_BASE_URL}/nhan-khau/them-moi/`;
 
       const method = isEditMode ? 'PATCH' : 'POST';
+      const csrfToken = getCsrfToken();
+
+      console.log('Sending data:', formData);
+      console.log('CSRF Token:', csrfToken);
+      console.log('URL:', url);
+      console.log('Method:', method);
 
       const response = await fetch(url, {
         method: method,
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken || '',
         },
         body: JSON.stringify(formData),
       });
 
+      console.log('Response status:', response.status);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        console.log('Error response:', errorData);
+        console.log('Validation errors:', errorData.errors);
+        const errorMsg = errorData.errors 
+          ? Object.entries(errorData.errors).map(([k, v]) => `${k}: ${v}`).join(', ')
+          : (errorData.detail || errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
@@ -280,6 +401,7 @@ const OfficerPopulationManagement = () => {
       fetchPopulations(currentPage, searchTerm);
       setShowFormModal(false);
       setFormData(null);
+      setEditingId(null);
     } catch (err) {
       setError(err.message || (isEditMode ? 'Lỗi khi cập nhật' : 'Lỗi khi thêm mới'));
       console.error('Error submitting form:', err);
@@ -292,6 +414,7 @@ const OfficerPopulationManagement = () => {
     setShowFormModal(false);
     setFormData(null);
     setFormErrors({});
+    setEditingId(null);
   };
 
   const getStatusLabel = (status) => {
@@ -338,42 +461,89 @@ const OfficerPopulationManagement = () => {
       )}
 
       {/* Search & Filter */}
-      <div className="search-filter">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo tên, CCCD, nghề nghiệp..."
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        <div className="filter-box">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            disabled={loading}
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="song">Còn sống</option>
-            <option value="chet">Đã chết</option>
-            <option value="tam_tru">Tạm trú</option>
-            <option value="tam_vang">Tạm vắng</option>
-            <option value="chuyen_di">Chuyển đi</option>
-          </select>
-        </div>
-        <div className="filter-box">
-          <select
-            value={filterGender}
-            onChange={(e) => setFilterGender(e.target.value)}
-            disabled={loading}
-          >
-            <option value="">Tất cả giới tính</option>
-            <option value="Nam">Nam</option>
-            <option value="Nữ">Nữ</option>
-          </select>
-        </div>
+      <div className="search-filter" style={{ marginBottom: '15px' }}>
+        <h4 style={{ marginTop: 0, marginBottom: '10px' }}>Tìm Kiếm Nhân Khẩu</h4>
       </div>
+
+      {/* Advanced Search */}
+      <div className="advanced-search" style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px', marginBottom: '15px', border: '1px solid #dee2e6' }}>
+        <h5 style={{ marginTop: 0, marginBottom: '15px' }}>Tiêu Chí Tìm Kiếm</h5>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div>
+              <label>Họ Tên:</label>
+              <input
+                type="text"
+                name="ho_ten"
+                value={advancedSearch.ho_ten}
+                onChange={handleAdvancedSearch}
+                placeholder="Họ tên"
+              />
+            </div>
+            <div>
+              <label>CCCD:</label>
+              <input
+                type="text"
+                name="so_cccd"
+                value={advancedSearch.so_cccd}
+                onChange={handleAdvancedSearch}
+                placeholder="Số CCCD"
+              />
+            </div>
+            <div>
+              <label>Dân Tộc:</label>
+              <input
+                type="text"
+                name="dan_toc"
+                value={advancedSearch.dan_toc}
+                onChange={handleAdvancedSearch}
+                placeholder="Dân tộc"
+              />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div>
+              <label>Nghề Nghiệp:</label>
+              <input
+                type="text"
+                name="nghe_nghiep"
+                value={advancedSearch.nghe_nghiep}
+                onChange={handleAdvancedSearch}
+                placeholder="Nghề nghiệp"
+              />
+            </div>
+            <div>
+              <label>Giới Tính:</label>
+              <select
+                name="gioi_tinh"
+                value={advancedSearch.gioi_tinh}
+                onChange={handleAdvancedSearch}
+              >
+                <option value="">Tất cả</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+              </select>
+            </div>
+            <div>
+              <label>Trạng Thái:</label>
+              <select
+                name="trang_thai"
+                value={advancedSearch.trang_thai}
+                onChange={handleAdvancedSearch}
+              >
+                <option value="">Tất cả</option>
+                <option value="song">Còn sống</option>
+                <option value="chet">Đã chết</option>
+                <option value="tam_tru">Tạm trú</option>
+                <option value="tam_vang">Tạm vắng</option>
+                <option value="chuyen_di">Chuyển đi</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-primary" onClick={handleApplyAdvancedSearch}>Tìm Kiếm</button>
+            <button className="btn btn-secondary" onClick={handleResetAdvancedSearch}>Đặt Lại</button>
+          </div>
+        </div>
 
       {/* Populations Table */}
       <div className="populations-table-container">
@@ -557,10 +727,32 @@ const OfficerPopulationManagement = () => {
                     <span>{selectedPopulation.dia_chi_ho_khau || '-'}</span>
                   </div>
                   <div className="detail-item">
+                    <label>Địa Chỉ Thường Trú Trước Đây:</label>
+                    <span>{selectedPopulation.dia_chi_thuong_tru_truoc_day || '-'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Thời Gian Đăng Kí Thường Trú:</label>
+                    <span>{selectedPopulation.thoi_gian_dang_ki_thuong_tru ? new Date(selectedPopulation.thoi_gian_dang_ki_thuong_tru).toLocaleDateString('vi-VN') : '-'}</span>
+                  </div>
+                  <div className="detail-item">
                     <label>Trạng Thái:</label>
                     <span className={`status-badge ${selectedPopulation.trang_thai}`}>
                       {selectedPopulation.trang_thai_hien_thi || getStatusLabel(selectedPopulation.trang_thai)}
                     </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-section">
+                <h4>Thông Tin Hệ Thống</h4>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <label>Ngày Tạo:</label>
+                    <span>{selectedPopulation.created_at ? new Date(selectedPopulation.created_at).toLocaleDateString('vi-VN') : '-'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Ngày Cập Nhật:</label>
+                    <span>{selectedPopulation.updated_at ? new Date(selectedPopulation.updated_at).toLocaleDateString('vi-VN') : '-'}</span>
                   </div>
                 </div>
               </div>
@@ -783,6 +975,48 @@ const OfficerPopulationManagement = () => {
                 </div>
 
                 <div className="form-section">
+                  <h4>Thông Tin Đăng Kí & Trạng Thái</h4>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Trạng Thái</label>
+                      <select
+                        name="trang_thai"
+                        value={formData.trang_thai}
+                        onChange={handleFormChange}
+                      >
+                        <option value="song">Còn sống</option>
+                        <option value="chet">Đã chết</option>
+                        <option value="tam_tru">Tạm trú</option>
+                        <option value="tam_vang">Tạm vắng</option>
+                        <option value="chuyen_di">Chuyển đi</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Thời Gian Đăng Kí Thường Trú</label>
+                      <input
+                        type="date"
+                        name="thoi_gian_dang_ki_thuong_tru"
+                        value={formData.thoi_gian_dang_ki_thuong_tru}
+                        onChange={handleFormChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Địa Chỉ Thường Trú Trước Đây</label>
+                    <input
+                      type="text"
+                      name="dia_chi_thuong_tru_truoc_day"
+                      value={formData.dia_chi_thuong_tru_truoc_day}
+                      onChange={handleFormChange}
+                      placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-section">
                   <h4>Ghi Chú</h4>
                   
                   <div className="form-group">
@@ -835,6 +1069,9 @@ const OfficerPopulationManagement = () => {
             <div className="modal-body">
               <p className="confirm-message">
                 Bạn có chắc chắn muốn xóa nhân khẩu này không?
+              </p>
+              <p className="confirm-warning">
+                ⚠️Lưu ý: Hành động này không thể hoàn tác.
               </p>
             </div>
             <div className="modal-footer">
