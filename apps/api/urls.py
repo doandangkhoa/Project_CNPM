@@ -17,6 +17,7 @@ urlpatterns = [
     path('users/<int:user_id>/delete/', tai_khoan_views.delete_user, name='admin-delete-user'),
     
     # nhan khau
+    path('nhan-khau/', nhan_khau_views.danh_sach_nhan_khau, name='danh-sach-nhan-khau'),
     path('nhan-khau/them-moi/', nhan_khau_views.them_moi_nhan_khau, name='them-moi-nhan-khau'),
     path('nhan-khau/<int:pk>/cap-nhat/', nhan_khau_views.cap_nhat_nhan_khau, name='cap-nhat-nhan-khau'),
     path('nhan-khau/tim-kiem/', nhan_khau_views.tim_kiem_nhan_khau, name='tim-kiem-nhan-khau'),

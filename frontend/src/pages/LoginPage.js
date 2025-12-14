@@ -2,25 +2,35 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 
-function LoginPage({ onLogin }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+function LoginPage(props) {
+  const onLogin = props.onLogin;
+
+  const _useState1 = useState('');
+  const username = _useState1[0];
+  const setUsername = _useState1[1];
+
+  const _useState2 = useState('');
+  const password = _useState2[0];
+  const setPassword = _useState2[1];
+
+  const _useState3 = useState('');
+  const error = _useState3[0];
+  const setError = _useState3[1];
+
   const navigate = useNavigate();
 
-  // Lấy cookie CSRF
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
       document.cookie.split(';').forEach((cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        if (key === name) cookieValue = decodeURIComponent(value);
+        const parts = cookie.trim().split('=');
+        if (parts[0] === name) cookieValue = decodeURIComponent(parts[1]);
       });
     }
     return cookieValue;
   }
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
@@ -29,84 +39,109 @@ function LoginPage({ onLogin }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken'), // gửi CSRF token
+          'X-CSRFToken': getCookie('csrftoken'),
         },
-        credentials: 'include', // bắt buộc để lưu session cookie
-        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
       });
 
       const data = await res.json();
 
-      console.log(data.message);
       if (res.ok && data.status === 'success') {
-        onLogin(data.user); // Lưu thông tin user
-        
-        // Redirect dựa trên role của tài khoản
-        const userRole = data.user.role;
-        if (userRole === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (userRole === 'can_bo') {
-          navigate('/can-bo/dashboard');
-        } else if (userRole === 'nguoi_dan') {
-          navigate('/nguoi-dan/dashboard');
-        } else {
-          // Nếu role không xác định, redirect về home
-          navigate('/');
-        }
+        onLogin(data.user);
+
+        const role = data.user.role;
+        if (role === 'admin') navigate('/admin/dashboard');
+        else if (role === 'can_bo') navigate('/can-bo/dashboard');
+        else navigate('/nguoi-dan/dashboard');
       } else {
         setError(data.message || 'Đăng nhập thất bại');
       }
     } catch (err) {
       setError('Không thể kết nối đến server');
     }
-  };
+  }
 
-  const handleRegister = () => {
+  function goRegister() {
     navigate('/register');
-  };
+  }
 
-  return (
-    <div className="login-container d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div
-        className="login-box bg-white p-4 rounded shadow"
-        style={{ width: '350px' }}
-      >
-        <h3 className="text-center mb-4">Đăng nhập</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label">Tên đăng nhập</label>
-            <input
-              type="text"
-              className="form-control"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Mật khẩu</label>
-            <input
-              type="password"
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {error && <div className="text-danger mb-2">{error}</div>}
+  return React.createElement(
+    'div',
+    { className: 'login-container' },
 
-          <button type="submit" className="btn btn-primary w-100 mb-2">
-            Đăng nhập
-          </button>
+    React.createElement(
+      'div',
+      { className: 'login-card' },
 
-          <button
-            type="button"
-            className="btn btn-outline-secondary w-100"
-            onClick={handleRegister}
-          >
-            Đăng ký
-          </button>
-        </form>
-      </div>
-    </div>
+      React.createElement(
+        'h3',
+        { className: 'login-title' },
+        'Đăng nhập hệ thống'
+      ),
+
+      React.createElement(
+        'form',
+        { onSubmit: handleSubmit },
+
+        React.createElement(
+          'div',
+          { className: 'form-group' },
+          React.createElement('label', null, 'Tên đăng nhập'),
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Nhập username',
+            value: username,
+            onChange: function (e) {
+              setUsername(e.target.value);
+            },
+          })
+        ),
+
+        React.createElement(
+          'div',
+          { className: 'form-group' },
+          React.createElement('label', null, 'Mật khẩu'),
+          React.createElement('input', {
+            type: 'password',
+            placeholder: 'Nhập mật khẩu',
+            value: password,
+            onChange: function (e) {
+              setPassword(e.target.value);
+            },
+          })
+        ),
+
+        error &&
+          React.createElement(
+            'div',
+            { className: 'error-text' },
+            error
+          ),
+
+        React.createElement(
+          'button',
+          {
+            type: 'submit',
+            className: 'btn-primary',
+          },
+          'Đăng nhập'
+        ),
+
+        React.createElement(
+          'button',
+          {
+            type: 'button',
+            className: 'btn-secondary',
+            onClick: goRegister,
+          },
+          'Đăng ký'
+        )
+      )
+    )
   );
 }
 

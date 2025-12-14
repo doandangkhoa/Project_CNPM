@@ -168,9 +168,47 @@ def chi_tiet_nhan_khau(request, pk):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def danh_sach_nhan_khau(request):
+    """
+    API lấy danh sách tất cả nhân khẩu với phân trang
+    Hỗ trợ tìm kiếm theo: ho_ten, so_cccd, nghe_nghiep
+    """
+    queryset = NhanKhau.objects.select_related('ho_gia_dinh').prefetch_related('bien_dong_nhan_khau')
+    
+    # Tìm kiếm
+    search = request.query_params.get('search', '').strip()
+    if search:
+        queryset = queryset.filter(
+            Q(ho_ten__icontains=search) | 
+            Q(so_cccd__icontains=search) | 
+            Q(nghe_nghiep__icontains=search)
+        )
+    
+    # Phân trang
+    page = int(request.query_params.get('page', 1))
+    limit = int(request.query_params.get('limit', 10))
+    start = (page - 1) * limit
+    end = start + limit
+
+    results = queryset.order_by('ho_ten')[start:end]
+    total = queryset.count()
+
+    serializer = NhanKhauSerializer(results, many=True)
+
+    return Response({
+        'status': 'success',
+        'total': total,
+        'page': page,
+        'limit': limit,
+        'results': serializer.data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def tim_kiem_nhan_khau(request):
     """
-    API tìm kiếm nhân khẩu
+    API tìm kiếm nhân khẩu nâng cao
     ?ho_ten=Nguyễn Văn
     &so_cccd=0012
     &ngay_sinh=1990-05-20

@@ -53,6 +53,7 @@ def login_view(request):
     })
     
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def logout_view(request):
     logout(request)
     return Response({'status': 'success', 'message': 'Đăng xuất thành công.'})
