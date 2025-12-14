@@ -35,6 +35,7 @@ const OfficerPopulationManagement = () => {
     trang_thai: '',
     gioi_tinh: '',
     dan_toc: '',
+    dia_chi: '',
   });
   const [selectedPopulation, setSelectedPopulation] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -77,6 +78,7 @@ const OfficerPopulationManagement = () => {
         if (advSearch.trang_thai) params.append('trang_thai', advSearch.trang_thai);
         if (advSearch.gioi_tinh) params.append('gioi_tinh', advSearch.gioi_tinh);
         if (advSearch.dan_toc) params.append('dan_toc', advSearch.dan_toc);
+        if (advSearch.dia_chi) params.append('dia_chi', advSearch.dia_chi);
       }
 
       const response = await fetch(`${API_BASE_URL}/nhan-khau/?${params}`, {
@@ -142,6 +144,7 @@ const OfficerPopulationManagement = () => {
       trang_thai: '',
       gioi_tinh: '',
       dan_toc: '',
+      dia_chi: '',
     });
     fetchPopulations(1, '');
   };
@@ -289,6 +292,8 @@ const OfficerPopulationManagement = () => {
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
       ho_gia_dinh: '',
+      ngay_chuyen_di: '',
+      noi_chuyen: '',
     });
     setIsEditMode(false);
     setFormErrors({});
@@ -315,6 +320,8 @@ const OfficerPopulationManagement = () => {
       dia_chi_thuong_tru_truoc_day: population.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: population.ghi_chu || '',
       ho_gia_dinh: population.ho_gia_dinh?.id || population.ho_gia_dinh || '',
+      ngay_chuyen_di: population.ngay_chuyen_di || '',
+      noi_chuyen: population.noi_chuyen || '',
     });
     setEditingId(population.id);
     setIsEditMode(true);
@@ -539,6 +546,18 @@ const OfficerPopulationManagement = () => {
               </select>
             </div>
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div>
+              <label>Địa Chỉ:</label>
+              <input
+                type="text"
+                name="dia_chi"
+                value={advancedSearch.dia_chi}
+                onChange={handleAdvancedSearch}
+                placeholder="Địa chỉ hộ khẩu"
+              />
+            </div>
+          </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button className="btn btn-primary" onClick={handleApplyAdvancedSearch}>Tìm Kiếm</button>
             <button className="btn btn-secondary" onClick={handleResetAdvancedSearch}>Đặt Lại</button>
@@ -743,6 +762,23 @@ const OfficerPopulationManagement = () => {
                 </div>
               </div>
 
+              {/* Relocation Info - Only show when status is "chuyen_di" */}
+              {selectedPopulation.trang_thai === 'chuyen_di' && (
+                <div className="detail-section">
+                  <h4>Thông Tin Chuyển Đi</h4>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <label>Ngày Chuyển Đi:</label>
+                      <span>{selectedPopulation.ngay_chuyen_di ? new Date(selectedPopulation.ngay_chuyen_di).toLocaleDateString('vi-VN') : '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Nơi Chuyển:</label>
+                      <span>{selectedPopulation.noi_chuyen || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="detail-section">
                 <h4>Thông Tin Hệ Thống</h4>
                 <div className="detail-grid">
@@ -764,7 +800,8 @@ const OfficerPopulationManagement = () => {
                 </div>
               )}
 
-              {selectedPopulation.bien_dong && selectedPopulation.bien_dong.length > 0 && (
+              {/* Change History - Hidden from UI */}
+              {/* {selectedPopulation.bien_dong && selectedPopulation.bien_dong.length > 0 && (
                 <div className="detail-section">
                   <h4>Lịch Sử Thay Đổi</h4>
                   <table className="history-table">
@@ -786,7 +823,7 @@ const OfficerPopulationManagement = () => {
                     </tbody>
                   </table>
                 </div>
-              )}
+              )} */}
             </div>
             <div className="modal-footer">
               <button
@@ -1014,6 +1051,34 @@ const OfficerPopulationManagement = () => {
                       placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
                     />
                   </div>
+
+                  {/* Relocation Fields - Only show when status is "chuyen_di" */}
+                  {formData.trang_thai === 'chuyen_di' && (
+                    <>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Ngày Chuyển Đi</label>
+                          <input
+                            type="date"
+                            name="ngay_chuyen_di"
+                            value={formData.ngay_chuyen_di}
+                            onChange={handleFormChange}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>Nơi Chuyển</label>
+                          <input
+                            type="text"
+                            name="noi_chuyen"
+                            value={formData.noi_chuyen}
+                            onChange={handleFormChange}
+                            placeholder="Nơi chuyển đi"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="form-section">

@@ -201,6 +201,7 @@ def danh_sach_nhan_khau(request):
     dia_chi_thuong_tru_truoc_day = request.query_params.get('dia_chi_thuong_tru_truoc_day', '').strip()
     trang_thai = request.query_params.get('trang_thai', '').strip()
     quan_he_voi_chu_ho = request.query_params.get('quan_he_voi_chu_ho', '').strip()
+    dia_chi = request.query_params.get('dia_chi', '').strip()
 
     # Áp dụng các bộ lọc nâng cao - chỉ khi tham số không trống
     if ho_ten:
@@ -229,6 +230,8 @@ def danh_sach_nhan_khau(request):
         queryset = queryset.filter(trang_thai=trang_thai)
     if quan_he_voi_chu_ho:
         queryset = queryset.filter(quan_he_voi_chu_ho__icontains=quan_he_voi_chu_ho)
+    if dia_chi:
+        queryset = queryset.filter(ho_gia_dinh__dia_chi__icontains=dia_chi)
     
     # Phân trang - với error handling
     try:

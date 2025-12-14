@@ -29,7 +29,10 @@ class NhanKhau(models.Model):
                  ("chuyen_di", "Đã chuyển đi"),
         ],
         default="song",
-    ) 
+    )
+    # Fields for moving/relocation
+    ngay_chuyen_di = models.DateField(null=True, blank=True, help_text="Ngày chuyển đi (chỉ khi trạng thái là 'Đã chuyển đi')")
+    noi_chuyen = models.CharField(max_length=255, null=True, blank=True, help_text="Nơi chuyển tới (chỉ khi trạng thái là 'Đã chuyển đi')")
     quan_he_voi_chu_ho = models.CharField(max_length=50)
     ghi_chu = models.TextField(null=True, blank=True)
     

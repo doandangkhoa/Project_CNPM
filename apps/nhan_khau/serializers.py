@@ -25,6 +25,8 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
             'trang_thai': {'required': False},
             'ghi_chu': {'required': False, 'allow_blank': True},
             'ho_gia_dinh': {'required': False, 'allow_null': True},
+            'ngay_chuyen_di': {'required': False, 'allow_null': True},
+            'noi_chuyen': {'required': False, 'allow_blank': True},
         }
         
 class BienDongNhanKhauSerializer(serializers.ModelSerializer):
@@ -120,6 +122,7 @@ class NhanKhauSerializer(serializers.ModelSerializer):
             'ngay_cap', 'noi_cap', 'noi_lam_viec',
             'nghe_nghiep', 'quan_he_voi_chu_ho', 'trang_thai', 'trang_thai_hien_thi',
             'thoi_gian_dang_ki_thuong_tru', 'dia_chi_thuong_tru_truoc_day',
+            'ngay_chuyen_di', 'noi_chuyen',
             'ten_ho_khau', 'dia_chi_ho_khau', 'ho_gia_dinh',
             'ghi_chu', 'created_at', 'updated_at', 'bien_dong'
         ]
