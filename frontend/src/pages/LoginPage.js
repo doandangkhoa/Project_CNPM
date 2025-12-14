@@ -39,7 +39,20 @@ function LoginPage({ onLogin }) {
 
       console.log(data.message);
       if (res.ok && data.status === 'success') {
-        onLogin(data.user); // Chuyển vào trang chính
+        onLogin(data.user); // Lưu thông tin user
+        
+        // Redirect dựa trên role của tài khoản
+        const userRole = data.user.role;
+        if (userRole === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (userRole === 'can_bo') {
+          navigate('/can-bo/dashboard');
+        } else if (userRole === 'nguoi_dan') {
+          navigate('/nguoi-dan/dashboard');
+        } else {
+          // Nếu role không xác định, redirect về home
+          navigate('/');
+        }
       } else {
         setError(data.message || 'Đăng nhập thất bại');
       }

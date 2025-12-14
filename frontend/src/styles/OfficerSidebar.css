@@ -1,0 +1,199 @@
+/* Officer Sidebar Styles */
+
+.officer-sidebar {
+  width: 260px;
+  height: 100vh;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  border-right: 1px solid #3b82f6;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #60a5fa #1e40af;
+  color: white;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.officer-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.officer-sidebar::-webkit-scrollbar-track {
+  background: #1e40af;
+}
+
+.officer-sidebar::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 3px;
+}
+
+.officer-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa;
+}
+
+.officer-sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar-header {
+  padding: 1.5rem 1rem;
+  border-bottom: 1px solid #3b82f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.officer-sidebar.collapsed .sidebar-title {
+  opacity: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #bfdbfe;
+  transform: scale(1.05);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  color: #dbeafe;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-left-color: #60a5fa;
+}
+
+.menu-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-left-color: #60a5fa;
+  font-weight: 600;
+}
+
+.menu-item .icon {
+  font-size: 1.25rem;
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.menu-item .label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.3s ease;
+}
+
+.officer-sidebar.collapsed .menu-item .label {
+  opacity: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.officer-sidebar.collapsed .menu-item {
+  padding: 0.875rem 0.75rem;
+  justify-content: center;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid #3b82f6;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.officer-sidebar.collapsed .sidebar-footer {
+  padding: 0.75rem 0.5rem;
+}
+
+.sidebar-footer .menu-item {
+  border-radius: 8px;
+  border-left: none;
+  padding: 0.75rem;
+}
+
+.sidebar-footer .menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 3px solid transparent;
+}
+
+.officer-sidebar.collapsed .sidebar-footer .menu-item {
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .officer-sidebar {
+    position: fixed;
+    left: 0;
+    top: 70px;
+    height: calc(100vh - 70px);
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    width: 260px;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .officer-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .officer-sidebar.collapsed {
+    width: 260px;
+  }
+}
