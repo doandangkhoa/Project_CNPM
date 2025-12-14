@@ -27,7 +27,7 @@
 
 ## Chức năng hệ thống Quản lý Khu Dân Cư
 
-### 1️. Quản lý Nhân khẩu
+### 1️. Quản lý Nhân khẩu (Đã hoàn thành)
 - Mục tiêu: Quản lý thông tin cá nhân của từng người dân.
 - Chức năng:
     - Thêm mới nhân khẩu. Tuấn
@@ -52,7 +52,6 @@
 - Chức năng:
     - Tạo phiếu tạm trú / tạm vắng cho nhân khẩu.
     - Xem chi tiết phiếu.
-    - Gia hạn / kết thúc thời gian tạm trú.
     - Lọc theo loại phiếu, thời gian, trạng thái còn hiệu lực.
     - Xuất danh sách người đang tạm trú / tạm vắng.
 
@@ -65,7 +64,7 @@
     - Ghi nhận tham gia (app ThamGiaSinhHoat).
     - Thống kê tỷ lệ tham gia theo buổi / theo hộ.
 
-### 5. Quản lý Tài khoản người dùng
+### 5. Quản lý Tài khoản người dùng (Đã hoàn thành)
 - Mục tiêu: Xác thực và phân quyền người dùng.
 - Chức năng:
     - Đăng nhập, đăng xuất.
@@ -83,13 +82,6 @@
     - Thống kê gia đình đạt danh hiệu "Gia đình văn hóa" cuối năm.
     - Tạo biểu đồ, xuất báo cáo (PDF / Excel). (optional)
 
-### 7. API Backend (Django REST Framework)
-- Xây dựng các API endpoint cho từng app (CRUD + filter).
-- Thêm xác thực JWT Token (bằng djangorestframework-simplejwt).
-- Thêm phân quyền API (chỉ cán bộ mới được sửa/xóa).
-- Viết serializer cho các model.
-- Viết unit test API (nếu có thời gian).
-- Viết README hướng dẫn cài backend.
 
 ## Frontend Team
 ### Frontend (React hoặc Vue)
