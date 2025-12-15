@@ -287,7 +287,7 @@ const OfficerPopulationManagement = () => {
       quan_he_voi_chu_ho: 'Con trai',
       nghe_nghiep: '',
       noi_lam_viec: '',
-      trang_thai: 'song',
+      trang_thai: 'thuong_tru',
       thoi_gian_dang_ki_thuong_tru: '',
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
@@ -315,7 +315,7 @@ const OfficerPopulationManagement = () => {
       quan_he_voi_chu_ho: population.quan_he_voi_chu_ho || '',
       nghe_nghiep: population.nghe_nghiep || '',
       noi_lam_viec: population.noi_lam_viec || '',
-      trang_thai: population.trang_thai || 'song',
+      trang_thai: population.trang_thai || 'thuong_tru',
       thoi_gian_dang_ki_thuong_tru: population.thoi_gian_dang_ki_thuong_tru || '',
       dia_chi_thuong_tru_truoc_day: population.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: population.ghi_chu || '',
@@ -375,7 +375,17 @@ const OfficerPopulationManagement = () => {
       const method = isEditMode ? 'PATCH' : 'POST';
       const csrfToken = getCsrfToken();
 
-      console.log('Sending data:', formData);
+      // Prepare data with proper date handling
+      // Convert empty strings to null for date fields
+      const submitData = {
+        ...formData,
+        ngay_sinh: formData.ngay_sinh || null,
+        ngay_cap: formData.ngay_cap || null,
+        thoi_gian_dang_ki_thuong_tru: formData.thoi_gian_dang_ki_thuong_tru || null,
+        ngay_chuyen_di: formData.ngay_chuyen_di || null,
+      };
+
+      console.log('Sending data:', submitData);
       console.log('CSRF Token:', csrfToken);
       console.log('URL:', url);
       console.log('Method:', method);
@@ -387,7 +397,7 @@ const OfficerPopulationManagement = () => {
           'Content-Type': 'application/json',
           'X-CSRFToken': csrfToken || '',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       console.log('Response status:', response.status);
@@ -422,17 +432,6 @@ const OfficerPopulationManagement = () => {
     setFormData(null);
     setFormErrors({});
     setEditingId(null);
-  };
-
-  const getStatusLabel = (status) => {
-    const statusMap = {
-      song: 'Còn sống',
-      chet: 'Đã chết',
-      tam_tru: 'Tạm trú',
-      tam_vang: 'Tạm vắng',
-      chuyen_di: 'Chuyển đi',
-    };
-    return statusMap[status] || status;
   };
 
   const calculateAge = (birthDate) => {
@@ -555,8 +554,8 @@ const OfficerPopulationManagement = () => {
                 style={{ width: '70%', padding: '3px', fontSize: '13px', boxSizing: 'border-box' }}
               >
                 <option value="">Tất cả</option>
-                <option value="song">Còn sống</option>
-                <option value="chet">Đã chết</option> 
+                <option value="thuong_tru">Còn sống (Thường trú)</option>
+                <option value="da_chet">Đã chết</option> 
                 <option value="tam_tru">Tạm trú</option>
                 <option value="tam_vang">Tạm vắng</option>
                 <option value="chuyen_di">Chuyển đi</option>
@@ -601,7 +600,7 @@ const OfficerPopulationManagement = () => {
                     <td className="occupation">{pop.nghe_nghiep || '-'}</td>
                     <td>
                       <span className={`status-badge ${pop.trang_thai}`}>
-                        {getStatusLabel(pop.trang_thai)}
+                        {pop.trang_thai_hien_thi || pop.trang_thai}
                       </span>
                     </td>
                     <td className="actions">
@@ -761,7 +760,7 @@ const OfficerPopulationManagement = () => {
                   <div className="detail-item">
                     <label>Trạng Thái:</label>
                     <span className={`status-badge ${selectedPopulation.trang_thai}`}>
-                      {selectedPopulation.trang_thai_hien_thi || getStatusLabel(selectedPopulation.trang_thai)}
+                      {selectedPopulation.trang_thai_hien_thi || selectedPopulation.trang_thai}
                     </span>
                   </div>
                 </div>
@@ -1027,8 +1026,8 @@ const OfficerPopulationManagement = () => {
                         value={formData.trang_thai}
                         onChange={handleFormChange}
                       >
-                        <option value="song">Còn sống</option>
-                        <option value="chet">Đã chết</option>
+                        <option value="thuong_tru">Thường trú</option>
+                        <option value="da_chet">Đã mất</option>
                         <option value="tam_tru">Tạm trú</option>
                         <option value="tam_vang">Tạm vắng</option>
                         <option value="chuyen_di">Chuyển đi</option>

@@ -32,7 +32,6 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
 class BienDongNhanKhauSerializer(serializers.ModelSerializer):
     nhan_khau_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
     loai_bien_dong_hien_thi = serializers.CharField(source='get_loai_bien_dong_display', read_only=True)
-    can_bo_thuc_hien_ten = serializers.SerializerMethodField()
     
     class Meta:
         model = BienDongNhanKhau
@@ -40,22 +39,14 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
                   'nhan_khau',
                   'nhan_khau_ten',
                   'ho_khau',
-                  'can_bo_thuc_hien',
-                  'can_bo_thuc_hien_ten',
                   'loai_bien_dong',
                   'loai_bien_dong_hien_thi',
                   'mo_ta',
-                  'ngay_thay_doi'
+                  'thoi_gian'
         ]
         # frontend không cần gửi các fields này 
-        read_only_fields = ['id', 'ngay_thay_doi', 'can_bo_thuc_hien', 'nhan_khau_ten',
-                            'loai_bien_dong_hien_thi', 'can_bo_thuc_hien_ten']
-    
-    def get_can_bo_thuc_hien_ten(self, obj):
-        """Handle case when can_bo_thuc_hien is None"""
-        if obj.can_bo_thuc_hien and obj.can_bo_thuc_hien.tai_khoan:
-            return obj.can_bo_thuc_hien.tai_khoan.username
-        return "Hệ thống"
+        read_only_fields = ['id', 'thoi_gian', 'nhan_khau_ten',
+                            'loai_bien_dong_hien_thi']
     
     def create(self, validated_data):
         # user called api 
@@ -63,12 +54,11 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
         # Only allow cán bộ positions (tổ trưởng, tổ phó, cán bộ) or superuser
         allowed_positions = ['to_truong', 'to_pho', 'can_bo']
         if not (user.is_superuser or (getattr(user, 'role', None) == 'can_bo' and getattr(user, 'chuc_vu', None) in allowed_positions)):
-            raise serializers.ValidationError("Người dùng hiện tại không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ)")
+            raise serializers.ValidationError("Người dùng hiện tại không có quyền")
 
-        can_bo = CanBo.objects.filter(tai_khoan=user).first()
-        validated_data['can_bo_thuc_hien'] = can_bo
         loai_bien_dong = validated_data.get('loai_bien_dong')
         nhan_khau = validated_data.get('nhan_khau')
+        ho_khau = validated_data.get('ho_khau', None)
         ghi_chu = validated_data.get('mo_ta', '')
         
         with transaction.atomic(): # Đảm bảo cả 2 hành động cùng thành công
@@ -76,12 +66,11 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
             instance = super().create(validated_data)
 
             if loai_bien_dong == 'KHAI_TU':
-                nhan_khau.trang_thai = 'chet'
-                nhan_khau.ghi_chu = "Đã qua đời" 
-                nhan_khau.ngay_xoa = instance.ngay_thay_doi
+                nhan_khau.trang_thai = 'da_chet'
+                nhan_khau.ghi_chu = "Đã qua đời"
                 nhan_khau.save()
             
-            elif loai_bien_dong == 'CHUYEN_KHAU':
+            elif loai_bien_dong == 'CHUYEN_DI':
                 nhan_khau.trang_thai = 'chuyen_di'
                 nhan_khau.ghi_chu = f"Chuyển đi: {ghi_chu}"
                 nhan_khau.save()
@@ -95,7 +84,22 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
                 nhan_khau.trang_thai = 'tam_tru'
                 nhan_khau.ghi_chu = f"Đang tạm trú: {ghi_chu}"
                 nhan_khau.save()
+                
+            elif loai_bien_dong == 'THAY_DOI_CHU_HO':
+                if ho_khau:
+                    ho_khau.id_chu_ho = nhan_khau # Gán nhân khẩu này làm chủ hộ
+                    ho_khau.save()
+                    nhan_khau.quan_he_voi_chu_ho = 'Chu Ho'
+                else:
+                    raise serializers.ValidationError({"ho_khau": "Cần chọn hộ khẩu để thay đổi chủ hộ."})
 
+            elif loai_bien_dong in ['MOI_SINH', 'CHUYEN_DEN']:
+                nhan_khau.trang_thai = 'thuong_tru'
+                if ho_khau:
+                    nhan_khau.ho_gia_dinh = ho_khau
+
+            nhan_khau.save()
+            
         return instance
 
     # {

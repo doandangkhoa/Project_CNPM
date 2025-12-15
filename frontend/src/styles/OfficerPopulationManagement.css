@@ -163,9 +163,21 @@
   text-transform: uppercase;
 }
 
+.status-badge.thuong_tru {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-left: 3px solid #10b981;
+}
+
 .status-badge.song {
   background-color: #d1fae5;
   color: #065f46;
+}
+
+.status-badge.da_chet {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-left: 3px solid #ef4444;
 }
 
 .status-badge.chet {
@@ -176,16 +188,19 @@
 .status-badge.tam_tru {
   background-color: #dbeafe;
   color: #0c4a6e;
+  border-left: 3px solid #3b82f6;
 }
 
 .status-badge.tam_vang {
   background-color: #fef3c7;
   color: #92400e;
+  border-left: 3px solid #f59e0b;
 }
 
 .status-badge.chuyen_di {
   background-color: #f3e8ff;
   color: #5b21b6;
+  border-left: 3px solid #a855f7;
 }
 
 .actions {

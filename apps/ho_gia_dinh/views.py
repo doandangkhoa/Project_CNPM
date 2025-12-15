@@ -4,11 +4,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from datetime import datetime, date
 
 # Import Models
-from apps.nhan_khau.models import HoGiaDinh, NhanKhau, BienDongNhanKhau
+from apps.ho_gia_dinh.models import HoGiaDinh
+from apps.nhan_khau.models import NhanKhau, BienDongNhanKhau
 from apps.can_bo.models import CanBo
 
 # Import Serializers
@@ -16,12 +17,12 @@ from apps.ho_gia_dinh.serializers import HoGiaDinhSerializer, HoGiaDinhCreateUpd
 
 def _user_is_authorized_can_bo(user):
     """Kiểm tra quyền cán bộ"""
-    if not user or not getattr(user, 'is_authenticated', False):
+    if not user or not getattr(user, 'is_authenticated', False): # user chưa login 
         return False
-    if user.is_superuser:
+    if user.is_superuser: # user là admin
         return True
     allowed_positions = ['to_truong', 'to_pho', 'can_bo']
-    return getattr(user, 'role', None) == 'can_bo' and getattr(user, 'chuc_vu', None) in allowed_positions
+    return getattr(user, 'role', None) == 'can_bo' and getattr(user, 'chuc_vu', None) in allowed_positions 
 
 # --- 1. THÊM MỚI ---
 @api_view(['POST'])
@@ -116,10 +117,10 @@ def cap_nhat_ho_gia_dinh(request, pk):
 def chi_tiet_ho_gia_dinh(request, pk):
     '''API lấy chi tiết hộ gia đình theo ID'''
     try:
-        # Quan trọng: prefetch_related('nhankhau_set') để lấy danh sách thành viên
+        # Quan trọng: prefetch_related('nhan_khau') để lấy danh sách thành viên
         # Quan trọng: select_related('id_chu_ho') để lấy tên chủ hộ thực
         ho_gia_dinh = HoGiaDinh.objects.select_related('id_chu_ho')\
-                                       .prefetch_related('nhankhau_set')\
+                                       .prefetch_related('nhan_khau')\
                                        .get(pk=pk)
     except HoGiaDinh.DoesNotExist:
         return Response({
@@ -138,15 +139,17 @@ def chi_tiet_ho_gia_dinh(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def tim_kiem_ho_gia_dinh(request):
-    # Tối ưu query ngay từ đầu
+    # Tối ưu query ngay từ đầu và annotate số thành viên
     queryset = HoGiaDinh.objects.select_related('id_chu_ho')\
-                                .prefetch_related('nhankhau_set').all()
+                                .prefetch_related('nhan_khau')\
+                                .annotate(so_luong_thanh_vien=Count('nhan_khau'))\
+                                .all()
     
     # Fix lỗi: dùng get(..., '') để tránh lỗi NoneType has no attribute 'strip'
     so_ho_khau = request.query_params.get('so_ho_khau', '').strip()
     ho_ten_chu_ho = request.query_params.get('ho_ten_chu_ho', '').strip()
     dia_chi = request.query_params.get('dia_chi', '').strip()
-    phuong_xa = request.query_params.get('phuong_xa', '').strip()
+    so_thanh_vien = request.query_params.get('so_thanh_vien', '').strip()
 
     if so_ho_khau:
         queryset = queryset.filter(so_ho_khau__icontains=so_ho_khau) # icontains linh hoạt hơn iexact
@@ -155,8 +158,13 @@ def tim_kiem_ho_gia_dinh(request):
         queryset = queryset.filter(ho_ten_chu_ho__icontains=ho_ten_chu_ho)
     if dia_chi:
         queryset = queryset.filter(dia_chi__icontains=dia_chi)
-    if phuong_xa:
-        queryset = queryset.filter(phuong_xa__icontains=phuong_xa)
+    if so_thanh_vien:
+        try:
+            so_thanh_vien_int = int(so_thanh_vien)
+            queryset = queryset.filter(so_luong_thanh_vien=so_thanh_vien_int)
+        except ValueError:
+            # Nếu không phải số hợp lệ, bỏ qua filter này
+            pass
     
     # Phân trang
     try:

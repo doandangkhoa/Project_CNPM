@@ -21,14 +21,18 @@ class NhanKhau(models.Model):
     # em be --> moi sinh
     dia_chi_thuong_tru_truoc_day = models.CharField(max_length=255, null=True, blank=True)
     trang_thai = models.CharField(
-        max_length=20,
-        choices=[("song", "còn sống"), 
-                 ("chet", "đã chết"), 
-                 ("tam_tru", "tạm trú"),
-                 ("tam_vang", "tạm vắng"),
-                 ("chuyen_di", "Đã chuyển đi"),
-        ],
-        default="song",
+    max_length=20,
+    choices=[
+        # Nhóm đang cư trú tại địa phương
+        ("thuong_tru", "Thường trú"),  # Thay cho "song" -> Nghe chuẩn pháp lý hơn
+        ("tam_tru", "Tạm trú"),        # Người nơi khác đến
+        
+        # Nhóm vắng mặt hoặc không còn ở
+        ("tam_vang", "Tạm vắng"),      # Người địa phương đi nơi khác tạm thời
+        ("chuyen_di", "Đã chuyển đi"), # Cắt khẩu đi hẳn nơi khác
+        ("da_chet", "Đã qua đời"),      # Thay cho "chet" -> Trang trọng hơn
+    ],
+    default="thuong_tru", # Mặc định sinh ra là thường trú (con cái)
     )
     # Fields for moving/relocation
     ngay_chuyen_di = models.DateField(null=True, blank=True, help_text="Ngày chuyển đi (chỉ khi trạng thái là 'Đã chuyển đi')")
@@ -44,26 +48,24 @@ class NhanKhau(models.Model):
     
 class BienDongNhanKhau(models.Model):
     LOAI_BIEN_DONG = [
-        ('TAO_MOI', 'Thêm nhân khẩu'),
-        ('CAP_NHAT', 'Cập nhật thông tin'),
-        ('XOA', 'Xóa nhân khẩu'),
+        ('THAY_DOI_CHU_HO', 'Thay đổi chủ hộ'),
+        ('MOI_SINH', 'Mới sinh'), 
+        ('CHUYEN_DEN', 'Chuyển đến (Nhập hộ)'),
+        ('CHUYEN_DI', 'Chuyển đi nơi khác'),
         ('KHAI_TU', 'Khai tử'),
         ('TACH_HO', 'Tách hộ'),
-        ('NHAP_HO', 'Nhập hộ'),
-        ('TAM_VANG', 'Tạm vắng'),
-        ('TAM_TRU', 'Tạm trú'),
-        ('CHUYEN_KHAU', 'Chuyển khẩu'),
+        ('TAM_VANG', 'Khai báo tạm vắng'),
+        ('TAM_TRU', 'Đăng ký tạm trú'),
     ]
 
     nhan_khau = models.ForeignKey('nhan_khau.NhanKhau', on_delete=models.CASCADE, related_name='bien_dong_nhan_khau')
     ho_khau = models.ForeignKey('ho_gia_dinh.HoGiaDinh', on_delete=models.CASCADE, related_name='bien_dong_ho_khau', null=True, blank=True)
-    can_bo_thuc_hien = models.ForeignKey('can_bo.CanBo', on_delete=models.SET_NULL, null=True, blank=True, related_name='thay_doi_bien_dong')
     loai_bien_dong = models.CharField(max_length=20, choices=LOAI_BIEN_DONG)
     mo_ta = models.TextField(null=True, blank=True)  # Ghi chú cụ thể: lý do, nơi chuyển đi/đến...
-    ngay_thay_doi = models.DateTimeField(auto_now_add=True)
+    thoi_gian = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.nhan_khau.ho_ten} - {self.get_loai_bien_dong_display()} ({self.ngay_thay_doi.date()})"    
+        return f"{self.nhan_khau.ho_ten} - {self.get_loai_bien_dong_display()} ({self.thoi_gian.date()})"    
     
 class TamVang(models.Model):
     """

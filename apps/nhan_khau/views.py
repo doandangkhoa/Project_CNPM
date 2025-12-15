@@ -80,17 +80,6 @@ def them_moi_nhan_khau(request):
                 # 2. Lưu nhân khẩu mới
                 nhan_khau = serializer.save()
 
-                # 4. Lấy CanBo nếu tồn tại (một số tài khoản cán bộ có thể chưa có bản ghi CanBo)
-                can_bo = CanBo.objects.filter(tai_khoan=user).first()
-
-                # 5. Ghi log biến động TAO_MOI (can_bo có thể là None; field FK cho phép null)
-                BienDongNhanKhau.objects.create(
-                    nhan_khau=nhan_khau,
-                    ho_khau=nhan_khau.ho_gia_dinh,
-                    can_bo_thuc_hien=can_bo,
-                    loai_bien_dong='TAO_MOI',
-                    mo_ta=f"Thêm mới nhân khẩu: {nhan_khau.ho_ten}"
-                )
 
             return Response({
                 'status': 'success',
@@ -129,15 +118,7 @@ def cap_nhat_nhan_khau(request, pk):
             with transaction.atomic():
                 serializer.save()
 
-                # Ghi log CAP_NHAT
-                can_bo = CanBo.objects.filter(tai_khoan=user).first()
-                BienDongNhanKhau.objects.create(
-                    nhan_khau=nhan_khau,
-                    ho_khau=nhan_khau.ho_gia_dinh,
-                    can_bo_thuc_hien=can_bo,
-                    loai_bien_dong='CAP_NHAT',
-                    mo_ta="Cập nhật thông tin nhân khẩu"
-                )
+
 
             return Response({'status': 'success', 'message': 'Cập nhật thành công'}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -367,22 +348,10 @@ def xoa_nhan_khau(request, pk):
 
     try:
         with transaction.atomic():
-            # 1. Kiểm tra quyền
             user = request.user
             if not _user_is_authorized_can_bo(user):
                 return Response({'status': 'error', 'message': 'User không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ được phép)'}, status=status.HTTP_403_FORBIDDEN)
 
-            # 2. Tạo biến động loại XOA (ghi log trước khi xóa)
-            can_bo = CanBo.objects.filter(tai_khoan=user).first()
-            BienDongNhanKhau.objects.create(
-                nhan_khau=nhan_khau,
-                ho_khau=nhan_khau.ho_gia_dinh,
-                can_bo_thuc_hien=can_bo,
-                loai_bien_dong='XOA',
-                mo_ta=ly_do
-            )
-
-            # 3. Xóa hẳn nhân khẩu từ database
             nhan_khau.delete()
 
         return Response({'status': 'success', 'message': 'Đã xóa nhân khẩu thành công'}, status=status.HTTP_200_OK)
@@ -420,7 +389,7 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     """
     # 1. Kiểm tra hộ khẩu có tồn tại không
     try:
-        ho_gia_dinh = HoGiaDinh.objects.get(pk=ho_khau_id)
+        ho_gia_dinh = HoGiaDinh.objects.select_related('id_chu_ho').get(pk=ho_khau_id)
     except HoGiaDinh.DoesNotExist:
         return Response({
             'status': 'error',
@@ -430,8 +399,8 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     # 2. Truy vấn bảng Biến động, lọc theo ho_khau
     # select_related để tối ưu truy vấn (tránh query lặp lại vào bảng NhanKhau và CanBo)
     lich_su = BienDongNhanKhau.objects.filter(ho_khau_id=ho_khau_id)\
-                                      .select_related('nhan_khau', 'can_bo_thuc_hien')\
-                                      .order_by('-ngay_thay_doi') # Mới nhất lên đầu
+                                      .select_related('nhan_khau')\
+                                      .order_by('-thoi_gian') # Mới nhất lên đầu
 
     # 3. Serialize dữ liệu
     serializer = BienDongNhanKhauSerializer(lich_su, many=True)

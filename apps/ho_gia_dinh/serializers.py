@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from apps.nhan_khau.models import HoGiaDinh, NhanKhau
+from apps.ho_gia_dinh.models import HoGiaDinh
+from apps.nhan_khau.models import NhanKhau
 from datetime import date
 
 # --- 1. Serializer Input (Giữ nguyên) ---
@@ -10,11 +11,11 @@ class HoGiaDinhCreateUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'so_ho_khau': {'required': True},
             'ho_ten_chu_ho': {'required': True},
-            'id_chu_ho': {'required': False, 'allow_null': True, 'allow_blank': True},
+            'id_chu_ho': {'required': False, 'allow_null': True},
             'dia_chi': {'required': True},
             'phuong_xa': {'required': True},
-            'so_dien_thoai': {'required': False, 'allow_null': True, 'allow_blank': True},
-            'ghi_chu': {'required': False, 'allow_null': True, 'allow_blank': True},
+            'so_dien_thoai': {'required': False, 'allow_null': True},
+            'ghi_chu': {'required': False, 'allow_null': True},
         }
 
 # --- 2. Serializer Thành viên ---
