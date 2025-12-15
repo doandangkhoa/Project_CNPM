@@ -48,9 +48,40 @@ const HouseholdManagement = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [editingId, setEditingId] = useState(null);
+  const [populationChanges, setPopulationChanges] = useState([]);
+  const [showBienDong, setShowBienDong] = useState(false);
   const searchTimeoutRef = useRef(null);
 
   const itemsPerPage = 10;
+
+  // Fetch population changes for a household
+  const fetchPopulationChanges = async (householdId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/nhan-khau/bien-dong/ho-khau/${householdId}/`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setPopulationChanges(data.data || []);
+    } catch (err) {
+      console.error('Error fetching population changes:', err);
+      setPopulationChanges([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch households from API
   const fetchHouseholds = async (page = 1, search = '', advSearch = null) => {
@@ -172,8 +203,9 @@ const HouseholdManagement = () => {
       thoi_gian_dang_ki_thuong_tru: member.thoi_gian_dang_ki_thuong_tru || '',
       dia_chi_thuong_tru_truoc_day: member.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: member.ghi_chu || '',
-      ngay_chuyen_di: member.ngay_chuyen_di || '',
-      noi_chuyen: member.noi_chuyen || '',
+      ngay_bat_dau: '',
+      ngay_ket_thuc: '',
+      noi_chuyen: '',
     });
     setEditingId(member.id);
     setFormType('member');
@@ -206,9 +238,10 @@ const HouseholdManagement = () => {
       thoi_gian_dang_ki_thuong_tru: '',
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
-      ngay_chuyen_di: '',
-      noi_chuyen: '',
       ho_gia_dinh: selectedHousehold.id,
+      ngay_bat_dau: '',
+      ngay_ket_thuc: '',
+      noi_chuyen: '',
     });
     setEditingId(null);
     setFormType('member');
@@ -271,6 +304,9 @@ const HouseholdManagement = () => {
       const data = await response.json();
       setSelectedHousehold(data.data || data);
       setShowDetail(true);
+      setShowBienDong(false);
+      // Fetch population changes for this household
+      await fetchPopulationChanges(household.id);
     } catch (err) {
       setError(err.message || 'Lỗi khi tải chi tiết');
       console.error('Error fetching detail:', err);
@@ -379,6 +415,13 @@ const HouseholdManagement = () => {
         submitData = {
           ...formData,
           ho_gia_dinh: formData.ho_gia_dinh || selectedHousehold?.id,
+          // Convert empty date strings to null
+          ngay_sinh: formData.ngay_sinh || null,
+          ngay_cap: formData.ngay_cap || null,
+          thoi_gian_dang_ki_thuong_tru: formData.thoi_gian_dang_ki_thuong_tru || null,
+          ngay_bat_dau: formData.ngay_bat_dau || null,
+          ngay_ket_thuc: formData.ngay_ket_thuc || null,
+          noi_chuyen: formData.noi_chuyen || '',
         };
       }
 
@@ -421,6 +464,8 @@ const HouseholdManagement = () => {
           });
           const detailData = await response.json();
           setSelectedHousehold(detailData.data || detailData);
+          // Refresh population changes after member update
+          await fetchPopulationChanges(selectedHousehold.id);
         }
       }
       
@@ -788,6 +833,61 @@ const HouseholdManagement = () => {
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {!showBienDong && (
+                <div className="detail-section">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => setShowBienDong(true)}
+                    style={{ marginTop: '15px' }}
+                  >
+                    Xem Biến Động Nhân Khẩu
+                  </button>
+                </div>
+              )}
+
+              {showBienDong && (
+                <div className="detail-section">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <h4 style={{ margin: 0 }}>Biến Động Nhân Khẩu ({populationChanges.length})</h4>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => setShowBienDong(false)}
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                    >
+                      Ẩn
+                    </button>
+                  </div>
+                  {populationChanges.length > 0 ? (
+                    <table className="members-table">
+                      <thead>
+                        <tr>
+                          <th>Họ Tên</th>
+                          <th>Loại Biến Động</th>
+                          <th>Từ Ngày</th>
+                          <th>Đến Ngày</th>
+                          <th>Nơi Chuyển</th>
+                          <th>Cập Nhật</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {populationChanges.map((change, idx) => (
+                          <tr key={idx}>
+                            <td>{change.nhan_khau_ten}</td>
+                            <td>{change.loai_bien_dong_hien_thi || change.loai_bien_dong}</td>
+                            <td>{change.ngay_bat_dau ? new Date(change.ngay_bat_dau).toLocaleDateString('vi-VN') : '-'}</td>
+                            <td>{change.ngay_ket_thuc ? new Date(change.ngay_ket_thuc).toLocaleDateString('vi-VN') : '-'}</td>
+                            <td>{change.noi_chuyen || '-'}</td>
+                            <td>{new Date(change.thoi_gian).toLocaleDateString('vi-VN')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p style={{ color: '#7f8c8d', fontStyle: 'italic' }}>Không có biến động nào</p>
+                  )}
                 </div>
               )}
             </div>
@@ -1180,22 +1280,49 @@ const HouseholdManagement = () => {
                             <option value="chuyen_di">Chuyển đi</option>
                           </select>
                         </div>
+                      </div>
 
-                        {formData.trang_thai === 'chuyen_di' && (
-                          <>
-                            <div className="detail-item">
-                              <label>Ngày Chuyển Đi</label>
-                              <input
-                                type="date"
-                                name="ngay_chuyen_di"
-                                value={formData.ngay_chuyen_di}
-                                onChange={handleFormChange}
-                                style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
-                              />
-                            </div>
+                      {/* Time Fields for Status Changes */}
+                      {(formData.trang_thai === 'da_chet') && (
+                        <div className="detail-grid">
+                          <div className="detail-item">
+                            <label>Ngày Sự Kiện *</label>
+                            <input
+                              type="date"
+                              name="ngay_bat_dau"
+                              value={formData.ngay_bat_dau}
+                              onChange={handleFormChange}
+                              style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
-                            <div className="detail-item">
-                              <label>Nơi Chuyển</label>
+                      {(formData.trang_thai === 'tam_tru' || formData.trang_thai === 'tam_vang' || formData.trang_thai === 'chuyen_di') && (
+                        <div className="detail-grid">
+                          <div className="detail-item">
+                            <label>Ngày Bắt Đầu *</label>
+                            <input
+                              type="date"
+                              name="ngay_bat_dau"
+                              value={formData.ngay_bat_dau}
+                              onChange={handleFormChange}
+                              style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div className="detail-item">
+                            <label>Ngày Kết Thúc</label>
+                            <input
+                              type="date"
+                              name="ngay_ket_thuc"
+                              value={formData.ngay_ket_thuc}
+                              onChange={handleFormChange}
+                              style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          {formData.trang_thai === 'chuyen_di' && (
+                            <div className="detail-item" style={{ gridColumn: '1 / -1' }}>
+                              <label>Nơi Chuyển Đi</label>
                               <input
                                 type="text"
                                 name="noi_chuyen"
@@ -1205,9 +1332,9 @@ const HouseholdManagement = () => {
                                 style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                               />
                             </div>
-                          </>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="form-section">
@@ -1381,22 +1508,7 @@ const HouseholdManagement = () => {
                 </div>
               </div>
 
-              {/* Relocation Info */}
-              {selectedMember.trang_thai === 'chuyen_di' && (
-                <div className="detail-section">
-                  <h4>Thông Tin Chuyển Đi</h4>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <label>Ngày Chuyển Đi:</label>
-                      <span>{selectedMember.ngay_chuyen_di ? new Date(selectedMember.ngay_chuyen_di).toLocaleDateString('vi-VN') : '-'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Nơi Chuyển:</label>
-                      <span>{selectedMember.noi_chuyen || '-'}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Relocation Info moved to BienDongNhanKhau */}
 
               <div className="detail-section">
                 <h4>Thông Tin Hệ Thống</h4>

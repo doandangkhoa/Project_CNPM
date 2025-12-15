@@ -16,7 +16,7 @@
 
 .members-table th {
   padding: 10px;
-  text-align: left;
+  text-align: center;
   border-bottom: 2px solid #dee2e6;
   font-weight: 600;
   color: #2c3e50;
@@ -131,7 +131,8 @@ textarea {
   align-items: center;
   padding: 20px;
   border-bottom: 1px solid #e9ecef;
-  sticky: top;
+  position: sticky;
+  top: 0;
   background: white;
 }
 

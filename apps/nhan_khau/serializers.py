@@ -8,14 +8,19 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
     # Allow frontend to send household name to find and link the household
     ten_ho_khau = serializers.CharField(write_only=True, required=False, allow_blank=True)
     dia_chi_ho_khau = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    # Fields for BienDongNhanKhau when status changes
+    ngay_bat_dau = serializers.DateField(write_only=True, required=False, allow_null=True)
+    ngay_ket_thuc = serializers.DateField(write_only=True, required=False, allow_null=True)
+    noi_chuyen = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
     class Meta:
         model = NhanKhau
         fields = ['id', 'ho_ten', 'bi_danh', 'gioi_tinh', 'ngay_sinh', 'noi_sinh', 'nguyen_quan', 
                   'dan_toc', 'nghe_nghiep', 'noi_lam_viec', 'so_cccd', 'ngay_cap', 'noi_cap',
                   'quan_he_voi_chu_ho', 'thoi_gian_dang_ki_thuong_tru', 'dia_chi_thuong_tru_truoc_day',
-                  'trang_thai', 'ngay_chuyen_di', 'noi_chuyen', 'ghi_chu', 'ho_gia_dinh',
-                  'created_at', 'updated_at', 'ten_ho_khau', 'dia_chi_ho_khau']
+                  'trang_thai', 'ghi_chu', 'ho_gia_dinh',
+                  'created_at', 'updated_at', 'ten_ho_khau', 'dia_chi_ho_khau',
+                  'ngay_bat_dau', 'ngay_ket_thuc', 'noi_chuyen']
         extra_kwargs = {
             'ho_ten': {'required': False},
             'bi_danh': {'required': False, 'allow_blank': True},
@@ -34,8 +39,9 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
             'trang_thai': {'required': False},
             'ghi_chu': {'required': False, 'allow_blank': True},
             'ho_gia_dinh': {'required': False, 'allow_null': True},
-            'ngay_chuyen_di': {'required': False, 'allow_null': True},
-            'noi_chuyen': {'required': False, 'allow_blank': True},
+            'ngay_bat_dau': {'required': False, 'allow_null': True},
+            'ngay_ket_thuc': {'required': False, 'allow_null': True},
+            'noi_chuyen': {'required': False, 'allow_blank': True, 'allow_null': True},
             'id': {'read_only': True},
             'created_at': {'read_only': True},
             'updated_at': {'read_only': True},
@@ -60,6 +66,10 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
         # Extract household name if provided
         ten_ho_khau = validated_data.pop('ten_ho_khau', None)
         dia_chi_ho_khau = validated_data.pop('dia_chi_ho_khau', None)
+        # Extract BienDongNhanKhau related fields
+        ngay_bat_dau = validated_data.pop('ngay_bat_dau', None)
+        ngay_ket_thuc = validated_data.pop('ngay_ket_thuc', None)
+        noi_chuyen = validated_data.pop('noi_chuyen', None)
         
         # Find and link household if household name is provided
         if ten_ho_khau:
@@ -69,7 +79,52 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
             except HoGiaDinh.DoesNotExist:
                 raise serializers.ValidationError(f"Không tìm thấy hộ khẩu '{ten_ho_khau}'")
         
-        return super().update(instance, validated_data)
+        # Detect status changes and create corresponding BienDongNhanKhau record
+        old_status = instance.trang_thai
+        old_status_display = instance.get_trang_thai_display()
+        new_status = validated_data.get('trang_thai', old_status)
+        with transaction.atomic():
+            # Update the instance
+            updated_instance = super().update(instance, validated_data)
+            
+            # If status changed, create a BienDongNhanKhau record
+            if old_status != new_status:
+                loai_bien_dong_map = {
+                    'da_chet': 'KHAI_TU',
+                    'chuyen_di': 'CHUYEN_DI',
+                    'tam_vang': 'TAM_VANG',
+                    'tam_tru': 'TAM_TRU',
+                    'thuong_tru': 'CHUYEN_DEN',  # Chuyển từ tạm thú sang thường trú
+                }
+                new_status_display = updated_instance.get_trang_thai_display()
+                loai_bien_dong = loai_bien_dong_map.get(new_status)
+                if loai_bien_dong:
+                    # Tạo mô tả phù hợp với loại biến động
+                    if loai_bien_dong == 'KHAI_TU':
+                        mo_ta = f"{updated_instance.ho_ten} đã qua đời."
+                    elif loai_bien_dong == 'CHUYEN_DI':
+                        noi_chuyen_text = noi_chuyen or "chưa xác định"
+                        mo_ta = f"{updated_instance.ho_ten} chuyển đi {noi_chuyen_text}."
+                    elif loai_bien_dong == 'TAM_VANG':
+                        mo_ta = f"{updated_instance.ho_ten} đăng ký tạm vắng."
+                    elif loai_bien_dong == 'TAM_TRU':
+                        mo_ta = f"{updated_instance.ho_ten} đăng ký tạm trú."
+                    elif loai_bien_dong == 'CHUYEN_DEN':
+                        mo_ta = f"{updated_instance.ho_ten} chuyển đến."
+                    else:
+                        mo_ta = f"Thay đổi trạng thái từ {old_status_display} sang {new_status_display}."
+                        
+                    BienDongNhanKhau.objects.create(
+                        nhan_khau=updated_instance,
+                        ho_khau=updated_instance.ho_gia_dinh,
+                        loai_bien_dong=loai_bien_dong,
+                        mo_ta=mo_ta,
+                        ngay_bat_dau=ngay_bat_dau,
+                        ngay_ket_thuc=ngay_ket_thuc,
+                        noi_chuyen=noi_chuyen
+                    )
+        
+        return updated_instance
         
 class BienDongNhanKhauSerializer(serializers.ModelSerializer):
     nhan_khau_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
@@ -84,20 +139,23 @@ class BienDongNhanKhauSerializer(serializers.ModelSerializer):
                   'loai_bien_dong',
                   'loai_bien_dong_hien_thi',
                   'mo_ta',
+                  'ngay_bat_dau',
+                  'ngay_ket_thuc',
+                  'noi_chuyen',
+                  'ngay_chuyen_di',
                   'thoi_gian'
         ]
         # frontend không cần gửi các fields này 
         read_only_fields = ['id', 'thoi_gian', 'nhan_khau_ten',
                             'loai_bien_dong_hien_thi']
+        extra_kwargs = {
+            'ngay_bat_dau': {'required': False, 'allow_null': True},
+            'ngay_ket_thuc': {'required': False, 'allow_null': True},
+            'noi_chuyen': {'required': False, 'allow_blank': True},
+            'ngay_chuyen_di': {'required': False, 'allow_null': True},
+        }
     
     def create(self, validated_data):
-        # user called api 
-        user = self.context['request'].user
-        # Only allow cán bộ positions (tổ trưởng, tổ phó, cán bộ) or superuser
-        allowed_positions = ['to_truong', 'to_pho', 'can_bo']
-        if not (user.is_superuser or (getattr(user, 'role', None) == 'can_bo' and getattr(user, 'chuc_vu', None) in allowed_positions)):
-            raise serializers.ValidationError("Người dùng hiện tại không có quyền")
-
         loai_bien_dong = validated_data.get('loai_bien_dong')
         nhan_khau = validated_data.get('nhan_khau')
         ho_khau = validated_data.get('ho_khau', None)
@@ -168,7 +226,6 @@ class NhanKhauSerializer(serializers.ModelSerializer):
             'ngay_cap', 'noi_cap', 'noi_lam_viec',
             'nghe_nghiep', 'quan_he_voi_chu_ho', 'trang_thai', 'trang_thai_hien_thi',
             'thoi_gian_dang_ki_thuong_tru', 'dia_chi_thuong_tru_truoc_day',
-            'ngay_chuyen_di', 'noi_chuyen',
             'ten_ho_khau', 'dia_chi_ho_khau', 'ho_gia_dinh',
             'ghi_chu', 'created_at', 'updated_at', 'bien_dong'
         ]

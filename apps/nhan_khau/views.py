@@ -99,7 +99,7 @@ def them_moi_nhan_khau(request):
 def cap_nhat_nhan_khau(request, pk):
     """
     API cập nhật thông tin nhân khẩu.
-    Tự động ghi log 'CAP_NHAT'.
+    Tự động ghi log biến động nhân khẩu.
     """
     try:
         nhan_khau = NhanKhau.objects.get(pk=pk)
@@ -117,9 +117,7 @@ def cap_nhat_nhan_khau(request, pk):
         try:
             with transaction.atomic():
                 serializer.save()
-
-
-
+                
             return Response({'status': 'success', 'message': 'Cập nhật thành công'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -414,6 +412,7 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     }, status=status.HTTP_200_OK)
 
 
+# chức năng này bổ sung cho chức năng thêm nhân khẩu
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def danh_sach_ho_gia_dinh(request):

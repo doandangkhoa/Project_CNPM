@@ -316,7 +316,8 @@ const OfficerPopulationManagement = () => {
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
       ho_gia_dinh: '',
-      ngay_chuyen_di: '',
+      ngay_bat_dau: '',
+      ngay_ket_thuc: '',
       noi_chuyen: '',
     });
     setIsEditMode(false);
@@ -344,8 +345,9 @@ const OfficerPopulationManagement = () => {
       dia_chi_thuong_tru_truoc_day: population.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: population.ghi_chu || '',
       ho_gia_dinh: population.ho_gia_dinh?.id || population.ho_gia_dinh || '',
-      ngay_chuyen_di: population.ngay_chuyen_di || '',
-      noi_chuyen: population.noi_chuyen || '',
+      ngay_bat_dau: '',
+      ngay_ket_thuc: '',
+      noi_chuyen: '',
     });
     setEditingId(population.id);
     setIsEditMode(true);
@@ -406,7 +408,9 @@ const OfficerPopulationManagement = () => {
         ngay_sinh: formData.ngay_sinh || null,
         ngay_cap: formData.ngay_cap || null,
         thoi_gian_dang_ki_thuong_tru: formData.thoi_gian_dang_ki_thuong_tru || null,
-        ngay_chuyen_di: formData.ngay_chuyen_di || null,
+        ngay_bat_dau: formData.ngay_bat_dau || null,
+        ngay_ket_thuc: formData.ngay_ket_thuc || null,
+        noi_chuyen: formData.noi_chuyen || '',
       };
 
       console.log('Sending data:', submitData);
@@ -792,21 +796,6 @@ const OfficerPopulationManagement = () => {
               </div>
 
               {/* Relocation Info - Only show when status is "chuyen_di" */}
-              {selectedPopulation.trang_thai === 'chuyen_di' && (
-                <div className="detail-section">
-                  <h4>Thông Tin Chuyển Đi</h4>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <label>Ngày Chuyển Đi:</label>
-                      <span>{selectedPopulation.ngay_chuyen_di ? new Date(selectedPopulation.ngay_chuyen_di).toLocaleDateString('vi-VN') : '-'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Nơi Chuyển:</label>
-                      <span>{selectedPopulation.noi_chuyen || '-'}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="detail-section">
                 <h4>Thông Tin Hệ Thống</h4>
@@ -1117,38 +1106,63 @@ const OfficerPopulationManagement = () => {
                       </select>
                     </div>
                   </div>
-                </div>
 
-                {/* Relocation Info - Only show when status is "chuyen_di" */}
-                {formData.trang_thai === 'chuyen_di' && (
-                  <div className="form-section">
-                    <h4>Thông Tin Chuyển Đi</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {/* Time Fields for Status Changes */}
+                  {(formData.trang_thai === 'da_chet') && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Chuyển Đi</label>
+                        <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Sự Kiện *</label>
                         <input
                           type="date"
-                          name="ngay_chuyen_di"
-                          value={formData.ngay_chuyen_di}
+                          name="ngay_bat_dau"
+                          value={formData.ngay_bat_dau}
                           onChange={handleFormChange}
-                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Chuyển</label>
-                        <input
-                          type="text"
-                          name="noi_chuyen"
-                          value={formData.noi_chuyen}
-                          onChange={handleFormChange}
-                          placeholder="Nơi chuyển đi"
                           style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                         />
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {(formData.trang_thai === 'tam_tru' || formData.trang_thai === 'tam_vang' || formData.trang_thai === 'chuyen_di') && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Bắt Đầu *</label>
+                        <input
+                          type="date"
+                          name="ngay_bat_dau"
+                          value={formData.ngay_bat_dau}
+                          onChange={handleFormChange}
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Kết Thúc</label>
+                        <input
+                          type="date"
+                          name="ngay_ket_thuc"
+                          value={formData.ngay_ket_thuc}
+                          onChange={handleFormChange}
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      {formData.trang_thai === 'chuyen_di' && (
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Chuyển Đi</label>
+                          <input
+                            type="text"
+                            name="noi_chuyen"
+                            value={formData.noi_chuyen}
+                            onChange={handleFormChange}
+                            placeholder="Nơi chuyển đi"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Relocation Info moved to BienDongNhanKhau */}
 
                 <div className="form-section">
                   <h4>Ghi Chú</h4>
