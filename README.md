@@ -27,7 +27,7 @@
 
 ## Chức năng hệ thống Quản lý Khu Dân Cư
 
-### 1️. Quản lý Nhân khẩu
+### 1️. Quản lý Nhân khẩu (Đã hoàn thành)
 - Mục tiêu: Quản lý thông tin cá nhân của từng người dân.
 - Chức năng:
     - Thêm mới nhân khẩu. Tuấn
@@ -52,7 +52,6 @@
 - Chức năng:
     - Tạo phiếu tạm trú / tạm vắng cho nhân khẩu.
     - Xem chi tiết phiếu.
-    - Gia hạn / kết thúc thời gian tạm trú.
     - Lọc theo loại phiếu, thời gian, trạng thái còn hiệu lực.
     - Xuất danh sách người đang tạm trú / tạm vắng.
 
@@ -65,7 +64,7 @@
     - Ghi nhận tham gia (app ThamGiaSinhHoat).
     - Thống kê tỷ lệ tham gia theo buổi / theo hộ.
 
-### 5. Quản lý Tài khoản người dùng
+### 5. Quản lý Tài khoản người dùng (Đã hoàn thành)
 - Mục tiêu: Xác thực và phân quyền người dùng.
 - Chức năng:
     - Đăng nhập, đăng xuất.
