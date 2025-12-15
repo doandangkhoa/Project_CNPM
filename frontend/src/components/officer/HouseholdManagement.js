@@ -183,6 +183,40 @@ const HouseholdManagement = () => {
     setShowFormModal(true);
   };
 
+  const handleAddNewMember = () => {
+    if (!selectedHousehold) {
+      setError('Vui lòng chọn hộ khẩu trước');
+      return;
+    }
+    setFormData({
+      ho_ten: '',
+      gioi_tinh: 'Nam',
+      ngay_sinh: '',
+      noi_sinh: '',
+      nguyen_quan: '',
+      dan_toc: 'Kinh',
+      bi_danh: '',
+      so_cccd: '',
+      ngay_cap: '',
+      noi_cap: '',
+      quan_he_voi_chu_ho: '',
+      nghe_nghiep: '',
+      noi_lam_viec: '',
+      trang_thai: 'thuong_tru',
+      thoi_gian_dang_ki_thuong_tru: '',
+      dia_chi_thuong_tru_truoc_day: '',
+      ghi_chu: '',
+      ngay_chuyen_di: '',
+      noi_chuyen: '',
+      ho_gia_dinh: selectedHousehold.id,
+    });
+    setEditingId(null);
+    setFormType('member');
+    setIsEditMode(false);
+    setFormErrors({});
+    setShowFormModal(true);
+  };
+
   const handleResetAdvancedSearch = () => {
     setAdvancedSearch({
       so_ho_khau: '',
@@ -335,9 +369,17 @@ const HouseholdManagement = () => {
           id_chu_ho: formData.id_chu_ho || null,
         };
       } else if (formType === 'member') {
-        url = `${API_BASE_URL}/nhan-khau/${editingId}/cap-nhat/`;
-        method = 'PATCH';
-        submitData = formData;
+        if (isEditMode) {
+          url = `${API_BASE_URL}/nhan-khau/${editingId}/cap-nhat/`;
+          method = 'PATCH';
+        } else {
+          url = `${API_BASE_URL}/nhan-khau/them-moi/`;
+          method = 'POST';
+        }
+        submitData = {
+          ...formData,
+          ho_gia_dinh: formData.ho_gia_dinh || selectedHousehold?.id,
+        };
       }
 
       const csrfToken = getCsrfToken();
@@ -695,7 +737,16 @@ const HouseholdManagement = () => {
 
               {selectedHousehold.danh_sach_thanh_vien && selectedHousehold.danh_sach_thanh_vien.length > 0 && (
                 <div className="detail-section">
-                  <h4>Danh Sách Thành Viên ({selectedHousehold.so_luong_thanh_vien})</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <h4 style={{ margin: 0 }}>Danh Sách Thành Viên ({selectedHousehold.so_luong_thanh_vien})</h4>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={handleAddNewMember}
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                    >
+                      + Thêm Thành Viên
+                    </button>
+                  </div>
                   <table className="members-table">
                     <thead>
                       <tr>
@@ -798,9 +849,8 @@ const HouseholdManagement = () => {
                   <>
                     <div className="form-section">
                       <h4>Thông Tin Hộ Khẩu</h4>
-
-                      <div className="form-row">
-                        <div className="form-group">
+                      <div className="detail-grid">
+                        <div className="detail-item">
                           <label>Số Hộ Khẩu *</label>
                           <input
                             type="text"
@@ -809,11 +859,12 @@ const HouseholdManagement = () => {
                             onChange={handleFormChange}
                             placeholder="Số hộ khẩu"
                             className={formErrors.so_ho_khau ? 'error' : ''}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                           {formErrors.so_ho_khau && <span className="error-text">{formErrors.so_ho_khau}</span>}
                         </div>
 
-                        <div className="form-group">
+                        <div className="detail-item">
                           <label>Tên Chủ Hộ *</label>
                           <input
                             type="text"
@@ -822,13 +873,12 @@ const HouseholdManagement = () => {
                             onChange={handleFormChange}
                             placeholder="Tên chủ hộ"
                             className={formErrors.ho_ten_chu_ho ? 'error' : ''}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                           {formErrors.ho_ten_chu_ho && <span className="error-text">{formErrors.ho_ten_chu_ho}</span>}
                         </div>
-                      </div>
 
-                      <div className="form-row">
-                        <div className="form-group">
+                        <div className="detail-item" style={{ gridColumn: '1 / -1' }}>
                           <label>Địa Chỉ *</label>
                           <input
                             type="text"
@@ -837,11 +887,12 @@ const HouseholdManagement = () => {
                             onChange={handleFormChange}
                             placeholder="Địa chỉ"
                             className={formErrors.dia_chi ? 'error' : ''}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                           {formErrors.dia_chi && <span className="error-text">{formErrors.dia_chi}</span>}
                         </div>
 
-                        <div className="form-group">
+                        <div className="detail-item">
                           <label>Phường/Xã *</label>
                           <input
                             type="text"
@@ -850,13 +901,12 @@ const HouseholdManagement = () => {
                             onChange={handleFormChange}
                             placeholder="Phường/xã"
                             className={formErrors.phuong_xa ? 'error' : ''}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                           {formErrors.phuong_xa && <span className="error-text">{formErrors.phuong_xa}</span>}
                         </div>
-                      </div>
 
-                      <div className="form-row">
-                        <div className="form-group">
+                        <div className="detail-item">
                           <label>Điện Thoại</label>
                           <input
                             type="text"
@@ -864,10 +914,11 @@ const HouseholdManagement = () => {
                             value={formData.so_dien_thoai}
                             onChange={handleFormChange}
                             placeholder="Số điện thoại"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                         </div>
 
-                        <div className="form-group">
+                        <div className="detail-item">
                           <label>ID Chủ Hộ (Nhân Khẩu)</label>
                           <input
                             type="number"
@@ -875,6 +926,7 @@ const HouseholdManagement = () => {
                             value={formData.id_chu_ho}
                             onChange={handleFormChange}
                             placeholder="ID của chủ hộ (nếu có)"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                         </div>
                       </div>
@@ -882,13 +934,14 @@ const HouseholdManagement = () => {
 
                     <div className="form-section">
                       <h4>Ghi Chú</h4>
-                      <div className="form-group">
+                      <div>
                         <textarea
                           name="ghi_chu"
                           value={formData.ghi_chu}
                           onChange={handleFormChange}
                           placeholder="Ghi chú thêm"
-                          rows="3"
+                          rows="4"
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                         />
                       </div>
                     </div>
@@ -900,83 +953,22 @@ const HouseholdManagement = () => {
                   <>
                     <div className="form-section">
                       <h4>Thông Tin Cơ Bản</h4>
-                      
-                      <div className="form-group">
-                        <label>Họ Tên *</label>
-                        <input
-                          type="text"
-                          name="ho_ten"
-                          value={formData.ho_ten}
-                          onChange={handleFormChange}
-                          className={formErrors.ho_ten ? 'error' : ''}
-                          placeholder="Nhập họ tên"
-                        />
-                        {formErrors.ho_ten && <span className="error-text">{formErrors.ho_ten}</span>}
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Giới Tính</label>
-                          <select
-                            name="gioi_tinh"
-                            value={formData.gioi_tinh}
-                            onChange={handleFormChange}
-                          >
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                          </select>
-                        </div>
-
-                        <div className="form-group">
-                          <label>Ngày Sinh *</label>
-                          <input
-                            type="date"
-                            name="ngay_sinh"
-                            value={formData.ngay_sinh}
-                            onChange={handleFormChange}
-                            className={formErrors.ngay_sinh ? 'error' : ''}
-                          />
-                          {formErrors.ngay_sinh && <span className="error-text">{formErrors.ngay_sinh}</span>}
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Nơi Sinh</label>
+                      <div className="detail-grid">
+                        <div className="detail-item">
+                          <label>Họ Tên *</label>
                           <input
                             type="text"
-                            name="noi_sinh"
-                            value={formData.noi_sinh}
+                            name="ho_ten"
+                            value={formData.ho_ten}
                             onChange={handleFormChange}
-                            placeholder="Nơi sinh"
+                            className={formErrors.ho_ten ? 'error' : ''}
+                            placeholder="Nhập họ tên"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
+                          {formErrors.ho_ten && <span className="error-text">{formErrors.ho_ten}</span>}
                         </div>
-
-                        <div className="form-group">
-                          <label>Quê Quán</label>
-                          <input
-                            type="text"
-                            name="nguyen_quan"
-                            value={formData.nguyen_quan}
-                            onChange={handleFormChange}
-                            placeholder="Quê quán"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Dân Tộc</label>
-                          <input
-                            type="text"
-                            name="dan_toc"
-                            value={formData.dan_toc}
-                            onChange={handleFormChange}
-                            placeholder="Dân tộc"
-                          />
-                        </div>
-
-                        <div className="form-group">
+                        
+                        <div className="detail-item">
                           <label>Biệt Danh</label>
                           <input
                             type="text"
@@ -984,12 +976,149 @@ const HouseholdManagement = () => {
                             value={formData.bi_danh}
                             onChange={handleFormChange}
                             placeholder="Biệt danh"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        
+                        <div className="detail-item">
+                          <label>Giới Tính</label>
+                          <select
+                            name="gioi_tinh"
+                            value={formData.gioi_tinh}
+                            onChange={handleFormChange}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          >
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                          </select>
+                        </div>
+
+                        <div className="detail-item">
+                          <label>Ngày Sinh *</label>
+                          <input
+                            type="date"
+                            name="ngay_sinh"
+                            value={formData.ngay_sinh}
+                            onChange={handleFormChange}
+                            className={formErrors.ngay_sinh ? 'error' : ''}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                          {formErrors.ngay_sinh && <span className="error-text">{formErrors.ngay_sinh}</span>}
+                        </div>
+                        
+                        <div className="detail-item">
+                          <label>Nơi Sinh</label>
+                          <input
+                            type="text"
+                            name="noi_sinh"
+                            value={formData.noi_sinh}
+                            onChange={handleFormChange}
+                            placeholder="Nơi sinh"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
+                          <label>Quê Quán</label>
+                          <input
+                            type="text"
+                            name="nguyen_quan"
+                            value={formData.nguyen_quan}
+                            onChange={handleFormChange}
+                            placeholder="Quê quán"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
+                          <label>Dân Tộc</label>
+                          <input
+                            type="text"
+                            name="dan_toc"
+                            value={formData.dan_toc}
+                            onChange={handleFormChange}
+                            placeholder="Dân tộc"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
+                          <label>CCCD</label>
+                          <input
+                            type="text"
+                            name="so_cccd"
+                            value={formData.so_cccd}
+                            onChange={handleFormChange}
+                            placeholder="Số CCCD"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
+                          <label>Ngày Cấp CCCD</label>
+                          <input
+                            type="date"
+                            name="ngay_cap"
+                            value={formData.ngay_cap}
+                            onChange={handleFormChange}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        
+                        <div className="detail-item">
+                          <label>Nơi Cấp CCCD</label>
+                          <input
+                            type="text"
+                            name="noi_cap"
+                            value={formData.noi_cap}
+                            onChange={handleFormChange}
+                            placeholder="Nơi cấp CCCD"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                         </div>
                       </div>
+                    </div>
 
-                      <div className="form-row">
-                        <div className="form-group">
+                    <div className="form-section">
+                      <h4>Thông Tin Công Việc & Nơi Ở</h4>
+                      <div className="detail-grid">
+                        <div className="detail-item">
+                          <label>Nghề Nghiệp</label>
+                          <input
+                            type="text"
+                            name="nghe_nghiep"
+                            value={formData.nghe_nghiep}
+                            onChange={handleFormChange}
+                            placeholder="Nghề nghiệp"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
+                          <label>Nơi Làm Việc</label>
+                          <input
+                            type="text"
+                            name="noi_lam_viec"
+                            value={formData.noi_lam_viec}
+                            onChange={handleFormChange}
+                            placeholder="Nơi làm việc"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
+                          <label>Hộ Khẩu</label>
+                          <input
+                            type="text"
+                            name="ho_gia_dinh_ten"
+                            value={selectedHousehold?.ho_ten_chu_ho || ''}
+                            readOnly
+                            placeholder="Hộ khẩu"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box', backgroundColor: '#f5f5f5' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
                           <label>Quan Hệ với Chủ Hộ</label>
                           <input
                             type="text"
@@ -997,85 +1126,52 @@ const HouseholdManagement = () => {
                             value={formData.quan_he_voi_chu_ho}
                             onChange={handleFormChange}
                             placeholder="Ví dụ: Chủ hộ, Vợ, Con"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="form-section">
-                      <h4>Thông Tin CCCD</h4>
-                      
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Số CCCD</label>
+                        <div className="detail-item">
+                          <label>Địa Chỉ Hộ Khẩu</label>
                           <input
                             type="text"
-                            name="so_cccd"
-                            value={formData.so_cccd}
-                            onChange={handleFormChange}
-                            placeholder="Số CCCD"
+                            name="dia_chi_ho_khau"
+                            value={selectedHousehold?.dia_chi || ''}
+                            readOnly
+                            placeholder="Địa chỉ hộ khẩu"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box', backgroundColor: '#f5f5f5' }}
                           />
                         </div>
 
-                        <div className="form-group">
-                          <label>Ngày Cấp</label>
+                        <div className="detail-item">
+                          <label>Địa Chỉ Thường Trú Trước Đây</label>
+                          <input
+                            type="text"
+                            name="dia_chi_thuong_tru_truoc_day"
+                            value={formData.dia_chi_thuong_tru_truoc_day}
+                            onChange={handleFormChange}
+                            placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div className="detail-item">
+                          <label>Thời Gian Đăng Kí Thường Trú</label>
                           <input
                             type="date"
-                            name="ngay_cap"
-                            value={formData.ngay_cap}
+                            name="thoi_gian_dang_ki_thuong_tru"
+                            value={formData.thoi_gian_dang_ki_thuong_tru}
                             onChange={handleFormChange}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           />
                         </div>
-                      </div>
 
-                      <div className="form-group">
-                        <label>Nơi Cấp</label>
-                        <input
-                          type="text"
-                          name="noi_cap"
-                          value={formData.noi_cap}
-                          onChange={handleFormChange}
-                          placeholder="Nơi cấp CCCD"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-section">
-                      <h4>Thông Tin Công Việc</h4>
-                      
-                      <div className="form-group">
-                        <label>Nghề Nghiệp</label>
-                        <input
-                          type="text"
-                          name="nghe_nghiep"
-                          value={formData.nghe_nghiep}
-                          onChange={handleFormChange}
-                          placeholder="Nghề nghiệp"
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Nơi Làm Việc</label>
-                        <input
-                          type="text"
-                          name="noi_lam_viec"
-                          value={formData.noi_lam_viec}
-                          onChange={handleFormChange}
-                          placeholder="Nơi làm việc"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-section">
-                      <h4>Thông Tin Đăng Kí & Trạng Thái</h4>
-                      
-                      <div className="form-row">
-                        <div className="form-group">
+                        <div className="detail-item">
                           <label>Trạng Thái</label>
                           <select
                             name="trang_thai"
                             value={formData.trang_thai}
                             onChange={handleFormChange}
+                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                           >
                             <option value="thuong_tru">Thường trú</option>
                             <option value="da_chet">Đã mất</option>
@@ -1085,42 +1181,20 @@ const HouseholdManagement = () => {
                           </select>
                         </div>
 
-                        <div className="form-group">
-                          <label>Thời Gian Đăng Kí Thường Trú</label>
-                          <input
-                            type="date"
-                            name="thoi_gian_dang_ki_thuong_tru"
-                            value={formData.thoi_gian_dang_ki_thuong_tru}
-                            onChange={handleFormChange}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-group">
-                        <label>Địa Chỉ Thường Trú Trước Đây</label>
-                        <input
-                          type="text"
-                          name="dia_chi_thuong_tru_truoc_day"
-                          value={formData.dia_chi_thuong_tru_truoc_day}
-                          onChange={handleFormChange}
-                          placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
-                        />
-                      </div>
-
-                      {formData.trang_thai === 'chuyen_di' && (
-                        <>
-                          <div className="form-row">
-                            <div className="form-group">
+                        {formData.trang_thai === 'chuyen_di' && (
+                          <>
+                            <div className="detail-item">
                               <label>Ngày Chuyển Đi</label>
                               <input
                                 type="date"
                                 name="ngay_chuyen_di"
                                 value={formData.ngay_chuyen_di}
                                 onChange={handleFormChange}
+                                style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                               />
                             </div>
 
-                            <div className="form-group">
+                            <div className="detail-item">
                               <label>Nơi Chuyển</label>
                               <input
                                 type="text"
@@ -1128,23 +1202,24 @@ const HouseholdManagement = () => {
                                 value={formData.noi_chuyen}
                                 onChange={handleFormChange}
                                 placeholder="Nơi chuyển đi"
+                                style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                               />
                             </div>
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     <div className="form-section">
                       <h4>Ghi Chú</h4>
-                      
-                      <div className="form-group">
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <textarea
                           name="ghi_chu"
                           value={formData.ghi_chu}
                           onChange={handleFormChange}
                           placeholder="Ghi chú thêm"
                           rows="4"
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                         />
                       </div>
                     </div>

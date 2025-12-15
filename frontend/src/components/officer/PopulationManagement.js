@@ -50,9 +50,32 @@ const OfficerPopulationManagement = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [editingId, setEditingId] = useState(null);
+  const [households, setHouseholds] = useState([]);
   const searchTimeoutRef = useRef(null);
 
   const itemsPerPage = 10;
+
+  // Fetch households list
+  const fetchHouseholds = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/nhan-khau/danh-sach-ho-khau/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setHouseholds(data.data || []);
+    } catch (err) {
+      console.error('Error fetching households:', err);
+    }
+  };
 
   // Fetch populations from API
   const fetchPopulations = async (page = 1, search = '', advSearch = null) => {
@@ -161,6 +184,7 @@ const OfficerPopulationManagement = () => {
     }).catch(err => console.error('Error initializing CSRF:', err));
     
     fetchPopulations(1, '');
+    fetchHouseholds();
     
     return () => {
       if (searchTimeoutRef.current) {
@@ -863,169 +887,227 @@ const OfficerPopulationManagement = () => {
               <div className="modal-body">
                 <div className="form-section">
                   <h4>Thông Tin Cơ Bản</h4>
-                  
-                  <div className="form-group">
-                    <label>Họ Tên *</label>
-                    <input
-                      type="text"
-                      name="ho_ten"
-                      value={formData.ho_ten}
-                      onChange={handleFormChange}
-                      className={formErrors.ho_ten ? 'error' : ''}
-                      placeholder="Nhập họ tên"
-                    />
-                    {formErrors.ho_ten && <span className="error-text">{formErrors.ho_ten}</span>}
-                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Họ Tên *</label>
+                      <input
+                        type="text"
+                        name="ho_ten"
+                        value={formData.ho_ten}
+                        onChange={handleFormChange}
+                        className={formErrors.ho_ten ? 'error' : ''}
+                        placeholder="Nhập họ tên"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                      {formErrors.ho_ten && <span className="error-text">{formErrors.ho_ten}</span>}
+                    </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Giới Tính</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Biệt Danh</label>
+                      <input
+                        type="text"
+                        name="bi_danh"
+                        value={formData.bi_danh}
+                        onChange={handleFormChange}
+                        placeholder="Biệt danh"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Giới Tính</label>
                       <select
                         name="gioi_tinh"
                         value={formData.gioi_tinh}
                         onChange={handleFormChange}
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       >
                         <option value="Nam">Nam</option>
                         <option value="Nữ">Nữ</option>
                       </select>
                     </div>
 
-                    <div className="form-group">
-                      <label>Ngày Sinh *</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Sinh *</label>
                       <input
                         type="date"
                         name="ngay_sinh"
                         value={formData.ngay_sinh}
                         onChange={handleFormChange}
                         className={formErrors.ngay_sinh ? 'error' : ''}
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       />
                       {formErrors.ngay_sinh && <span className="error-text">{formErrors.ngay_sinh}</span>}
                     </div>
-                  </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Nơi Sinh</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Sinh</label>
                       <input
                         type="text"
                         name="noi_sinh"
                         value={formData.noi_sinh}
                         onChange={handleFormChange}
                         placeholder="Nơi sinh"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>Quê Quán</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Quê Quán</label>
                       <input
                         type="text"
                         name="nguyen_quan"
                         value={formData.nguyen_quan}
                         onChange={handleFormChange}
                         placeholder="Quê quán"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       />
                     </div>
-                  </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Dân Tộc</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Dân Tộc</label>
                       <input
                         type="text"
                         name="dan_toc"
                         value={formData.dan_toc}
                         onChange={handleFormChange}
                         placeholder="Dân tộc"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>Quan Hệ với Chủ Hộ</label>
-                      <input
-                        type="text"
-                        name="quan_he_voi_chu_ho"
-                        value={formData.quan_he_voi_chu_ho}
-                        onChange={handleFormChange}
-                        placeholder="Ví dụ: Chủ hộ, Vợ, Con"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-section">
-                  <h4>Thông Tin CCCD</h4>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Số CCCD</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>CCCD</label>
                       <input
                         type="text"
                         name="so_cccd"
                         value={formData.so_cccd}
                         onChange={handleFormChange}
                         placeholder="Số CCCD"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>Ngày Cấp</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Cấp CCCD</label>
                       <input
                         type="date"
                         name="ngay_cap"
                         value={formData.ngay_cap}
                         onChange={handleFormChange}
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Cấp CCCD</label>
+                      <input
+                        type="text"
+                        name="noi_cap"
+                        value={formData.noi_cap}
+                        onChange={handleFormChange}
+                        placeholder="Nơi cấp CCCD"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
-
-                  <div className="form-group">
-                    <label>Nơi Cấp</label>
-                    <input
-                      type="text"
-                      name="noi_cap"
-                      value={formData.noi_cap}
-                      onChange={handleFormChange}
-                      placeholder="Nơi cấp CCCD"
-                    />
-                  </div>
                 </div>
 
                 <div className="form-section">
-                  <h4>Thông Tin Công Việc</h4>
-                  
-                  <div className="form-group">
-                    <label>Nghề Nghiệp</label>
-                    <input
-                      type="text"
-                      name="nghe_nghiep"
-                      value={formData.nghe_nghiep}
-                      onChange={handleFormChange}
-                      placeholder="Nghề nghiệp"
-                    />
-                  </div>
+                  <h4>Thông Tin Công Việc & Nơi Ở</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Nghề Nghiệp</label>
+                      <input
+                        type="text"
+                        name="nghe_nghiep"
+                        value={formData.nghe_nghiep}
+                        onChange={handleFormChange}
+                        placeholder="Nghề nghiệp"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                    </div>
 
-                  <div className="form-group">
-                    <label>Nơi Làm Việc</label>
-                    <input
-                      type="text"
-                      name="noi_lam_viec"
-                      value={formData.noi_lam_viec}
-                      onChange={handleFormChange}
-                      placeholder="Nơi làm việc"
-                    />
-                  </div>
-                </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Làm Việc</label>
+                      <input
+                        type="text"
+                        name="noi_lam_viec"
+                        value={formData.noi_lam_viec}
+                        onChange={handleFormChange}
+                        placeholder="Nơi làm việc"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                    </div>
 
-                <div className="form-section">
-                  <h4>Thông Tin Đăng Kí & Trạng Thái</h4>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Trạng Thái</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Hộ Khẩu</label>
+                      <input
+                        type="text"
+                        name="ten_ho_khau"
+                        value={formData.ten_ho_khau || ''}
+                        onChange={handleFormChange}
+                        placeholder="Hộ khẩu"
+                        readOnly
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box', backgroundColor: '#f5f5f5' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Quan Hệ với Chủ Hộ</label>
+                      <input
+                        type="text"
+                        name="quan_he_voi_chu_ho"
+                        value={formData.quan_he_voi_chu_ho}
+                        onChange={handleFormChange}
+                        placeholder="Ví dụ: Chủ hộ, Vợ, Con"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Địa Chỉ Hộ Khẩu</label>
+                      <input
+                        type="text"
+                        name="dia_chi_ho_khau"
+                        value={formData.dia_chi_ho_khau || ''}
+                        onChange={handleFormChange}
+                        placeholder="Địa chỉ hộ khẩu"
+                        readOnly
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box', backgroundColor: '#f5f5f5' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Địa Chỉ Thường Trú Trước Đây</label>
+                      <input
+                        type="text"
+                        name="dia_chi_thuong_tru_truoc_day"
+                        value={formData.dia_chi_thuong_tru_truoc_day}
+                        onChange={handleFormChange}
+                        placeholder="Địa chỉ thường trú trước đây"
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Thời Gian Đăng Kí Thường Trú</label>
+                      <input
+                        type="date"
+                        name="thoi_gian_dang_ki_thuong_tru"
+                        value={formData.thoi_gian_dang_ki_thuong_tru}
+                        onChange={handleFormChange}
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '6px' }}>Trạng Thái</label>
                       <select
                         name="trang_thai"
                         value={formData.trang_thai}
                         onChange={handleFormChange}
+                        style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                       >
                         <option value="thuong_tru">Thường trú</option>
                         <option value="da_chet">Đã mất</option>
@@ -1034,68 +1116,50 @@ const OfficerPopulationManagement = () => {
                         <option value="chuyen_di">Chuyển đi</option>
                       </select>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="form-group">
-                      <label>Thời Gian Đăng Kí Thường Trú</label>
-                      <input
-                        type="date"
-                        name="thoi_gian_dang_ki_thuong_tru"
-                        value={formData.thoi_gian_dang_ki_thuong_tru}
-                        onChange={handleFormChange}
-                      />
+                {/* Relocation Info - Only show when status is "chuyen_di" */}
+                {formData.trang_thai === 'chuyen_di' && (
+                  <div className="form-section">
+                    <h4>Thông Tin Chuyển Đi</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Chuyển Đi</label>
+                        <input
+                          type="date"
+                          name="ngay_chuyen_di"
+                          value={formData.ngay_chuyen_di}
+                          onChange={handleFormChange}
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Chuyển</label>
+                        <input
+                          type="text"
+                          name="noi_chuyen"
+                          value={formData.noi_chuyen}
+                          onChange={handleFormChange}
+                          placeholder="Nơi chuyển đi"
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                        />
+                      </div>
                     </div>
                   </div>
-
-                  <div className="form-group">
-                    <label>Địa Chỉ Thường Trú Trước Đây</label>
-                    <input
-                      type="text"
-                      name="dia_chi_thuong_tru_truoc_day"
-                      value={formData.dia_chi_thuong_tru_truoc_day}
-                      onChange={handleFormChange}
-                      placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
-                    />
-                  </div>
-
-                  {/* Relocation Fields - Only show when status is "chuyen_di" */}
-                  {formData.trang_thai === 'chuyen_di' && (
-                    <>
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Ngày Chuyển Đi</label>
-                          <input
-                            type="date"
-                            name="ngay_chuyen_di"
-                            value={formData.ngay_chuyen_di}
-                            onChange={handleFormChange}
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label>Nơi Chuyển</label>
-                          <input
-                            type="text"
-                            name="noi_chuyen"
-                            value={formData.noi_chuyen}
-                            onChange={handleFormChange}
-                            placeholder="Nơi chuyển đi"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
+                )}
 
                 <div className="form-section">
                   <h4>Ghi Chú</h4>
-                  
-                  <div className="form-group">
+                  <div>
                     <textarea
                       name="ghi_chu"
                       value={formData.ghi_chu}
                       onChange={handleFormChange}
                       placeholder="Ghi chú thêm"
                       rows="4"
+                      style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                     />
                   </div>
                 </div>

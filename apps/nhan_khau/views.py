@@ -412,3 +412,32 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
         'tong_so_bien_dong': lich_su.count(),
         'data': serializer.data
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def danh_sach_ho_gia_dinh(request):
+    """
+    API lấy danh sách tất cả hộ gia đình (để chọn khi thêm/sửa nhân khẩu)
+    """
+    try:
+        ho_gia_dinh_list = HoGiaDinh.objects.all().order_by('ho_ten_chu_ho')
+        data = [
+            {
+                'id': hgd.id,
+                'ten_ho_khau': hgd.ho_ten_chu_ho,
+                'dia_chi': hgd.dia_chi,
+                'so_ho_khau': hgd.so_ho_khau,
+                'phuong_xa': hgd.phuong_xa
+            }
+            for hgd in ho_gia_dinh_list
+        ]
+        return Response({
+            'status': 'success',
+            'data': data
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)

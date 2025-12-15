@@ -1,12 +1,21 @@
 from rest_framework import serializers
 from .models import NhanKhau, BienDongNhanKhau, TamTru, TamVang
 from apps.can_bo.models import CanBo
+from apps.ho_gia_dinh.models import HoGiaDinh
 from django.db import transaction # Cần cái này để đảm bảo dữ liệu toàn vẹn
 
 class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
+    # Allow frontend to send household name to find and link the household
+    ten_ho_khau = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    dia_chi_ho_khau = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    
     class Meta:
         model = NhanKhau
-        fields = '__all__'
+        fields = ['id', 'ho_ten', 'bi_danh', 'gioi_tinh', 'ngay_sinh', 'noi_sinh', 'nguyen_quan', 
+                  'dan_toc', 'nghe_nghiep', 'noi_lam_viec', 'so_cccd', 'ngay_cap', 'noi_cap',
+                  'quan_he_voi_chu_ho', 'thoi_gian_dang_ki_thuong_tru', 'dia_chi_thuong_tru_truoc_day',
+                  'trang_thai', 'ngay_chuyen_di', 'noi_chuyen', 'ghi_chu', 'ho_gia_dinh',
+                  'created_at', 'updated_at', 'ten_ho_khau', 'dia_chi_ho_khau']
         extra_kwargs = {
             'ho_ten': {'required': False},
             'bi_danh': {'required': False, 'allow_blank': True},
@@ -27,7 +36,40 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
             'ho_gia_dinh': {'required': False, 'allow_null': True},
             'ngay_chuyen_di': {'required': False, 'allow_null': True},
             'noi_chuyen': {'required': False, 'allow_blank': True},
+            'id': {'read_only': True},
+            'created_at': {'read_only': True},
+            'updated_at': {'read_only': True},
         }
+    
+    def create(self, validated_data):
+        # Extract household name if provided
+        ten_ho_khau = validated_data.pop('ten_ho_khau', None)
+        dia_chi_ho_khau = validated_data.pop('dia_chi_ho_khau', None)
+        
+        # Find and link household if household name is provided
+        if ten_ho_khau:
+            try:
+                ho_gia_dinh = HoGiaDinh.objects.get(ho_ten_chu_ho=ten_ho_khau)
+                validated_data['ho_gia_dinh'] = ho_gia_dinh
+            except HoGiaDinh.DoesNotExist:
+                raise serializers.ValidationError(f"Không tìm thấy hộ khẩu '{ten_ho_khau}'")
+        
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        # Extract household name if provided
+        ten_ho_khau = validated_data.pop('ten_ho_khau', None)
+        dia_chi_ho_khau = validated_data.pop('dia_chi_ho_khau', None)
+        
+        # Find and link household if household name is provided
+        if ten_ho_khau:
+            try:
+                ho_gia_dinh = HoGiaDinh.objects.get(ho_ten_chu_ho=ten_ho_khau)
+                validated_data['ho_gia_dinh'] = ho_gia_dinh
+            except HoGiaDinh.DoesNotExist:
+                raise serializers.ValidationError(f"Không tìm thấy hộ khẩu '{ten_ho_khau}'")
+        
+        return super().update(instance, validated_data)
         
 class BienDongNhanKhauSerializer(serializers.ModelSerializer):
     nhan_khau_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
