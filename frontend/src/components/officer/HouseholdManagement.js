@@ -1298,7 +1298,7 @@ const HouseholdManagement = () => {
                         </div>
                       )}
 
-                      {(formData.trang_thai === 'tam_tru' || formData.trang_thai === 'tam_vang' || formData.trang_thai === 'chuyen_di') && (
+                      {(formData.trang_thai === 'tam_tru' || formData.trang_thai === 'tam_vang') && (
                         <div className="detail-grid">
                           <div className="detail-item">
                             <label>Ngày Bắt Đầu *</label>
@@ -1320,19 +1320,32 @@ const HouseholdManagement = () => {
                               style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                             />
                           </div>
-                          {formData.trang_thai === 'chuyen_di' && (
-                            <div className="detail-item" style={{ gridColumn: '1 / -1' }}>
-                              <label>Nơi Chuyển Đi</label>
-                              <input
-                                type="text"
-                                name="noi_chuyen"
-                                value={formData.noi_chuyen}
-                                onChange={handleFormChange}
-                                placeholder="Nơi chuyển đi"
-                                style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
-                              />
-                            </div>
-                          )}
+                        </div>
+                      )}
+
+                      {formData.trang_thai === 'chuyen_di' && (
+                        <div className="detail-grid">
+                          <div className="detail-item">
+                            <label>Ngày Sự Kiện *</label>
+                            <input
+                              type="date"
+                              name="ngay_bat_dau"
+                              value={formData.ngay_bat_dau}
+                              onChange={handleFormChange}
+                              style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div className="detail-item" style={{ gridColumn: '1 / -1' }}>
+                            <label>Nơi Chuyển Đi *</label>
+                            <input
+                              type="text"
+                              name="noi_chuyen"
+                              value={formData.noi_chuyen}
+                              onChange={handleFormChange}
+                              placeholder="Nơi chuyển đi"
+                              style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>

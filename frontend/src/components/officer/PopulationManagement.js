@@ -1123,7 +1123,7 @@ const OfficerPopulationManagement = () => {
                     </div>
                   )}
 
-                  {(formData.trang_thai === 'tam_tru' || formData.trang_thai === 'tam_vang' || formData.trang_thai === 'chuyen_di') && (
+                  {(formData.trang_thai === 'tam_tru' || formData.trang_thai === 'tam_vang') && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
                       <div>
                         <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Bắt Đầu *</label>
@@ -1145,19 +1145,32 @@ const OfficerPopulationManagement = () => {
                           style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
                         />
                       </div>
-                      {formData.trang_thai === 'chuyen_di' && (
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Chuyển Đi</label>
-                          <input
-                            type="text"
-                            name="noi_chuyen"
-                            value={formData.noi_chuyen}
-                            onChange={handleFormChange}
-                            placeholder="Nơi chuyển đi"
-                            style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
-                          />
-                        </div>
-                      )}
+                    </div>
+                  )}
+
+                  {formData.trang_thai === 'chuyen_di' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px' }}>Ngày Sự Kiện *</label>
+                        <input
+                          type="date"
+                          name="ngay_bat_dau"
+                          value={formData.ngay_bat_dau}
+                          onChange={handleFormChange}
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <label style={{ display: 'block', marginBottom: '6px' }}>Nơi Chuyển Đi *</label>
+                        <input
+                          type="text"
+                          name="noi_chuyen"
+                          value={formData.noi_chuyen}
+                          onChange={handleFormChange}
+                          placeholder="Nơi chuyển đi"
+                          style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
