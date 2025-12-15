@@ -40,12 +40,14 @@
 ### 2️. Quản lý Hộ gia đình
 - Mục tiêu: Quản lý thông tin hộ dân trong khu dân cư.
 - Chức năng:
-    - Thêm mới hộ gia đình (bao gồm chủ hộ).
-    - Cập nhật địa chỉ, thông tin chủ hộ.
-    - Xem danh sách thành viên trong hộ.
-    - Thêm hoặc chuyển nhân khẩu giữa các hộ.
-    - Xóa hộ (hoặc đánh dấu giải thể hộ).
-    - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.
+    - Thêm mới hộ gia đình (bao gồm chủ hộ). (Done)
+    - Cập nhật địa chỉ, thông tin chủ hộ. (Done)
+    - Xem danh sách thành viên trong hộ. (Done)
+    - Thêm thành viên. (Done)
+    - tách hộ.
+    - xem thông tin biến động nhân khẩu của 1 hộ.
+    - Xóa hộ. (Done)
+    - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.(Done)
 
 ### 3️. Quản lý Tạm trú - Tạm vắng
 - Mục tiêu: Theo dõi biến động nhân khẩu trong khu dân cư.
