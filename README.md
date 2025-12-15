@@ -83,13 +83,6 @@
     - Thống kê gia đình đạt danh hiệu "Gia đình văn hóa" cuối năm.
     - Tạo biểu đồ, xuất báo cáo (PDF / Excel). (optional)
 
-### 7. API Backend (Django REST Framework)
-- Xây dựng các API endpoint cho từng app (CRUD + filter).
-- Thêm xác thực JWT Token (bằng djangorestframework-simplejwt).
-- Thêm phân quyền API (chỉ cán bộ mới được sửa/xóa).
-- Viết serializer cho các model.
-- Viết unit test API (nếu có thời gian).
-- Viết README hướng dẫn cài backend.
 
 ## Frontend Team
 ### Frontend (React hoặc Vue)
