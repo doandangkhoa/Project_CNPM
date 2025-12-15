@@ -35,9 +35,9 @@ class NhanKhau(models.Model):
     default="thuong_tru", # Mặc định sinh ra là thường trú (con cái)
     )
     # Fields for moving/relocation
-    ngay_chuyen_di = models.DateField(null=True, blank=True, help_text="Ngày chuyển đi (chỉ khi trạng thái là 'Đã chuyển đi')")
-    noi_chuyen = models.CharField(max_length=255, null=True, blank=True, help_text="Nơi chuyển tới (chỉ khi trạng thái là 'Đã chuyển đi')")
-    quan_he_voi_chu_ho = models.CharField(max_length=50)
+    ngay_chuyen_di = models.DateField(null=True, blank=True, help_text="Ngày chuyển đi ")
+    noi_chuyen = models.CharField(max_length=255, null=True, blank=True, help_text="Nơi chuyển tới ")
+    quan_he_voi_chu_ho = models.CharField(max_length=50, null=True, blank=True)
     ghi_chu = models.TextField(null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True, null=True)

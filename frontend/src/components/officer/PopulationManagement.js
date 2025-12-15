@@ -723,10 +723,7 @@ const OfficerPopulationManagement = () => {
                     <label>Nơi Cấp CCCD:</label>
                     <span>{selectedPopulation.noi_cap || '-'}</span>
                   </div>
-                  <div className="detail-item">
-                    <label>Quan Hệ với Chủ Hộ:</label>
-                    <span>{selectedPopulation.quan_he_voi_chu_ho}</span>
-                  </div>
+                  
                 </div>
               </div>
 
@@ -744,6 +741,10 @@ const OfficerPopulationManagement = () => {
                   <div className="detail-item">
                     <label>Hộ Khẩu:</label>
                     <span>{selectedPopulation.ten_ho_khau || '-'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Quan Hệ với Chủ Hộ:</label>
+                    <span>{selectedPopulation.quan_he_voi_chu_ho}</span>
                   </div>
                   <div className="detail-item">
                     <label>Địa Chỉ Hộ Khẩu:</label>

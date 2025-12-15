@@ -44,6 +44,7 @@ const HouseholdManagement = () => {
   const [error, setError] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
   const [formData, setFormData] = useState(null);
+  const [formType, setFormType] = useState('household'); // 'household' or 'member'
   const [isEditMode, setIsEditMode] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [editingId, setEditingId] = useState(null);
@@ -152,6 +153,36 @@ const HouseholdManagement = () => {
     }
   };
 
+  const handleEditMember = (member) => {
+    setFormData({
+      ho_ten: member.ho_ten || '',
+      gioi_tinh: member.gioi_tinh || 'Nam',
+      ngay_sinh: member.ngay_sinh || '',
+      noi_sinh: member.noi_sinh || '',
+      nguyen_quan: member.nguyen_quan || '',
+      dan_toc: member.dan_toc || 'Kinh',
+      bi_danh: member.bi_danh || '',
+      so_cccd: member.so_cccd || '',
+      ngay_cap: member.ngay_cap || '',
+      noi_cap: member.noi_cap || '',
+      quan_he_voi_chu_ho: member.quan_he_voi_chu_ho || '',
+      nghe_nghiep: member.nghe_nghiep || '',
+      noi_lam_viec: member.noi_lam_viec || '',
+      trang_thai: member.trang_thai || 'thuong_tru',
+      thoi_gian_dang_ki_thuong_tru: member.thoi_gian_dang_ki_thuong_tru || '',
+      dia_chi_thuong_tru_truoc_day: member.dia_chi_thuong_tru_truoc_day || '',
+      ghi_chu: member.ghi_chu || '',
+      ngay_chuyen_di: member.ngay_chuyen_di || '',
+      noi_chuyen: member.noi_chuyen || '',
+    });
+    setEditingId(member.id);
+    setFormType('member');
+    setIsEditMode(true);
+    setFormErrors({});
+    setShowMemberDetail(false);
+    setShowFormModal(true);
+  };
+
   const handleResetAdvancedSearch = () => {
     setAdvancedSearch({
       so_ho_khau: '',
@@ -239,6 +270,7 @@ const HouseholdManagement = () => {
       phuong_xa: household.phuong_xa || '',
       ghi_chu: household.ghi_chu || '',
     });
+    setFormType('household');
     setIsEditMode(true);
     setEditingId(household.id);
     setFormErrors({});
@@ -262,14 +294,25 @@ const HouseholdManagement = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.so_ho_khau || !formData.ho_ten_chu_ho || !formData.dia_chi || !formData.phuong_xa) {
-      setFormErrors({
-        so_ho_khau: !formData.so_ho_khau ? 'Số hộ khẩu là bắt buộc' : null,
-        ho_ten_chu_ho: !formData.ho_ten_chu_ho ? 'Tên chủ hộ là bắt buộc' : null,
-        dia_chi: !formData.dia_chi ? 'Địa chỉ là bắt buộc' : null,
-        phuong_xa: !formData.phuong_xa ? 'Phường/xã là bắt buộc' : null,
-      });
-      return;
+    // Validate theo loại form
+    if (formType === 'household') {
+      if (!formData.so_ho_khau || !formData.ho_ten_chu_ho || !formData.dia_chi || !formData.phuong_xa) {
+        setFormErrors({
+          so_ho_khau: !formData.so_ho_khau ? 'Số hộ khẩu là bắt buộc' : null,
+          ho_ten_chu_ho: !formData.ho_ten_chu_ho ? 'Tên chủ hộ là bắt buộc' : null,
+          dia_chi: !formData.dia_chi ? 'Địa chỉ là bắt buộc' : null,
+          phuong_xa: !formData.phuong_xa ? 'Phường/xã là bắt buộc' : null,
+        });
+        return;
+      }
+    } else if (formType === 'member') {
+      if (!formData.ho_ten || !formData.ngay_sinh) {
+        setFormErrors({
+          ho_ten: !formData.ho_ten ? 'Họ tên là bắt buộc' : null,
+          ngay_sinh: !formData.ngay_sinh ? 'Ngày sinh là bắt buộc' : null,
+        });
+        return;
+      }
     }
 
     try {
@@ -280,17 +323,24 @@ const HouseholdManagement = () => {
         throw new Error('Không tìm thấy ID để cập nhật');
       }
 
-      const url = isEditMode
-        ? `${API_BASE_URL}/ho-gia-dinh/${editingId}/cap-nhat/`
-        : `${API_BASE_URL}/ho-gia-dinh/them-moi/`;
+      let url, method, submitData;
 
-      const method = isEditMode ? 'PATCH' : 'POST';
+      if (formType === 'household') {
+        url = isEditMode
+          ? `${API_BASE_URL}/ho-gia-dinh/${editingId}/cap-nhat/`
+          : `${API_BASE_URL}/ho-gia-dinh/them-moi/`;
+        method = isEditMode ? 'PATCH' : 'POST';
+        submitData = {
+          ...formData,
+          id_chu_ho: formData.id_chu_ho || null,
+        };
+      } else if (formType === 'member') {
+        url = `${API_BASE_URL}/nhan-khau/${editingId}/cap-nhat/`;
+        method = 'PATCH';
+        submitData = formData;
+      }
+
       const csrfToken = getCsrfToken();
-
-      const submitData = {
-        ...formData,
-        id_chu_ho: formData.id_chu_ho || null,
-      };
 
       console.log('Sending data:', submitData);
 
@@ -317,10 +367,25 @@ const HouseholdManagement = () => {
       const data = await response.json();
       alert(isEditMode ? 'Cập nhật thành công' : 'Thêm mới thành công');
       
-      fetchHouseholds(currentPage, searchTerm);
+      if (formType === 'household') {
+        fetchHouseholds(currentPage, searchTerm);
+      } else if (formType === 'member') {
+        // Refresh household detail to get updated member list
+        if (selectedHousehold) {
+          const response = await fetch(`${API_BASE_URL}/ho-gia-dinh/${selectedHousehold.id}/chi-tiet/`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const detailData = await response.json();
+          setSelectedHousehold(detailData.data || detailData);
+        }
+      }
+      
       setShowFormModal(false);
       setFormData(null);
       setEditingId(null);
+      setFormType('household');
     } catch (err) {
       setError(err.message || (isEditMode ? 'Lỗi khi cập nhật' : 'Lỗi khi thêm mới'));
       console.error('Error submitting form:', err);
@@ -709,9 +774,14 @@ const HouseholdManagement = () => {
       {/* Form Modal */}
       {showFormModal && formData && (
         <div className="modal-overlay" onClick={handleCloseForm}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content form-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{isEditMode ? 'Chỉnh Sửa Hộ Khẩu' : 'Thêm Hộ Khẩu Mới'}</h3>
+              <h3>
+                {formType === 'household' 
+                  ? (isEditMode ? 'Chỉnh Sửa Hộ Khẩu' : 'Thêm Hộ Khẩu Mới')
+                  : (isEditMode ? 'Chỉnh Sửa Nhân Khẩu' : 'Thêm Nhân Khẩu Mới')
+                }
+              </h3>
               <button className="close-btn" onClick={handleCloseForm}>✕</button>
             </div>
 
@@ -723,102 +793,363 @@ const HouseholdManagement = () => {
               )}
 
               <form onSubmit={handleFormSubmit}>
-                <div className="form-section">
-                  <h4>Thông Tin Hộ Khẩu</h4>
+                {/* HOUSEHOLD FORM */}
+                {formType === 'household' && (
+                  <>
+                    <div className="form-section">
+                      <h4>Thông Tin Hộ Khẩu</h4>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Số Hộ Khẩu *</label>
-                      <input
-                        type="text"
-                        name="so_ho_khau"
-                        value={formData.so_ho_khau}
-                        onChange={handleFormChange}
-                        placeholder="Số hộ khẩu"
-                        className={formErrors.so_ho_khau ? 'error' : ''}
-                      />
-                      {formErrors.so_ho_khau && <span className="error-text">{formErrors.so_ho_khau}</span>}
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Số Hộ Khẩu *</label>
+                          <input
+                            type="text"
+                            name="so_ho_khau"
+                            value={formData.so_ho_khau}
+                            onChange={handleFormChange}
+                            placeholder="Số hộ khẩu"
+                            className={formErrors.so_ho_khau ? 'error' : ''}
+                          />
+                          {formErrors.so_ho_khau && <span className="error-text">{formErrors.so_ho_khau}</span>}
+                        </div>
+
+                        <div className="form-group">
+                          <label>Tên Chủ Hộ *</label>
+                          <input
+                            type="text"
+                            name="ho_ten_chu_ho"
+                            value={formData.ho_ten_chu_ho}
+                            onChange={handleFormChange}
+                            placeholder="Tên chủ hộ"
+                            className={formErrors.ho_ten_chu_ho ? 'error' : ''}
+                          />
+                          {formErrors.ho_ten_chu_ho && <span className="error-text">{formErrors.ho_ten_chu_ho}</span>}
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Địa Chỉ *</label>
+                          <input
+                            type="text"
+                            name="dia_chi"
+                            value={formData.dia_chi}
+                            onChange={handleFormChange}
+                            placeholder="Địa chỉ"
+                            className={formErrors.dia_chi ? 'error' : ''}
+                          />
+                          {formErrors.dia_chi && <span className="error-text">{formErrors.dia_chi}</span>}
+                        </div>
+
+                        <div className="form-group">
+                          <label>Phường/Xã *</label>
+                          <input
+                            type="text"
+                            name="phuong_xa"
+                            value={formData.phuong_xa}
+                            onChange={handleFormChange}
+                            placeholder="Phường/xã"
+                            className={formErrors.phuong_xa ? 'error' : ''}
+                          />
+                          {formErrors.phuong_xa && <span className="error-text">{formErrors.phuong_xa}</span>}
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Điện Thoại</label>
+                          <input
+                            type="text"
+                            name="so_dien_thoai"
+                            value={formData.so_dien_thoai}
+                            onChange={handleFormChange}
+                            placeholder="Số điện thoại"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>ID Chủ Hộ (Nhân Khẩu)</label>
+                          <input
+                            type="number"
+                            name="id_chu_ho"
+                            value={formData.id_chu_ho}
+                            onChange={handleFormChange}
+                            placeholder="ID của chủ hộ (nếu có)"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="form-group">
-                      <label>Tên Chủ Hộ *</label>
-                      <input
-                        type="text"
-                        name="ho_ten_chu_ho"
-                        value={formData.ho_ten_chu_ho}
-                        onChange={handleFormChange}
-                        placeholder="Tên chủ hộ"
-                        className={formErrors.ho_ten_chu_ho ? 'error' : ''}
-                      />
-                      {formErrors.ho_ten_chu_ho && <span className="error-text">{formErrors.ho_ten_chu_ho}</span>}
+                    <div className="form-section">
+                      <h4>Ghi Chú</h4>
+                      <div className="form-group">
+                        <textarea
+                          name="ghi_chu"
+                          value={formData.ghi_chu}
+                          onChange={handleFormChange}
+                          placeholder="Ghi chú thêm"
+                          rows="3"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </>
+                )}
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Địa Chỉ *</label>
-                      <input
-                        type="text"
-                        name="dia_chi"
-                        value={formData.dia_chi}
-                        onChange={handleFormChange}
-                        placeholder="Địa chỉ"
-                        className={formErrors.dia_chi ? 'error' : ''}
-                      />
-                      {formErrors.dia_chi && <span className="error-text">{formErrors.dia_chi}</span>}
+                {/* MEMBER FORM */}
+                {formType === 'member' && (
+                  <>
+                    <div className="form-section">
+                      <h4>Thông Tin Cơ Bản</h4>
+                      
+                      <div className="form-group">
+                        <label>Họ Tên *</label>
+                        <input
+                          type="text"
+                          name="ho_ten"
+                          value={formData.ho_ten}
+                          onChange={handleFormChange}
+                          className={formErrors.ho_ten ? 'error' : ''}
+                          placeholder="Nhập họ tên"
+                        />
+                        {formErrors.ho_ten && <span className="error-text">{formErrors.ho_ten}</span>}
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Giới Tính</label>
+                          <select
+                            name="gioi_tinh"
+                            value={formData.gioi_tinh}
+                            onChange={handleFormChange}
+                          >
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label>Ngày Sinh *</label>
+                          <input
+                            type="date"
+                            name="ngay_sinh"
+                            value={formData.ngay_sinh}
+                            onChange={handleFormChange}
+                            className={formErrors.ngay_sinh ? 'error' : ''}
+                          />
+                          {formErrors.ngay_sinh && <span className="error-text">{formErrors.ngay_sinh}</span>}
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Nơi Sinh</label>
+                          <input
+                            type="text"
+                            name="noi_sinh"
+                            value={formData.noi_sinh}
+                            onChange={handleFormChange}
+                            placeholder="Nơi sinh"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>Quê Quán</label>
+                          <input
+                            type="text"
+                            name="nguyen_quan"
+                            value={formData.nguyen_quan}
+                            onChange={handleFormChange}
+                            placeholder="Quê quán"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Dân Tộc</label>
+                          <input
+                            type="text"
+                            name="dan_toc"
+                            value={formData.dan_toc}
+                            onChange={handleFormChange}
+                            placeholder="Dân tộc"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>Biệt Danh</label>
+                          <input
+                            type="text"
+                            name="bi_danh"
+                            value={formData.bi_danh}
+                            onChange={handleFormChange}
+                            placeholder="Biệt danh"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Quan Hệ với Chủ Hộ</label>
+                          <input
+                            type="text"
+                            name="quan_he_voi_chu_ho"
+                            value={formData.quan_he_voi_chu_ho}
+                            onChange={handleFormChange}
+                            placeholder="Ví dụ: Chủ hộ, Vợ, Con"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="form-group">
-                      <label>Phường/Xã *</label>
-                      <input
-                        type="text"
-                        name="phuong_xa"
-                        value={formData.phuong_xa}
-                        onChange={handleFormChange}
-                        placeholder="Phường/xã"
-                        className={formErrors.phuong_xa ? 'error' : ''}
-                      />
-                      {formErrors.phuong_xa && <span className="error-text">{formErrors.phuong_xa}</span>}
-                    </div>
-                  </div>
+                    <div className="form-section">
+                      <h4>Thông Tin CCCD</h4>
+                      
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Số CCCD</label>
+                          <input
+                            type="text"
+                            name="so_cccd"
+                            value={formData.so_cccd}
+                            onChange={handleFormChange}
+                            placeholder="Số CCCD"
+                          />
+                        </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Điện Thoại</label>
-                      <input
-                        type="text"
-                        name="so_dien_thoai"
-                        value={formData.so_dien_thoai}
-                        onChange={handleFormChange}
-                        placeholder="Số điện thoại"
-                      />
+                        <div className="form-group">
+                          <label>Ngày Cấp</label>
+                          <input
+                            type="date"
+                            name="ngay_cap"
+                            value={formData.ngay_cap}
+                            onChange={handleFormChange}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Nơi Cấp</label>
+                        <input
+                          type="text"
+                          name="noi_cap"
+                          value={formData.noi_cap}
+                          onChange={handleFormChange}
+                          placeholder="Nơi cấp CCCD"
+                        />
+                      </div>
                     </div>
 
-                    <div className="form-group">
-                      <label>ID Chủ Hộ (Nhân Khẩu)</label>
-                      <input
-                        type="number"
-                        name="id_chu_ho"
-                        value={formData.id_chu_ho}
-                        onChange={handleFormChange}
-                        placeholder="ID của chủ hộ (nếu có)"
-                      />
-                    </div>
-                  </div>
-                </div>
+                    <div className="form-section">
+                      <h4>Thông Tin Công Việc</h4>
+                      
+                      <div className="form-group">
+                        <label>Nghề Nghiệp</label>
+                        <input
+                          type="text"
+                          name="nghe_nghiep"
+                          value={formData.nghe_nghiep}
+                          onChange={handleFormChange}
+                          placeholder="Nghề nghiệp"
+                        />
+                      </div>
 
-                <div className="form-section">
-                  <h4>Ghi Chú</h4>
-                  <div className="form-group">
-                    <textarea
-                      name="ghi_chu"
-                      value={formData.ghi_chu}
-                      onChange={handleFormChange}
-                      placeholder="Ghi chú thêm"
-                      rows="3"
-                    />
-                  </div>
-                </div>
+                      <div className="form-group">
+                        <label>Nơi Làm Việc</label>
+                        <input
+                          type="text"
+                          name="noi_lam_viec"
+                          value={formData.noi_lam_viec}
+                          onChange={handleFormChange}
+                          placeholder="Nơi làm việc"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-section">
+                      <h4>Thông Tin Đăng Kí & Trạng Thái</h4>
+                      
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Trạng Thái</label>
+                          <select
+                            name="trang_thai"
+                            value={formData.trang_thai}
+                            onChange={handleFormChange}
+                          >
+                            <option value="thuong_tru">Thường trú</option>
+                            <option value="da_chet">Đã mất</option>
+                            <option value="tam_tru">Tạm trú</option>
+                            <option value="tam_vang">Tạm vắng</option>
+                            <option value="chuyen_di">Chuyển đi</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label>Thời Gian Đăng Kí Thường Trú</label>
+                          <input
+                            type="date"
+                            name="thoi_gian_dang_ki_thuong_tru"
+                            value={formData.thoi_gian_dang_ki_thuong_tru}
+                            onChange={handleFormChange}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Địa Chỉ Thường Trú Trước Đây</label>
+                        <input
+                          type="text"
+                          name="dia_chi_thuong_tru_truoc_day"
+                          value={formData.dia_chi_thuong_tru_truoc_day}
+                          onChange={handleFormChange}
+                          placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
+                        />
+                      </div>
+
+                      {formData.trang_thai === 'chuyen_di' && (
+                        <>
+                          <div className="form-row">
+                            <div className="form-group">
+                              <label>Ngày Chuyển Đi</label>
+                              <input
+                                type="date"
+                                name="ngay_chuyen_di"
+                                value={formData.ngay_chuyen_di}
+                                onChange={handleFormChange}
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label>Nơi Chuyển</label>
+                              <input
+                                type="text"
+                                name="noi_chuyen"
+                                value={formData.noi_chuyen}
+                                onChange={handleFormChange}
+                                placeholder="Nơi chuyển đi"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="form-section">
+                      <h4>Ghi Chú</h4>
+                      
+                      <div className="form-group">
+                        <textarea
+                          name="ghi_chu"
+                          value={formData.ghi_chu}
+                          onChange={handleFormChange}
+                          placeholder="Ghi chú thêm"
+                          rows="4"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="modal-footer">
                   <button
@@ -932,10 +1263,6 @@ const HouseholdManagement = () => {
                     <label>Nơi Cấp CCCD:</label>
                     <span>{selectedMember.noi_cap || '-'}</span>
                   </div>
-                  <div className="detail-item">
-                    <label>Quan Hệ với Chủ Hộ:</label>
-                    <span>{selectedMember.quan_he_voi_chu_ho}</span>
-                  </div>
                 </div>
               </div>
 
@@ -953,6 +1280,10 @@ const HouseholdManagement = () => {
                   <div className="detail-item">
                     <label>Hộ Khẩu:</label>
                     <span>{selectedMember.ten_ho_khau || '-'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Quan Hệ với Chủ Hộ:</label>
+                    <span>{selectedMember.quan_he_voi_chu_ho}</span>
                   </div>
                   <div className="detail-item">
                     <label>Địa Chỉ Hộ Khẩu:</label>
@@ -1020,6 +1351,12 @@ const HouseholdManagement = () => {
                 onClick={() => setShowMemberDetail(false)}
               >
                 Đóng
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => handleEditMember(selectedMember)}
+              >
+                Chỉnh Sửa
               </button>
             </div>
           </div>

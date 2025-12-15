@@ -55,7 +55,7 @@ def them_moi_nhan_khau(request):
                 
                 # Yêu cầu: Bỏ trống nghề nghiệp, nơi làm việc, CCCD
                 if not data.get('nghe_nghiep'):
-                    data['nghe_nghiep'] = None # Hoặc để None tùy bạn
+                    data['nghe_nghiep'] = None # Hoặc để None
                 data['noi_lam_viec'] = None
                 
                 # Xử lý CCCD: Nếu gửi lên chuỗi rỗng "" thì set về None để tránh lỗi unique
