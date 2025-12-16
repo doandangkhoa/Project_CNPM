@@ -33,10 +33,10 @@
         npm start
         
 ### Lưu ý: vì tài khoản mới tạo tự động sẽ là người dân nên không thể đăng nhập vào các trang cán bộ / admin, các bước cần làm:
-- Cách 1:
+    - Cách 1:
       - đầu tiên tạo superuser : python manage.py createsuperuser
       - sau đó vào trang admin và thực hiện phân quyền tài khoản cho tài khoản (người dân/cán bộ/admin)
-- Cách 2(dễ hơn):
+    - Cách 2(dễ hơn):
       - vào trang admin của django và phân quyền trực tiếp cho tài khoản.
     
 
