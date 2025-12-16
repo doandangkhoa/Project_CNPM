@@ -49,22 +49,22 @@
     - Xóa hộ. (Done)
     - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.(Done)
 
-### 3️. Quản lý Tạm trú - Tạm vắng
+### 3️. Quản lý Tạm trú - Tạm vắng (ứng với trang phê duyệt yêu cầu của cán bộ)
 - Mục tiêu: Theo dõi biến động nhân khẩu trong khu dân cư.
 - Chức năng:
-    - Tạo phiếu tạm trú / tạm vắng cho nhân khẩu.
+    - Tạo phiếu tạm trú / tạm vắng cho nhân khẩu(làm cả ở trang của cán bộ và trang người dân(nộp đơn xin đăng kí tạm trú / tạm vắng)).
     - Xem chi tiết phiếu.
     - Lọc theo loại phiếu, thời gian, trạng thái còn hiệu lực.
     - Xuất danh sách người đang tạm trú / tạm vắng.
 
-### 4. Quản lý Sự kiện & Thông báo
+### 4. Quản lý Sự kiện & Thông báo (Tích hợp các chức năng ở phần dashboard của cán bộ)
 - Mục tiêu: Quản lý các buổi họp dân cư, ghi nhận tham gia.
 - Chức năng:
     - Tạo buổi sinh hoạt (chủ đề, ngày giờ, địa điểm, nội dung).
     - Cập nhật thông tin buổi sinh hoạt.
     - Xem danh sách hộ gia đình tham gia / vắng mặt.
-    - Ghi nhận tham gia (app ThamGiaSinhHoat).
-    - Thống kê tỷ lệ tham gia theo buổi / theo hộ.
+    - Ghi nhận tham gia / vắng mặt (cần trao đổi lại để rõ ràng hơn nên làm thế nào).
+    - Thống kê tỷ lệ tham gia theo buổi / theo hộ (dùng để đánh giá gia đình văn hóa cuối năm).
 
 ### 5. Quản lý Tài khoản người dùng (Đã hoàn thành)
 - Mục tiêu: Xác thực và phân quyền người dùng.
@@ -72,17 +72,14 @@
     - Đăng nhập, đăng xuất.
     - Phân quyền (Cán bộ quản lý / Người dân).
     - Đổi mật khẩu, quản lý thông tin tài khoản.
-    - Nếu có frontend riêng: đăng ký tài khoản người dân (optional).
 
-### 6. Thống kê & Báo cáo
+### 6. Thống kê & Báo cáo (Làm ở trang thống kê của cán bộ)
 - Mục tiêu: Phân tích và thống kê dữ liệu phục vụ quản lý.
 - Chức năng:
     - Thống kê dân số toàn khu / theo giới tính / độ tuổi.
-    - Thống kê số hộ gia đình, trung bình nhân khẩu / hộ.
     - Thống kê tạm trú – tạm vắng trong một khoảng thời gian.
-    - Thống kê lịch sử thay đổi nhân khẩu.
     - Thống kê gia đình đạt danh hiệu "Gia đình văn hóa" cuối năm.
-    - Tạo biểu đồ, xuất báo cáo (PDF / Excel). (optional)
+    - Tạo biểu đồ thống kê - trực quan hóa (optional).
 
 
 ## Frontend Team
