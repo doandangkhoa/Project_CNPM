@@ -43,6 +43,19 @@ const HouseholdManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [splitData, setSplitData] = useState({
+    so_ho_khau: '',
+    ho_ten_chu_ho: '',
+    dia_chi: '',
+    so_dien_thoai: '',
+    phuong_xa: '',
+    ghi_chu: '',
+    id_chu_ho: '',
+    selectedMembers: {},
+    quan_he: {},
+  });
+  const [selectedChuHo, setSelectedChuHo] = useState(null);
   const [formData, setFormData] = useState(null);
   const [formType, setFormType] = useState('household'); // 'household' or 'member'
   const [isEditMode, setIsEditMode] = useState(false);
@@ -537,6 +550,165 @@ const HouseholdManagement = () => {
     setDeleteConfirmId(null);
   };
 
+  // Split Household Handlers
+  const handleOpenSplitModal = (household) => {
+    setSplitData({
+      so_ho_khau: '',
+      ho_ten_chu_ho: '',
+      dia_chi: household?.dia_chi || '',
+      so_dien_thoai: household?.so_dien_thoai || '',
+      phuong_xa: household?.phuong_xa || '',
+      ghi_chu: '',
+      id_chu_ho: '',
+      selectedMembers: {},
+      quan_he: {},
+    });
+    setSelectedChuHo(null);
+    setShowSplitModal(true);
+  };
+
+  const handleCloseSplitModal = () => {
+    setShowSplitModal(false);
+    setSplitData({
+      so_ho_khau: '',
+      ho_ten_chu_ho: '',
+      dia_chi: '',
+      so_dien_thoai: '',
+      phuong_xa: '',
+      ghi_chu: '',
+      id_chu_ho: '',
+      selectedMembers: {},
+      quan_he: {},
+    });
+    setSelectedChuHo(null);
+  };
+
+  const handleSplitChange = (e) => {
+    const { name, value } = e.target;
+    setSplitData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleMemberToggle = (memberId) => {
+    setSplitData(prev => {
+      const selectedMembers = { ...prev.selectedMembers };
+      selectedMembers[memberId] = !selectedMembers[memberId];
+
+      // If unchecked, remove from relationships
+      if (!selectedMembers[memberId]) {
+        const quan_he = { ...prev.quan_he };
+        delete quan_he[memberId];
+        return {
+          ...prev,
+          selectedMembers,
+          quan_he,
+        };
+      }
+
+      return {
+        ...prev,
+        selectedMembers,
+      };
+    });
+  };
+
+  const handleQuanHeChange = (memberId, value) => {
+    setSplitData(prev => ({
+      ...prev,
+      quan_he: {
+        ...prev.quan_he,
+        [memberId]: value,
+      },
+    }));
+  };
+
+  const handleSubmitSplit = async () => {
+    // Validate form
+    if (!splitData.so_ho_khau.trim()) {
+      alert('Vui lòng nhập số hộ khẩu mới');
+      return;
+    }
+    if (!selectedChuHo) {
+      alert('Vui lòng chọn chủ hộ mới');
+      return;
+    }
+    if (!splitData.ho_ten_chu_ho.trim()) {
+      alert('Lỗi: Tên chủ hộ mới không được xác định');
+      return;
+    }
+
+    const selectedMemberIds = Object.keys(splitData.selectedMembers)
+      .filter(id => splitData.selectedMembers[id])
+      .map(id => parseInt(id));
+
+    if (selectedMemberIds.length === 0) {
+      alert('Vui lòng chọn ít nhất một nhân khẩu để tách');
+      return;
+    }
+
+    // Validate all selected members have quan_he assigned
+    for (const memberId of selectedMemberIds) {
+      if (!splitData.quan_he[memberId]) {
+        alert(`Vui lòng chọn quan hệ cho tất cả nhân khẩu được chọn (ngoài chủ hộ mới)`);
+        return;
+      }
+    }
+
+    if (!selectedHousehold?.id) {
+      alert('Không thể xác định hộ khẩu hiện tại');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const csrfToken = getCsrfToken();
+
+      const requestData = {
+        so_ho_khau: splitData.so_ho_khau,
+        ho_ten_chu_ho: splitData.ho_ten_chu_ho,
+        dia_chi: splitData.dia_chi,
+        so_dien_thoai: splitData.so_dien_thoai,
+        phuong_xa: splitData.phuong_xa,
+        ghi_chu: splitData.ghi_chu,
+        id_chu_ho: parseInt(selectedChuHo),
+        nhan_khau_ids: selectedMemberIds,
+        quan_he: Object.fromEntries(
+          selectedMemberIds.map(id => [id, splitData.quan_he[id]])
+        ),
+      };
+
+      const response = await fetch(
+        `${API_BASE_URL}/ho-gia-dinh/${selectedHousehold.id}/tach-ho/`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken || '',
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      alert('Tách hộ khẩu thành công');
+      handleCloseSplitModal();
+      setShowDetail(false);
+      await fetchHouseholds();
+    } catch (err) {
+      alert('Lỗi khi tách hộ khẩu: ' + (err.message || 'Lỗi không xác định'));
+      console.error('Error splitting household:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="officer-population-management">
       <div className="section-header">
@@ -898,6 +1070,15 @@ const HouseholdManagement = () => {
                 onClick={() => setShowDetail(false)}
               >
                 Đóng
+              </button>
+              <button
+                className="btn btn-info"
+                onClick={() => {
+                  setShowDetail(false);
+                  handleOpenSplitModal(selectedHousehold);
+                }}
+              >
+                Tách Hộ
               </button>
               <button
                 className="btn btn-primary"
@@ -1416,6 +1597,231 @@ const HouseholdManagement = () => {
                 disabled={loading}
               >
                 {loading ? 'Đang xóa...' : 'Xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Split Household Modal */}
+      {showSplitModal && selectedHousehold && (
+        <div className="modal-overlay" onClick={handleCloseSplitModal}>
+          <div className="modal-content form-modal split-household-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Tách Hộ Khẩu</h3>
+              <button className="close-btn" onClick={handleCloseSplitModal}>✕</button>
+            </div>
+
+            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* New Household Information */}
+              <div className="detail-section">
+                <h4>Thông Tin Hộ Khẩu Mới</h4>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <label>Số Hộ Khẩu *</label>
+                    <input
+                      type="text"
+                      name="so_ho_khau"
+                      value={splitData.so_ho_khau}
+                      onChange={handleSplitChange}
+                      placeholder="Nhập số hộ khẩu mới"
+                      style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  <div className="detail-item">
+                    <label>Địa Chỉ</label>
+                    <input
+                      type="text"
+                      name="dia_chi"
+                      value={splitData.dia_chi}
+                      onChange={handleSplitChange}
+                      placeholder="Nhập địa chỉ"
+                      style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  <div className="detail-item">
+                    <label>Số Điện Thoại</label>
+                    <input
+                      type="text"
+                      name="so_dien_thoai"
+                      value={splitData.so_dien_thoai}
+                      onChange={handleSplitChange}
+                      placeholder="Nhập số điện thoại"
+                      style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  <div className="detail-item">
+                    <label>Phường/Xã</label>
+                    <input
+                      type="text"
+                      name="phuong_xa"
+                      value={splitData.phuong_xa}
+                      onChange={handleSplitChange}
+                      placeholder="Nhập phường/xã"
+                      style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  <div className="detail-item">
+                    <label>Ghi Chú</label>
+                    <textarea
+                      name="ghi_chu"
+                      value={splitData.ghi_chu}
+                      onChange={handleSplitChange}
+                      placeholder="Nhập ghi chú"
+                      rows="3"
+                      style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Select New Chief */}
+              <div className="detail-section">
+                <h4>1. Chọn Chủ Hộ Mới *</h4>
+                <div style={{ marginTop: '10px' }}>
+                  <select
+                    value={selectedChuHo || ''}
+                    onChange={(e) => {
+                      const newChuHoId = e.target.value;
+                      setSelectedChuHo(newChuHoId);
+                      // Auto-set new chief name and auto-check this member
+                      if (newChuHoId) {
+                        const selectedMember = selectedHousehold.danh_sach_thanh_vien.find(m => m.id === parseInt(newChuHoId));
+                        setSplitData(prev => ({
+                          ...prev,
+                          ho_ten_chu_ho: selectedMember?.ho_ten || '',
+                          selectedMembers: {
+                            ...prev.selectedMembers,
+                            [parseInt(newChuHoId)]: true,
+                          },
+                          quan_he: {
+                            ...prev.quan_he,
+                            [parseInt(newChuHoId)]: 'Chủ hộ',
+                          },
+                        }));
+                      }
+                    }}
+                    style={{ width: '100%', padding: '6px', fontSize: '1em' }}
+                  >
+                    <option value="">-- Chọn chủ hộ mới --</option>
+                    {selectedHousehold?.danh_sach_thanh_vien?.map(member => {
+                      // Get current household chief - exclude from options
+                      const currentChief = selectedHousehold?.id_chu_ho;
+                      if (currentChief && member.id === currentChief) {
+                        return null;
+                      }
+                      return (
+                        <option key={member.id} value={member.id}>
+                          {member.ho_ten} ({member.quan_he_voi_chu_ho})
+                          {member.ngay_sinh && ` - ${new Date(member.ngay_sinh).toLocaleDateString('vi-VN')}`}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              {/* Select Members to Split - Part 1: Select Members */}
+              <div className="detail-section">
+                <h4>2. Chọn Thành Viên Tham Gia Tách Hộ *</h4>
+                <div style={{ paddingLeft: '10px' }}>
+                  {selectedHousehold?.danh_sach_thanh_vien?.map(member => {
+                    // Exclude current household chief from member selection
+                    const currentChief = selectedHousehold?.id_chu_ho;
+                    if (currentChief && member.id === currentChief) {
+                      return null;
+                    }
+                    return (
+                      <div key={member.id} style={{ marginBottom: '8px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={splitData.selectedMembers[member.id] || false}
+                            onChange={() => {
+                              handleMemberToggle(member.id);
+                              // If unchecking the selected chief, also unselect as chief
+                              if (selectedChuHo === member.id.toString()) {
+                                setSelectedChuHo(null);
+                              }
+                            }}
+                            style={{ marginRight: '10px', cursor: 'pointer' }}
+                            disabled={selectedChuHo === member.id.toString()}
+                            title={selectedChuHo === member.id.toString() ? 'Đã chọn làm chủ hộ mới' : ''}
+                          />
+                          <span style={{ opacity: selectedChuHo === member.id.toString() ? 0.6 : 1 }}>
+                            <strong>{member.ho_ten}</strong>
+                            <span style={{ marginLeft: '10px', color: '#666' }}>
+                              ({member.quan_he_voi_chu_ho})
+                              {member.ngay_sinh && ` - ${new Date(member.ngay_sinh).toLocaleDateString('vi-VN')}`}
+                            </span>
+                            {selectedChuHo === member.id.toString() && (
+                              <span style={{ marginLeft: '10px', color: '#007bff', fontWeight: 'bold' }}>
+                                [Chủ hộ mới]
+                              </span>
+                            )}
+                          </span>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Select Members to Split - Part 2: Assign Relationships */}
+              {Object.keys(splitData.selectedMembers).some(id => splitData.selectedMembers[id]) && (
+                <div className="detail-section">
+                  <h4>3. Quan Hệ Với Chủ Hộ Mới *</h4>
+                  <div style={{ paddingLeft: '10px' }}>
+                    {selectedHousehold?.danh_sach_thanh_vien?.map(member => {
+                      if (!splitData.selectedMembers[member.id]) return null;
+                      if (selectedChuHo === member.id.toString()) return null;
+                      
+                      return (
+                        <div key={member.id} className="member-card">
+                          <div>
+                            {member.ho_ten}
+                            {member.ngay_sinh && ` (${new Date(member.ngay_sinh).toLocaleDateString('vi-VN')})`}
+                          </div>
+                          <select
+                            value={splitData.quan_he[member.id] || ''}
+                            onChange={(e) => handleQuanHeChange(member.id, e.target.value)}
+                          >
+                            <option value="">-- Chọn quan hệ --</option>
+                            <option value="Vợ/Chồng">Vợ/Chồng</option>
+                            <option value="Con">Con</option>
+                            <option value="Con dâu/Rể">Con dâu/Rể</option>
+                            <option value="Cháu">Cháu</option>
+                            <option value="Bố/Mẹ">Bố/Mẹ</option>
+                            <option value="Ông/Bà">Ông/Bà</option>
+                            <option value="Anh/Chị/Em">Anh/Chị/Em</option>
+                            <option value="Khác">Khác</option>
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={handleCloseSplitModal}
+                disabled={loading}
+              >
+                Hủy
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleSubmitSplit}
+                disabled={loading}
+              >
+                {loading ? 'Đang tách...' : 'Tách Hộ'}
               </button>
             </div>
           </div>

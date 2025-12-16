@@ -232,3 +232,108 @@ def xoa_ho_gia_dinh(request, pk):
             'status':'error',
             'message': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# --- TÁCH HỘ ---
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def tach_ho_gia_dinh(request, pk):
+    """
+    Tách hộ: Tạo hộ mới và chuyển những nhân khẩu được chọn sang hộ mới
+    Request body:
+    {
+        "so_ho_khau": "...",
+        "ho_ten_chu_ho": "...",
+        "dia_chi": "...",
+        "so_dien_thoai": "...",
+        "phuong_xa": "...",
+        "id_chu_ho": <id_chu_ho_moi>,
+        "nhan_khau_ids": [1, 2, 3],  // IDs của nhân khẩu cần tách
+        "quan_he": {
+            "1": "Chủ hộ",
+            "2": "Vợ/Chồng",
+            ...
+        }
+    }
+    """
+    user = request.user
+    if not _user_is_authorized_can_bo(user):
+        return Response({
+            'status': 'error',
+            'message': 'Bạn không có quyền thực hiện hành động này.'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        ho_gia_dinh_cu = HoGiaDinh.objects.get(pk=pk)
+        
+        data = request.data
+        nhan_khau_ids = data.get('nhan_khau_ids', [])
+        quan_he = data.get('quan_he', {})
+        id_chu_ho_moi = data.get('id_chu_ho')
+        
+        if not nhan_khau_ids:
+            return Response({
+                'status': 'error',
+                'message': 'Vui lòng chọn ít nhất một nhân khẩu để tách.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        with transaction.atomic():
+            # Tạo hộ mới
+            ho_gia_dinh_moi = HoGiaDinh.objects.create(
+                so_ho_khau=data.get('so_ho_khau'),
+                ho_ten_chu_ho=data.get('ho_ten_chu_ho'),
+                dia_chi=data.get('dia_chi'),
+                so_dien_thoai=data.get('so_dien_thoai'),
+                phuong_xa=data.get('phuong_xa'),
+                ghi_chu=data.get('ghi_chu', ''),
+                id_chu_ho_id=id_chu_ho_moi
+            )
+            
+            # Lấy danh sách nhân khẩu cần tách
+            nhan_khau_list = NhanKhau.objects.filter(id__in=nhan_khau_ids)
+            
+            # Cập nhật từng nhân khẩu
+            for nhan_khau in nhan_khau_list:
+                # Cập nhật hộ gia đình
+                nhan_khau.ho_gia_dinh = ho_gia_dinh_moi
+                
+                # Cập nhật quan hệ với chủ hộ
+                nhan_khau.quan_he_voi_chu_ho = quan_he.get(str(nhan_khau.id), 'Khác')
+                nhan_khau.save()
+                
+                # Tạo BienDongNhanKhau record cho hộ CŨ
+                BienDongNhanKhau.objects.create(
+                    nhan_khau=nhan_khau,
+                    ho_khau=ho_gia_dinh_cu,  # Lưu ở hộ cũ
+                    loai_bien_dong='TACH_HO',
+                    mo_ta=f"{nhan_khau.ho_ten} được tách sang hộ mới: {ho_gia_dinh_moi.so_ho_khau} - {ho_gia_dinh_moi.ho_ten_chu_ho}",
+                    ngay_bat_dau=date.today()
+                )
+        
+        return Response({
+            'status': 'success',
+            'message': 'Tách hộ thành công.',
+            'data': {
+                'ho_gia_dinh_cu': {
+                    'id': ho_gia_dinh_cu.id,
+                    'so_ho_khau': ho_gia_dinh_cu.so_ho_khau,
+                    'ho_ten_chu_ho': ho_gia_dinh_cu.ho_ten_chu_ho,
+                },
+                'ho_gia_dinh_moi': {
+                    'id': ho_gia_dinh_moi.id,
+                    'so_ho_khau': ho_gia_dinh_moi.so_ho_khau,
+                    'ho_ten_chu_ho': ho_gia_dinh_moi.ho_ten_chu_ho,
+                }
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except HoGiaDinh.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Hộ gia đình không tìm thấy.'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
