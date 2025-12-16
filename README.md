@@ -45,7 +45,7 @@
     - Xem danh sách thành viên trong hộ. (Done)
     - Thêm thành viên. (Done)
     - tách hộ.
-    - xem thông tin biến động nhân khẩu của 1 hộ.
+    - xem thông tin biến động nhân khẩu của 1 hộ. (Done)
     - Xóa hộ. (Done)
     - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.(Done)
 
