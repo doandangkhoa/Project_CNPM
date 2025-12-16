@@ -22,8 +22,22 @@
 ### Bước 2 — Cài đặt tất cả thư viện cần thiết
     pip install -r requirements.txt
 
-### Làm việc với database 
+### Bước 3 - Làm việc với database 
     tạo file .env ở thư mục chính rồi copy file env_example vào
+
+### Bước 4: chạy chương trình
+    1. chạy backend: 
+        python manage.py runserver
+    2. chạy frontend :
+        cd frontend
+        npm start
+### Lưu ý: vì tài khoản mới tạo tự động sẽ là người dân nên không thể đăng nhập vào các trang cán bộ / admin, các bước cần làm:
+- Cách 1:
+      - đầu tiên tạo superuser : python manage.py createsuperuser
+      - sau đó vào trang admin và thực hiện phân quyền tài khoản cho tài khoản (người dân/cán bộ/admin)
+- Cách 2(dễ hơn):
+      - vào trang admin của django và phân quyền trực tiếp cho tài khoản.
+    
 
 ## Chức năng hệ thống Quản lý Khu Dân Cư
 
