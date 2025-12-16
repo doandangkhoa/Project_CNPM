@@ -31,6 +31,8 @@
     2. chạy frontend :
         cd frontend
         npm start
+    3. sinh dữ liệu nhân/khẩu hộ khẩu tự động (optional) : ở thư mục gốc chạy
+        py populate_data
         
 ### Lưu ý: vì tài khoản mới tạo tự động sẽ là người dân nên không thể đăng nhập vào các trang cán bộ / admin, các bước cần làm:
     - Cách 1:
