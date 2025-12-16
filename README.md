@@ -31,6 +31,7 @@
     2. chạy frontend :
         cd frontend
         npm start
+        
 ### Lưu ý: vì tài khoản mới tạo tự động sẽ là người dân nên không thể đăng nhập vào các trang cán bộ / admin, các bước cần làm:
 - Cách 1:
       - đầu tiên tạo superuser : python manage.py createsuperuser
