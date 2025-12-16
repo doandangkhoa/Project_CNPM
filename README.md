@@ -78,6 +78,9 @@
 
 
 ## Frontend Team
+to run :
+1. cd frontend
+2. npm start
 ### Frontend (React hoặc Vue)
 - Trang đăng nhập / đăng xuất.
 - Dashboard tổng quan (thống kê nhanh).
