@@ -54,14 +54,14 @@
     - Tìm kiếm nhân khẩu theo tên, CCCD, ngày sinh, hộ gia đình. Sơn
     - Ghi lại lịch sử thay đổi nhân khẩu (LichSuThayDoiNhanKhau). Khoa
 
-### 2️. Quản lý Hộ gia đình
+### 2️. Quản lý Hộ gia đình (Đã hoàn thành)
 - Mục tiêu: Quản lý thông tin hộ dân trong khu dân cư.
 - Chức năng:
     - Thêm mới hộ gia đình (bao gồm chủ hộ). (Done)
     - Cập nhật địa chỉ, thông tin chủ hộ. (Done)
     - Xem danh sách thành viên trong hộ. (Done)
     - Thêm thành viên. (Done)
-    - tách hộ.
+    - tách hộ. (Done)
     - xem thông tin biến động nhân khẩu của 1 hộ. (Done)
     - Xóa hộ. (Done)
     - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.(Done)
