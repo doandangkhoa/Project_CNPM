@@ -49,15 +49,10 @@
     - Xóa hộ. (Done)
     - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.(Done)
 
-### 3️. Quản lý Tạm trú - Tạm vắng (ứng với trang phê duyệt yêu cầu của cán bộ)
+### 3️. Quản lý Tạm trú - Tạm vắng (ứng với trang phê duyệt yêu cầu của cán bộ) - Đỗ Sơn
 - Mục tiêu: Theo dõi biến động nhân khẩu trong khu dân cư.
 - Chức năng:
-    - Tạo phiếu tạm trú / tạm vắng cho nhân khẩu(làm cả ở trang của cán bộ và trang người dân(nộp đơn xin đăng kí tạm trú / tạm vắng)).
-    - Xem chi tiết phiếu.
-    - Lọc theo loại phiếu, thời gian, trạng thái còn hiệu lực.
-    - Xuất danh sách người đang tạm trú / tạm vắng.
-
-### 4. Quản lý Sự kiện & Thông báo (Tích hợp các chức năng ở phần dashboard của cán bộ)
+    - Tạo phiếu tạm trú / tạm vTuấn
 - Mục tiêu: Quản lý các buổi họp dân cư, ghi nhận tham gia.
 - Chức năng:
     - Tạo buổi sinh hoạt (chủ đề, ngày giờ, địa điểm, nội dung).
@@ -73,7 +68,7 @@
     - Phân quyền (Cán bộ quản lý / Người dân).
     - Đổi mật khẩu, quản lý thông tin tài khoản.
 
-### 6. Thống kê & Báo cáo (Làm ở trang thống kê của cán bộ)
+### 6. Thống kê & Báo cáo (Làm ở trang thống kê của cán bộ) - Đăng Khoa
 - Mục tiêu: Phân tích và thống kê dữ liệu phục vụ quản lý.
 - Chức năng:
     - Thống kê dân số toàn khu / theo giới tính / độ tuổi.
