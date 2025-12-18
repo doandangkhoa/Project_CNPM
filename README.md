@@ -78,6 +78,15 @@
     - Ghi nhận tham gia / vắng mặt (cần trao đổi lại để rõ ràng hơn nên làm thế nào).
     - Thống kê tỷ lệ tham gia theo buổi / theo hộ (dùng để đánh giá gia đình văn hóa cuối năm).
 
+
+### 4. Quản lý Sự kiện & Thông báo (Tuấn)
+- Mục tiêu: Quản lý các buổi họp dân cư, ghi nhận tham gia.
+- Chức năng:
+    - Tạo buổi sinh hoạt (chủ đề, ngày giờ, địa điểm, nội dung).
+    - Cập nhật thông tin buổi sinh hoạt.
+    - Xem danh sách hộ gia đình tham gia / vắng mặt.
+    - Ghi nhận tham gia (app ThamGiaSinhHoat).
+
 ### 5. Quản lý Tài khoản người dùng (Đã hoàn thành)
 - Mục tiêu: Xác thực và phân quyền người dùng.
 - Chức năng:
