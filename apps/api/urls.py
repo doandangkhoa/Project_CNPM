@@ -2,6 +2,7 @@ from django.urls import path
 from apps.tai_khoan import views as tai_khoan_views
 from apps.nhan_khau import views as nhan_khau_views
 from apps.ho_gia_dinh import views as ho_gia_dinh_views
+from apps.tam_tru_tam_vang import views as tam_tru_tam_vang_views
 
 urlpatterns = [
     # Tai khoan
@@ -35,4 +36,11 @@ urlpatterns = [
     path('ho-gia-dinh/<int:pk>/chi-tiet/', ho_gia_dinh_views.chi_tiet_ho_gia_dinh, name='chi-tiet-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/xoa/', ho_gia_dinh_views.xoa_ho_gia_dinh, name='xoa-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/tach-ho/', ho_gia_dinh_views.tach_ho_gia_dinh, name='tach-ho-gia-dinh'),
+
+    #tam_tru_tam_vang
+    path('tam-tru-tam-vang/tao-phieu/', tam_tru_tam_vang_views.tao_phieu_view, name='tao-phieu-tam-tru-tam-vang'),
+    path('tam-tru-tam-vang/<int:id>/chi-tiet/', tam_tru_tam_vang_views.chi_tiet_phieu_view, name='chi-tiet-phieu-tam-tru-tam-vang'),
+    path('tam-tru-tam-vang/loc/', tam_tru_tam_vang_views.loc_phieu_view, name='loc-phieu-tam-tru-tam-vang'),
+    path('tam-tru-tam-vang/dang-hieu-luc/', tam_tru_tam_vang_views.danh_sach_dang_hieu_luc_view, name='danh-sach-phieu-dang-hieu-luc'),
+
 ]
