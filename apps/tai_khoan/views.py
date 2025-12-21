@@ -28,6 +28,7 @@ def register_view(request):
         'username': request.data.get('username'),
         'email': request.data.get('email'),
         'password': request.data.get('password'),
+        'cccd': request.data.get('cccd'),
     }
     serializer = TaiKhoanRegisterSerializer(data=data)
     if serializer.is_valid():
@@ -39,6 +40,7 @@ def register_view(request):
         }, status=status.HTTP_201_CREATED)
     return Response({
         'status': 'error',
+        'message': 'Đăng ký thất bại',
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 

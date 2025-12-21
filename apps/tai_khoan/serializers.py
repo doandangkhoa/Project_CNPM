@@ -9,7 +9,13 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaiKhoan
         # Người dân đăng ký, role mặc định là 'nguoi_dan', chuc_vu không cần
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'cccd']
+
+    def validate_cccd(self, value):
+        """Kiểm tra số CCCD chưa được sử dụng"""
+        if value and TaiKhoan.objects.filter(cccd=value).exists():
+            raise serializers.ValidationError("Số CCCD đã được sử dụng")
+        return value
 
     def create(self, validated_data):
         """
@@ -19,6 +25,7 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
+            cccd=validated_data.get('cccd', ''),
             role='nguoi_dan',
             chuc_vu=None
         )
