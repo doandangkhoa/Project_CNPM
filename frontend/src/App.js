@@ -22,6 +22,7 @@ import OfficerRequestsPage from './pages/officer/RequestsPage';
 import CitizenHomePage from './pages/citizen/HomePage';
 import CitizenHouseholdPage from './pages/citizen/HouseholdPage';
 import CitizenServicesPage from './pages/citizen/ServicesPage';
+import CitizenUserProfilePage from './pages/citizen/UserProfilePage';
 
 // User Pages
 import UserProfilePage from './pages/UserProfilePage';
@@ -194,6 +195,20 @@ function App() {
               requiredRoles={['nguoi_dan']}
             >
               <CitizenServicesPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/profile"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <CitizenUserProfilePage
                 currentUser={currentUser}
                 onLogout={handleLogout}
               />

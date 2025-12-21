@@ -6,83 +6,110 @@ const CitizenHousehold = ({ currentUser }) => {
   const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Mock data - In production, fetch from API using currentUser.id
-    const mockHousehold = {
-      so_ho_khau: '001',
-      chu_ho: 'Nguyễn Văn A',
-      cccd_chu_ho: '12345678901',
-      dia_chi: '123 Đường Lê Lợi, Phường 1, Quận 1',
-      ngay_cap: '2020-01-15',
-      trang_thai: 'hoat_dong',
-    };
-
-    const mockMembers = [
-      {
-        id: 1,
-        ho_ten: 'Nguyễn Văn A',
-        cccd: '12345678901',
-        nam_sinh: 1980,
-        gioi_tinh: 'Nam',
-        quoc_tich: 'Việt Nam',
-        dia_chi_thuong_tru: '123 Đường Lê Lợi',
-        quan_he_chu_ho: 'Chủ hộ',
-        tinh_trang: 'Sống',
-      },
-      {
-        id: 2,
-        ho_ten: 'Nguyễn Thị B',
-        cccd: '12345678902',
-        nam_sinh: 1985,
-        gioi_tinh: 'Nữ',
-        quoc_tich: 'Việt Nam',
-        dia_chi_thuong_tru: '123 Đường Lê Lợi',
-        quan_he_chu_ho: 'Vợ',
-        tinh_trang: 'Sống',
-      },
-      {
-        id: 3,
-        ho_ten: 'Nguyễn Văn C',
-        cccd: '12345678903',
-        nam_sinh: 2008,
-        gioi_tinh: 'Nam',
-        quoc_tich: 'Việt Nam',
-        dia_chi_thuong_tru: '123 Đường Lê Lợi',
-        quan_he_chu_ho: 'Con',
-        tinh_trang: 'Sống',
-      },
-      {
-        id: 4,
-        ho_ten: 'Nguyễn Thị D',
-        cccd: '12345678904',
-        nam_sinh: 2010,
-        gioi_tinh: 'Nữ',
-        quoc_tich: 'Việt Nam',
-        dia_chi_thuong_tru: '123 Đường Lê Lợi',
-        quan_he_chu_ho: 'Con',
-        tinh_trang: 'Sống',
-      },
-    ];
-
-    setHousehold(mockHousehold);
-    setMembers(mockMembers);
+    fetchHouseholdData();
   }, [currentUser]);
+
+  const fetchHouseholdData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await fetch(
+        'http://localhost:8000/api/citizen/profile/',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'success') {
+        const hoGiaDinh = data.ho_gia_dinh;
+        const nhanKhau = data.nhan_khau;
+
+        if (hoGiaDinh) {
+          setHousehold({
+            so_ho_khau: hoGiaDinh.so_ho_khau,
+            chu_ho: hoGiaDinh.ho_ten_chu_ho,
+            cccd_chu_ho: hoGiaDinh.id_chu_ho ? 'Có' : 'Chưa xác định',
+            dia_chi: hoGiaDinh.dia_chi,
+            phuong_xa: hoGiaDinh.phuong_xa,
+            so_dien_thoai: hoGiaDinh.so_dien_thoai,
+            ngay_tao: hoGiaDinh.ngay_tao,
+            so_luong_thanh_vien: hoGiaDinh.so_luong_thanh_vien,
+          });
+
+          // Map danh sách thành viên
+          if (
+            hoGiaDinh.danh_sach_thanh_vien &&
+            hoGiaDinh.danh_sach_thanh_vien.length > 0
+          ) {
+            setMembers(
+              hoGiaDinh.danh_sach_thanh_vien.map((m) => ({
+                id: m.id,
+                ho_ten: m.ho_ten,
+                cccd: m.so_cccd,
+                ngay_sinh: m.ngay_sinh,
+                gioi_tinh: m.gioi_tinh_hien_thi,
+                quan_he_chu_ho: m.quan_he_voi_chu_ho_display,
+                tuoi: m.tuoi,
+                trang_thai: m.trang_thai,
+              }))
+            );
+          }
+        } else {
+          setError('Chưa có thông tin hộ khẩu');
+        }
+      } else {
+        setError(data.message || 'Không thể tải thông tin hộ khẩu');
+      }
+    } catch (err) {
+      setError('Lỗi kết nối server: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleViewMember = (member) => {
     setSelectedMember(member);
     setShowDetail(true);
   };
 
-  if (!household) {
+  if (loading) {
     return <div className="loading">Đang tải dữ liệu...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="citizen-household">
+        <div className="error-message">
+          <h3>⚠️ {error}</h3>
+          <button onClick={fetchHouseholdData} className="btn-retry">
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!household) {
+    return <div className="loading">Không có thông tin hộ khẩu.</div>;
   }
 
   return (
     <div className="citizen-household">
       <div className="section-header">
         <h2>Sổ Hộ Khẩu Điện Tử</h2>
-        <p className="subtitle">Thông tin thành viên trong hộ gia đình của bạn</p>
+        <p className="subtitle">
+          Thông tin thành viên trong hộ gia đình của bạn
+        </p>
       </div>
 
       {/* Household Info */}
@@ -110,8 +137,18 @@ const CitizenHousehold = ({ currentUser }) => {
             <span>{household.dia_chi}</span>
           </div>
           <div className="info-item">
-            <label>Ngày Cấp:</label>
-            <span>{new Date(household.ngay_cap).toLocaleDateString('vi-VN')}</span>
+            <label>Phường/Xã:</label>
+            <span>{household.phuong_xa}</span>
+          </div>
+          <div className="info-item">
+            <label>Số Điện Thoại:</label>
+            <span>{household.so_dien_thoai || 'Chưa cập nhật'}</span>
+          </div>
+          <div className="info-item">
+            <label>Ngày Tạo:</label>
+            <span>
+              {new Date(household.ngay_tao).toLocaleDateString('vi-VN')}
+            </span>
           </div>
         </div>
       </div>
@@ -133,7 +170,7 @@ const CitizenHousehold = ({ currentUser }) => {
               </tr>
             </thead>
             <tbody>
-              {members.map(member => (
+              {members.map((member) => (
                 <tr key={member.id} className="member-row">
                   <td className="member-name">{member.ho_ten}</td>
                   <td>{member.cccd}</td>
@@ -145,9 +182,7 @@ const CitizenHousehold = ({ currentUser }) => {
                     </span>
                   </td>
                   <td>
-                    <span className="status-badge">
-                      {member.tinh_trang}
-                    </span>
+                    <span className="status-badge">{member.tinh_trang}</span>
                   </td>
                   <td className="actions">
                     <button
@@ -187,7 +222,10 @@ const CitizenHousehold = ({ currentUser }) => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Chi Tiết Thành Viên</h3>
-              <button className="close-btn" onClick={() => setShowDetail(false)}>
+              <button
+                className="close-btn"
+                onClick={() => setShowDetail(false)}
+              >
                 ✕
               </button>
             </div>
@@ -203,37 +241,48 @@ const CitizenHousehold = ({ currentUser }) => {
                   <span>{selectedMember.cccd}</span>
                 </div>
                 <div className="detail-row">
-                  <label>Năm Sinh:</label>
-                  <span>{selectedMember.nam_sinh}</span>
+                  <label>Ngày Sinh:</label>
+                  <span>
+                    {selectedMember.ngay_sinh
+                      ? new Date(selectedMember.ngay_sinh).toLocaleDateString(
+                          'vi-VN'
+                        )
+                      : 'N/A'}
+                  </span>
                 </div>
                 <div className="detail-row">
                   <label>Giới Tính:</label>
                   <span>{selectedMember.gioi_tinh}</span>
                 </div>
                 <div className="detail-row">
-                  <label>Quốc Tịch:</label>
-                  <span>{selectedMember.quoc_tich}</span>
-                </div>
-                <div className="detail-row">
-                  <label>Quan Hệ Chủ Hộ:</label>
-                  <span>{selectedMember.quan_he_chu_ho}</span>
-                </div>
-                <div className="detail-row">
-                  <label>Địa Chỉ Thường Trú:</label>
-                  <span>{selectedMember.dia_chi_thuong_tru}</span>
+                  <label>Tuổi:</label>
+                  <span>{selectedMember.tuoi} tuổi</span>
                 </div>
                 <div className="detail-row">
                   <label>Tình Trạng:</label>
-                  <span>{selectedMember.tinh_trang}</span>
+                  <span className={`status-badge ${selectedMember.trang_thai}`}>
+                    {selectedMember.trang_thai === 'thuong_tru' && 'Thường Trú'}
+                    {selectedMember.trang_thai === 'tam_tru' && 'Tạm Trú'}
+                    {selectedMember.trang_thai === 'tam_vang' && 'Tạm Vắng'}
+                    {selectedMember.trang_thai === 'chuyen_di' &&
+                      'Đã Chuyển Đi'}
+                    {selectedMember.trang_thai === 'da_chet' && 'Đã Qua Đời'}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowDetail(false)}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowDetail(false)}
+              >
                 Đóng
               </button>
-              <a href="/citizen/services?type=update_info" className="btn btn-primary">
+              <a
+                href="/citizen/services?type=update_info"
+                className="btn btn-primary"
+              >
                 Báo Sai Thông Tin
               </a>
             </div>

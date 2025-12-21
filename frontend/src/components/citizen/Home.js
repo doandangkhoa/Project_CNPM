@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../../styles/CitizenHome.css';
 
 const CitizenHome = ({ currentUser }) => {
@@ -48,12 +49,14 @@ const CitizenHome = ({ currentUser }) => {
               <div className="service-icon">⚠️</div>
               <h3>Báo Sai Thông Tin</h3>
               <p>Báo cáo thông tin không chính xác</p>
-              <a href="/citizen/services?type=update_info" className="service-btn">
+              <a
+                href="/citizen/services?type=update_info"
+                className="service-btn"
+              >
                 Nộp Đơn
               </a>
             </div>
           </div>
-          
         </section>
 
         {/* Recent Requests */}
@@ -96,17 +99,35 @@ const CitizenHome = ({ currentUser }) => {
             <div className="help-item">
               <h4>Hướng Dẫn Sử Dụng</h4>
               <p>Tìm hiểu cách sử dụng các dịch vụ công trực tuyến</p>
-              <a href="#" className="help-link">Xem hướng dẫn →</a>
+              <Link
+                to="/citizen/home"
+                className="help-link"
+                title="Tính năng đang phát triển"
+              >
+                Xem hướng dẫn →
+              </Link>
             </div>
             <div className="help-item">
               <h4>Câu Hỏi Thường Gặp</h4>
               <p>Giải đáp các câu hỏi thường được hỏi</p>
-              <a href="#" className="help-link">Xem FAQ →</a>
+              <Link
+                to="/citizen/home"
+                className="help-link"
+                title="Tính năng đang phát triển"
+              >
+                Xem FAQ →
+              </Link>
             </div>
             <div className="help-item">
               <h4>Liên Hệ Hỗ Trợ</h4>
               <p>Liên hệ với bộ phận hỗ trợ kỹ thuật</p>
-              <a href="#" className="help-link">Liên hệ →</a>
+              <Link
+                to="/citizen/home"
+                className="help-link"
+                title="Tính năng đang phát triển"
+              >
+                Liên hệ →
+              </Link>
             </div>
           </div>
         </section>

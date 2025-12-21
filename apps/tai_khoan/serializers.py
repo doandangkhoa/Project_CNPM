@@ -9,7 +9,7 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaiKhoan
         # Người dân đăng ký, role mặc định là 'nguoi_dan', chuc_vu không cần
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'cccd']
 
     def create(self, validated_data):
         """
@@ -19,6 +19,7 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
+            cccd=validated_data.get('cccd', ''),
             role='nguoi_dan',
             chuc_vu=None
         )
@@ -34,7 +35,7 @@ class TaiKhoanDetailSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(source='date_joined', read_only=True)
     class Meta:
         model = TaiKhoan
-        fields = ['id', 'username', 'email', 'ho_ten', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'created_at', 'avatar']
+        fields = ['id', 'username', 'email', 'cccd', 'ho_ten', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'created_at', 'avatar']
 
     def get_ho_ten(self, obj):
         # Prefer a dedicated full-name field if present, else combine first/last name

@@ -27,6 +27,7 @@ urlpatterns = [
     path('nhan-khau/<int:pk>/xoa/', nhan_khau_views.xoa_nhan_khau, name='xoa-nhan-khau'), # xóa do nhập sai
     path('nhan-khau/bien-dong/ho-khau/<int:ho_khau_id>/', nhan_khau_views.lich_su_thay_doi_ho_khau, name='lich-su-ho-khau'),
     path('nhan-khau/danh-sach-ho-khau/', nhan_khau_views.danh_sach_ho_gia_dinh, name='danh-sach-ho-khau'),
+    path('citizen/profile/', nhan_khau_views.get_citizen_profile, name='citizen-profile'),
     
     # ho gia dinh
     path('ho-gia-dinh/', ho_gia_dinh_views.tim_kiem_ho_gia_dinh, name='danh-sach-ho-gia-dinh'),

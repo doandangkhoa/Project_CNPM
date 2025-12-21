@@ -14,6 +14,7 @@ class TaiKhoan(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='nguoi_dan')
     chuc_vu = models.CharField(max_length=20, choices=CHUC_VU, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    cccd = models.CharField(max_length=12, unique=True, blank=True, null=True, verbose_name='Số CCCD')
 
     # Override để tránh xung đột với auth.User
     groups = models.ManyToManyField(
