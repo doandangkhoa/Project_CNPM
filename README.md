@@ -23,11 +23,8 @@
     pip install -r requirements.txt
 
 ### Làm việc với database 
-<<<<<<< HEAD
     tạo file .env ở thư mục chính rồi copy file .env_example vào
-=======
     tạo file .env ở thư mục chính rồi copy file env_example vào
->>>>>>> origin/khanh_new_version
 
 ## Chức năng hệ thống Quản lý Khu Dân Cư
 
