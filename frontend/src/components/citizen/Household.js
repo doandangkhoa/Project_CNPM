@@ -158,14 +158,11 @@ const CitizenHousehold = ({ currentUser }) => {
         <h3>Danh Sách Thành Viên ({members.length} người)</h3>
         <div className="members-table-container">
           <table className="members-table">
-            <thead>
+            <thead >
               <tr>
                 <th>Họ Tên</th>
                 <th>CCCD</th>
-                <th>Năm Sinh</th>
                 <th>Giới Tính</th>
-                <th>Quan Hệ</th>
-                <th>Tình Trạng</th>
                 <th>Hành Động</th>
               </tr>
             </thead>
@@ -174,16 +171,7 @@ const CitizenHousehold = ({ currentUser }) => {
                 <tr key={member.id} className="member-row">
                   <td className="member-name">{member.ho_ten}</td>
                   <td>{member.cccd}</td>
-                  <td>{member.nam_sinh}</td>
                   <td>{member.gioi_tinh}</td>
-                  <td>
-                    <span className="relation-badge">
-                      {member.quan_he_chu_ho}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="status-badge">{member.tinh_trang}</span>
-                  </td>
                   <td className="actions">
                     <button
                       className="btn-action detail"

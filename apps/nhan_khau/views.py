@@ -449,9 +449,9 @@ def danh_sach_ho_gia_dinh(request):
 @permission_classes([IsAuthenticated])
 def get_citizen_profile(request):
     """
-    API lấy thông tin hộ khẩu và nhân khẩu dựa vào số CCCD của user đăng nhập
+    API lấy thông tin hộ khẩu và nhân khẩu dựa vào user đăng nhập
     - User phải là 'nguoi_dan'
-    - Tìm nhân khẩu có so_cccd trùng với TaiKhoan.cccd
+    - Sử dụng liên kết OneToOneField nhan_khau từ TaiKhoan, fallback to CCCD lookup
     - Lấy thông tin hộ khẩu từ nhân khẩu đó
     """
     try:
@@ -464,17 +464,24 @@ def get_citizen_profile(request):
                 'message': 'Chỉ người dân mới có quyền truy cập tính năng này'
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # Kiểm tra user có CCCD không
-        if not user.cccd:
+        # Kiểm tra user có liên kết nhan_khau hoặc CCCD
+        if not user.nhan_khau and not user.cccd:
             return Response({
                 'status': 'error',
                 'message': 'Tài khoản của bạn chưa có thông tin CCCD'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Tìm nhân khẩu dựa vào CCCD
-        nhan_khau = NhanKhau.objects.select_related('ho_gia_dinh').get(so_cccd=user.cccd)
+        # Ưu tiên sử dụng liên kết nhan_khau nếu có
+        if user.nhan_khau:
+            nhan_khau = user.nhan_khau
+        else:
+            # Fallback: Tìm nhân khẩu dựa vào CCCD và tự động liên kết
+            nhan_khau = NhanKhau.objects.get(so_cccd=user.cccd)
+            user.nhan_khau = nhan_khau
+            user.save()
         
-        # Lấy thông tin hộ khẩu
+        # Load related household data
+        nhan_khau = NhanKhau.objects.select_related('ho_gia_dinh').get(id=nhan_khau.id)
         ho_gia_dinh = nhan_khau.ho_gia_dinh
         
         nhan_khau_data = NhanKhauSerializer(nhan_khau).data
@@ -489,7 +496,7 @@ def get_citizen_profile(request):
     except NhanKhau.DoesNotExist:
         return Response({
             'status': 'error',
-            'message': 'Không tìm thấy thông tin nhân khẩu tương ứng với CCCD của bạn'
+            'message': 'Không tìm thấy thông tin nhân khẩu tương ứng với CCCD của bạn. Vui lòng liên hệ cán bộ để đăng ký thông tin nhân khẩu.'
         }, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         import traceback
