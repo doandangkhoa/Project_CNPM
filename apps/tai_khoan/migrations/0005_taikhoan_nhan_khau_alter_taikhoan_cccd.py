@@ -7,7 +7,6 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('nhan_khau', '0010_ensure_ngay_chuyen_noi_chuyen'),
         ('tai_khoan', '0004_taikhoan_cccd'),
     ]
 
