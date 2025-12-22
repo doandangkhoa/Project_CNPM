@@ -116,12 +116,24 @@
 
 .members-table th {
   padding: 1rem;
-  text-align: left;
+  text-align: center;
+  vertical-align: middle;
   font-size: 0.875rem;
   font-weight: 700;
   color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+.members-table th:nth-child(1),
+.members-table td:nth-child(1) {
+  text-align: left;
+  font-weight: 500; /* Tên đậm hơn một chút cho đẹp */
+}
+
+/* 3. Các cột còn lại (CCCD, Giới tính, Hành động): Căn GIỮA */
+.members-table th:not(:first-child),
+.members-table td:not(:first-child) {
+  text-align: center;
 }
 
 .members-table tbody tr {
@@ -134,6 +146,7 @@
 }
 
 .members-table td {
+  text-align: center;
   padding: 1rem;
   color: #374151;
   font-size: 0.875rem;

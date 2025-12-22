@@ -7,6 +7,7 @@ function RegisterPage() {
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [cccd, setCCCD] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,7 +17,7 @@ function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!username || !email || !password || !confirmPassword) {
+    if (!username || !email || !cccd || !password || !confirmPassword) {
       setError('Vui lòng điền đầy đủ thông tin');
       return;
     }
@@ -26,13 +27,18 @@ function RegisterPage() {
       return;
     }
 
+    if (cccd.length !== 12 || !/^\d+$/.test(cccd)) {
+      setError('Số CCCD phải là 12 chữ số');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch('http://localhost:8000/api/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, cccd, password }),
       });
 
       const data = await res.json();
@@ -40,7 +46,7 @@ function RegisterPage() {
       if (res.ok && data.status === 'success') {
         navigate('/login');
       } else {
-        setError(data.message || 'Đăng ký thất bại');
+        setError(data.message || data.errors?.cccd?.[0] || 'Đăng ký thất bại');
       }
     } catch (err) {
       setError('Không thể kết nối server');
@@ -57,7 +63,9 @@ function RegisterPage() {
       { className: 'register-box' },
       React.createElement('h3', null, 'Đăng ký tài khoản'),
 
-      React.createElement('form', { onSubmit: handleRegister },
+      React.createElement(
+        'form',
+        { onSubmit: handleRegister },
 
         React.createElement('input', {
           type: 'text',
@@ -73,6 +81,15 @@ function RegisterPage() {
           placeholder: 'Email',
           value: email,
           onChange: (e) => setEmail(e.target.value),
+        }),
+
+        React.createElement('input', {
+          type: 'text',
+          className: 'form-control',
+          placeholder: 'Số CCCD (12 chữ số)',
+          value: cccd,
+          maxLength: '12',
+          onChange: (e) => setCCCD(e.target.value.replace(/\D/g, '')),
         }),
 
         React.createElement('input', {
@@ -92,11 +109,7 @@ function RegisterPage() {
         }),
 
         error &&
-          React.createElement(
-            'div',
-            { className: 'text-danger' },
-            error
-          ),
+          React.createElement('div', { className: 'text-danger' }, error),
 
         React.createElement(
           'button',

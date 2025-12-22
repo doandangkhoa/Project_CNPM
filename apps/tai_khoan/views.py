@@ -28,10 +28,20 @@ def register_view(request):
         'username': request.data.get('username'),
         'email': request.data.get('email'),
         'password': request.data.get('password'),
+        'cccd': request.data.get('cccd'),
     }
     serializer = TaiKhoanRegisterSerializer(data=data)
     if serializer.is_valid():
         user = serializer.save() # role: nguoi_dan, chuc_vu: None
+        # Try to auto-link with NhanKhau by CCCD
+        if user.cccd:
+            try:
+                from apps.nhan_khau.models import NhanKhau
+                nhan_khau = NhanKhau.objects.get(so_cccd=user.cccd)
+                user.nhan_khau = nhan_khau
+                user.save()
+            except:
+                pass
         return Response({
             'status': 'success',
             'message': 'Đăng ký thành công.',
@@ -39,6 +49,7 @@ def register_view(request):
         }, status=status.HTTP_201_CREATED)
     return Response({
         'status': 'error',
+        'message': 'Đăng ký thất bại',
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 

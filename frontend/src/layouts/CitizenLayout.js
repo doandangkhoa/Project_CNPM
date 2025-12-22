@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import UserMenu from '../components/UserMenu';
 import '../styles/CitizenLayout.css';
 
@@ -17,16 +18,26 @@ const CitizenLayout = ({ currentUser, onLogout, children }) => {
       </header>
       <nav className="citizen-nav">
         <ul>
-          <li><a href="/citizen/home">Trang Chủ</a></li>
-          <li><a href="/citizen/household">Sổ Hộ Khẩu</a></li>
-          <li><a href="/citizen/services">Dịch Vụ</a></li>
-          <li><a href="/citizen/requests">Lịch Sử Yêu Cầu</a></li>
-          <li><a href="/citizen/profile">Thông Tin Cá Nhân</a></li>
+          <li>
+            <Link to="/citizen/home">Trang Chủ</Link>
+          </li>
+          <li>
+            <Link to="/citizen/household">Sổ Hộ Khẩu</Link>
+          </li>
+          <li>
+            <Link to="/citizen/services">Dịch Vụ</Link>
+          </li>
+          <li>
+            <Link to="/citizen/home" title="Tính năng đang phát triển">
+              Lịch Sử Yêu Cầu
+            </Link>
+          </li>
+          <li>
+            <Link to="/citizen/profile">Thông Tin Cá Nhân</Link>
+          </li>
         </ul>
       </nav>
-      <main className="citizen-main">
-        {children}
-      </main>
+      <main className="citizen-main">{children}</main>
       <footer className="citizen-footer">
         <p>&copy; 2025 Cổng Dịch Vụ Công. Tất cả quyền được bảo lưu.</p>
       </footer>

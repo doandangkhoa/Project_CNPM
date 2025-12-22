@@ -9,7 +9,7 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaiKhoan
         # Người dân đăng ký, role mặc định là 'nguoi_dan', chuc_vu không cần
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'cccd']
 
     def create(self, validated_data):
         """
@@ -19,6 +19,7 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
+            cccd=validated_data.get('cccd', ''),
             role='nguoi_dan',
             chuc_vu=None
         )
@@ -32,14 +33,33 @@ class TaiKhoanDetailSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(read_only=True)
     ho_ten = serializers.SerializerMethodField(read_only=True)
     created_at = serializers.DateTimeField(source='date_joined', read_only=True)
+    # Include NhanKhau info if linked
+    nhan_khau = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = TaiKhoan
-        fields = ['id', 'username', 'email', 'ho_ten', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'created_at', 'avatar']
+        fields = ['id', 'username', 'email', 'cccd', 'ho_ten', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'created_at', 'avatar', 'nhan_khau']
 
     def get_ho_ten(self, obj):
-        # Prefer a dedicated full-name field if present, else combine first/last name
+        # Prefer NhanKhau's ho_ten if linked
+        if obj.nhan_khau:
+            return obj.nhan_khau.ho_ten
+        # Else combine first/last name
         full = getattr(obj, 'ho_ten', None) or ' '.join(filter(None, [obj.first_name, obj.last_name]))
         return full if full.strip() else None
+    
+    def get_nhan_khau(self, obj):
+        if obj.nhan_khau:
+            return {
+                'id': obj.nhan_khau.id,
+                'ho_ten': obj.nhan_khau.ho_ten,
+                'so_cccd': obj.nhan_khau.so_cccd,
+                'ngay_sinh': obj.nhan_khau.ngay_sinh,
+                'gioi_tinh': obj.nhan_khau.gioi_tinh,
+                'trang_thai': obj.nhan_khau.trang_thai,
+            }
+        return None
+
         
 class ManageUserPermissionsSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=TaiKhoan.ROLE_CHOICES, required=False)
@@ -119,10 +139,11 @@ class ChangePassWordSerializer(serializers.Serializer):
 
 class MeUpdateSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(required=False, allow_null=True)
+    nhan_khau_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = TaiKhoan
-        fields = ['username', 'email', 'avatar']
+        fields = ['username', 'email', 'avatar', 'nhan_khau_id']
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
@@ -130,6 +151,15 @@ class MeUpdateSerializer(serializers.ModelSerializer):
         # handle avatar
         if 'avatar' in validated_data:
             instance.avatar = validated_data.get('avatar')
-        instance.save()
-        return instance
+        # Link to NhanKhau if nhan_khau_id provided
+        if 'nhan_khau_id' in validated_data:
+            nhan_khau_id = validated_data.get('nhan_khau_id')
+            if nhan_khau_id:
+                try:
+                    from apps.nhan_khau.models import NhanKhau
+                    instance.nhan_khau = NhanKhau.objects.get(id=nhan_khau_id)
+                except:
+                    pass
+            else:
+                instance.nhan_khau = None
     
