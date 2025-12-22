@@ -1,0 +1,257 @@
+/* Admin Audit Log Styles */
+
+.admin-audit-log {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.admin-audit-log h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.subtitle {
+  margin: 0 0 2rem 0;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+/* Filter Section */
+.filter-section {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.search-box {
+  margin-bottom: 1rem;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  font-size: 0.875rem;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.filter-group select {
+  padding: 0.75rem;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Logs Container */
+.logs-container {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.logs-table thead {
+  background-color: #0f172a;
+  border-bottom: 2px solid #334155;
+}
+
+.logs-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.logs-table tbody tr {
+  border-bottom: 1px solid #334155;
+  transition: background-color 0.2s ease;
+}
+
+.logs-table tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.logs-table td {
+  padding: 0.875rem 1rem;
+  color: #cbd5e1;
+}
+
+.logs-table code {
+  background-color: rgba(15, 23, 42, 0.5);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  color: #60a5fa;
+  word-break: break-all;
+}
+
+.timestamp {
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.username {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.action {
+  text-align: center;
+}
+
+.action-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+}
+
+.object {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.object code {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ip-address {
+  color: #94a3b8;
+}
+
+.status {
+  text-align: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.success {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #86efac;
+}
+
+.status-badge.fail {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+/* Row Status */
+.logs-table tbody tr.status-fail {
+  opacity: 0.7;
+}
+
+.logs-table tbody tr.status-fail:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: #94a3b8;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* Table Footer */
+.table-footer {
+  padding: 1rem;
+  background-color: #0f172a;
+  border-top: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .logs-table {
+    font-size: 0.7rem;
+  }
+
+  .logs-table th,
+  .logs-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .logs-container {
+    overflow-x: auto;
+  }
+
+  .logs-table {
+    min-width: 900px;
+  }
+
+  .logs-table code {
+    font-size: 0.65rem;
+  }
+}

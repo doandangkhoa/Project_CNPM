@@ -9,7 +9,7 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaiKhoan
         # Người dân đăng ký, role mặc định là 'nguoi_dan', chuc_vu không cần
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'cccd']
 
     def create(self, validated_data):
         """
@@ -19,6 +19,7 @@ class TaiKhoanRegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
+            cccd=validated_data.get('cccd', ''),
             role='nguoi_dan',
             chuc_vu=None
         )
@@ -34,7 +35,7 @@ class TaiKhoanDetailSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(source='date_joined', read_only=True)
     class Meta:
         model = TaiKhoan
-        fields = ['id', 'username', 'email', 'ho_ten', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'created_at', 'avatar']
+        fields = ['id', 'username', 'email', 'cccd', 'ho_ten', 'role', 'role_hien_thi', 'chuc_vu', 'chuc_vu_hien_thi', 'is_active', 'created_at', 'avatar']
 
     def get_ho_ten(self, obj):
         # Prefer a dedicated full-name field if present, else combine first/last name
@@ -44,6 +45,7 @@ class TaiKhoanDetailSerializer(serializers.ModelSerializer):
 class ManageUserPermissionsSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=TaiKhoan.ROLE_CHOICES, required=False)
     chuc_vu = serializers.ChoiceField(choices=TaiKhoan.CHUC_VU, required=False, allow_null=True)
+    password = serializers.CharField(write_only=True, required=False, min_length=6)
 
     class Meta:
         model = TaiKhoan
@@ -53,6 +55,7 @@ class ManageUserPermissionsSerializer(serializers.ModelSerializer):
             'role',
             'chuc_vu',
             'is_active',
+            'password',
         ]
         extra_kwargs = {
             'username': {'required': False},
@@ -84,6 +87,10 @@ class ManageUserPermissionsSerializer(serializers.ModelSerializer):
             instance.chuc_vu = validated_data.get('chuc_vu', instance.chuc_vu)
 
         instance.is_active = validated_data.get('is_active', instance.is_active)
+
+        # Cập nhật mật khẩu nếu được cung cấp
+        if 'password' in validated_data and validated_data['password']:
+            instance.set_password(validated_data['password'])
 
         instance.save()
         return instance

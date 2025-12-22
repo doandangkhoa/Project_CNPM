@@ -1,24 +1,34 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import DashboardPage from './pages/DashboardPage';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import SearchPage from './pages/nhankhau/FindResidentPage';
-import ManagePage from './pages/ManagePage';
-import { Navigate } from 'react-router-dom';
-import BaseLayout from './components/BaseLayout';
-import HomePage from './pages/HomePage';
-import ChangePasswordPage from './pages/ChangePasswordPage';
-import AdminManagePage from './pages/admin/ManagePage';
-import AdminUserListPage from './pages/admin/UserListPage';
-import AdminUserFindPage from './pages/admin/UserFindPage';
-import AdminUserUpdatePage from './pages/admin/UserUpdatePage';
-import AddResidentPage from './pages/nhankhau/AddResidentPage';
-import FindResidentPage from './pages/nhankhau/FindResidentPage';
-import UpdateResidentPage from './pages/nhankhau/UpdateResidentPage';
+import ProtectedRoute from './utils/ProtectedRoute';
+
+// Admin Pages
+import AdminUsersPage from './pages/admin/UsersPage';
+
+// Officer Pages
+import OfficerDashboardPage from './pages/officer/DashboardPage';
+import OfficerHouseholdsPage from './pages/officer/HouseholdsPage';
+import OfficerResidentsPage from './pages/officer/ResidentsPage';
+import OfficerRequestsPage from './pages/officer/RequestsPage';
+
+// Citizen Pages
+import CitizenHomePage from './pages/citizen/HomePage';
+import CitizenHouseholdPage from './pages/citizen/HouseholdPage';
+import CitizenServicesPage from './pages/citizen/ServicesPage';
+import CitizenUserProfilePage from './pages/citizen/UserProfilePage';
+
+// User Pages
 import UserProfilePage from './pages/UserProfilePage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
+import NhanKhauListPage from './pages/nhankhau/ListPage';
+import NhanKhauDetailPage from './pages/nhankhau/DetailPage';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -27,159 +37,203 @@ function App() {
     setCurrentUser(currentUser);
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+  };
+
   return (
     <Router>
       <Routes>
-        {currentUser ? (
-          <>
-            <Route
-              path="/"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <HomePage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/search"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <SearchPage currentUser={currentUser} />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/manage"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <ManagePage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/about"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <AboutPage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/contact"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <ContactPage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <DashboardPage />
-                </BaseLayout>
-              }
-            />
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-            {/* Nhân khẩu routes */}
-            <Route
-              path="/resident-add"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <AddResidentPage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/resident-findbyid"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <FindResidentPage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/resident-find"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <FindResidentPage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/resident-update"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <UpdateResidentPage />
-                </BaseLayout>
-              }
-            />
+        {/* User Profile Routes */}
+        <Route
+          path="/user-profile"
+          element={
+            <ProtectedRoute currentUser={currentUser}>
+              <UserProfilePage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute currentUser={currentUser}>
+              <ChangePasswordPage currentUser={currentUser} />
+            </ProtectedRoute>
+          }
+        />
 
-            {/* Đổi mật khẩu */}
-            <Route
-              path="/change-password"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <ChangePasswordPage />
-                </BaseLayout>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <BaseLayout currentUser={currentUser}>
-                  <UserProfilePage />
-                </BaseLayout>
-              }
-            />
-            {currentUser.role === 'admin' && (
-              <>
-                <Route
-                  path="/admin/manage"
-                  element={
-                    <BaseLayout currentUser={currentUser}>
-                      <AdminManagePage />
-                    </BaseLayout>
-                  }
-                />
-                <Route
-                  path="/admin/userlist"
-                  element={
-                    <BaseLayout currentUser={currentUser}>
-                      <AdminUserListPage />
-                    </BaseLayout>
-                  }
-                />
-                <Route
-                  path="/admin/userfind"
-                  element={
-                    <BaseLayout currentUser={currentUser}>
-                      <AdminUserFindPage />
-                    </BaseLayout>
-                  }
-                />
-                <Route
-                  path="/admin/userupdate"
-                  element={
-                    <BaseLayout currentUser={currentUser}>
-                      <AdminUserUpdatePage />
-                    </BaseLayout>
-                  }
-                />
-              </>
-            )}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </>
-        ) : (
-          <>
-            <Route
-              path="/login"
-              element={<LoginPage onLogin={handleLogin} />}
-            />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </>
-        )}
+        {/* Nhan Khau Routes */}
+        <Route
+          path="/nhan-khau"
+          element={
+            <ProtectedRoute currentUser={currentUser}>
+              <NhanKhauListPage currentUser={currentUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nhan-khau/:id"
+          element={
+            <ProtectedRoute currentUser={currentUser}>
+              <NhanKhauDetailPage currentUser={currentUser} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute currentUser={currentUser} requiredRoles={['admin']}>
+              <AdminUsersPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Officer Routes */}
+        <Route
+          path="/officer/dashboard"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['can_bo']}
+            >
+              <OfficerDashboardPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/officer/households"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['can_bo']}
+            >
+              <OfficerHouseholdsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/officer/residents"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['can_bo']}
+            >
+              <OfficerResidentsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/officer/requests"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['can_bo']}
+            >
+              <OfficerRequestsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Citizen Routes */}
+        <Route
+          path="/citizen/home"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <CitizenHomePage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/household"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <CitizenHouseholdPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/services"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <CitizenServicesPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/profile"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <CitizenUserProfilePage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Redirects */}
+        <Route
+          path="/"
+          element={
+            currentUser ? (
+              currentUser.role === 'admin' ? (
+                <Navigate to="/admin/users" replace />
+              ) : currentUser.role === 'can_bo' ? (
+                <Navigate to="/officer/dashboard" replace />
+              ) : (
+                <Navigate to="/citizen/home" replace />
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

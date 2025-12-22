@@ -23,11 +23,15 @@
     pip install -r requirements.txt
 
 ### Làm việc với database 
+<<<<<<< HEAD
     tạo file .env ở thư mục chính rồi copy file .env_example vào
+=======
+    tạo file .env ở thư mục chính rồi copy file env_example vào
+>>>>>>> origin/khanh_new_version
 
 ## Chức năng hệ thống Quản lý Khu Dân Cư
 
-### 1️. Quản lý Nhân khẩu
+### 1️. Quản lý Nhân khẩu (Đã hoàn thành)
 - Mục tiêu: Quản lý thông tin cá nhân của từng người dân.
 - Chức năng:
     - Thêm mới nhân khẩu. Tuấn
@@ -40,19 +44,20 @@
 ### 2️. Quản lý Hộ gia đình
 - Mục tiêu: Quản lý thông tin hộ dân trong khu dân cư.
 - Chức năng:
-    - Thêm mới hộ gia đình (bao gồm chủ hộ).
-    - Cập nhật địa chỉ, thông tin chủ hộ.
-    - Xem danh sách thành viên trong hộ.
-    - Thêm hoặc chuyển nhân khẩu giữa các hộ.
-    - Xóa hộ (hoặc đánh dấu giải thể hộ).
-    - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.
+    - Thêm mới hộ gia đình (bao gồm chủ hộ). (Done)
+    - Cập nhật địa chỉ, thông tin chủ hộ. (Done)
+    - Xem danh sách thành viên trong hộ. (Done)
+    - Thêm thành viên. (Done)
+    - tách hộ.
+    - xem thông tin biến động nhân khẩu của 1 hộ.
+    - Xóa hộ. (Done)
+    - Tra cứu hộ theo địa chỉ hoặc tên chủ hộ.(Done)
 
 ### 3️. Quản lý Tạm trú - Tạm vắng
 - Mục tiêu: Theo dõi biến động nhân khẩu trong khu dân cư.
 - Chức năng:
     - Tạo phiếu tạm trú / tạm vắng cho nhân khẩu.
     - Xem chi tiết phiếu.
-    - Gia hạn / kết thúc thời gian tạm trú.
     - Lọc theo loại phiếu, thời gian, trạng thái còn hiệu lực.
     - Xuất danh sách người đang tạm trú / tạm vắng.
 
@@ -65,7 +70,7 @@
     - Ghi nhận tham gia (app ThamGiaSinhHoat).
     - Thống kê tỷ lệ tham gia theo buổi / theo hộ.
 
-### 5. Quản lý Tài khoản người dùng
+### 5. Quản lý Tài khoản người dùng (Đã hoàn thành)
 - Mục tiêu: Xác thực và phân quyền người dùng.
 - Chức năng:
     - Đăng nhập, đăng xuất.
@@ -83,13 +88,6 @@
     - Thống kê gia đình đạt danh hiệu "Gia đình văn hóa" cuối năm.
     - Tạo biểu đồ, xuất báo cáo (PDF / Excel). (optional)
 
-### 7. API Backend (Django REST Framework)
-- Xây dựng các API endpoint cho từng app (CRUD + filter).
-- Thêm xác thực JWT Token (bằng djangorestframework-simplejwt).
-- Thêm phân quyền API (chỉ cán bộ mới được sửa/xóa).
-- Viết serializer cho các model.
-- Viết unit test API (nếu có thời gian).
-- Viết README hướng dẫn cài backend.
 
 ## Frontend Team
 ### Frontend (React hoặc Vue)

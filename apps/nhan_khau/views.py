@@ -8,9 +8,11 @@ from rest_framework import status
 from django.db.models import Q
 from datetime import date, datetime
 
+from rest_framework import serializers
 from .models import NhanKhau, BienDongNhanKhau
 from apps.can_bo.models import CanBo
 from apps.ho_gia_dinh.models import HoGiaDinh
+from apps.ho_gia_dinh.serializers import HoGiaDinhSerializer
 from .serializers import NhanKhauSerializer, BienDongNhanKhauSerializer, NhanKhauCreateUpdateSerializer
 
 
@@ -55,7 +57,7 @@ def them_moi_nhan_khau(request):
                 
                 # Yêu cầu: Bỏ trống nghề nghiệp, nơi làm việc, CCCD
                 if not data.get('nghe_nghiep'):
-                    data['nghe_nghiep'] = None # Hoặc để None tùy bạn
+                    data['nghe_nghiep'] = None # Hoặc để None
                 data['noi_lam_viec'] = None
                 
                 # Xử lý CCCD: Nếu gửi lên chuỗi rỗng "" thì set về None để tránh lỗi unique
@@ -80,17 +82,6 @@ def them_moi_nhan_khau(request):
                 # 2. Lưu nhân khẩu mới
                 nhan_khau = serializer.save()
 
-                # 4. Lấy CanBo nếu tồn tại (một số tài khoản cán bộ có thể chưa có bản ghi CanBo)
-                can_bo = CanBo.objects.filter(tai_khoan=user).first()
-
-                # 5. Ghi log biến động TAO_MOI (can_bo có thể là None; field FK cho phép null)
-                BienDongNhanKhau.objects.create(
-                    nhan_khau=nhan_khau,
-                    ho_khau=nhan_khau.ho_gia_dinh,
-                    can_bo_thuc_hien=can_bo,
-                    loai_bien_dong='TAO_MOI',
-                    mo_ta=f"Thêm mới nhân khẩu: {nhan_khau.ho_ten}"
-                )
 
             return Response({
                 'status': 'success',
@@ -129,15 +120,7 @@ def cap_nhat_nhan_khau(request, pk):
             with transaction.atomic():
                 serializer.save()
 
-                # Ghi log CAP_NHAT
-                can_bo = CanBo.objects.filter(tai_khoan=user).first()
-                BienDongNhanKhau.objects.create(
-                    nhan_khau=nhan_khau,
-                    ho_khau=nhan_khau.ho_gia_dinh,
-                    can_bo_thuc_hien=can_bo,
-                    loai_bien_dong='CAP_NHAT',
-                    mo_ta="Cập nhật thông tin nhân khẩu"
-                )
+
 
             return Response({'status': 'success', 'message': 'Cập nhật thành công'}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -168,9 +151,108 @@ def chi_tiet_nhan_khau(request, pk):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def danh_sach_nhan_khau(request):
+    """
+    API lấy danh sách tất cả nhân khẩu với phân trang
+    Hỗ trợ tìm kiếm nâng cao theo nhiều tiêu chí:
+    ho_ten, so_cccd, ngay_sinh, so_ho_khau, noi_sinh, nguyen_quan,
+    dan_toc, gioi_tinh, nghe_nghiep, noi_lam_viec, dia_chi_thuong_tru_truoc_day,
+    trang_thai, quan_he_voi_chu_ho
+    """
+    queryset = NhanKhau.objects.select_related('ho_gia_dinh').prefetch_related('bien_dong_nhan_khau')
+    
+    # Tìm kiếm nhanh (basic search)
+    search = request.query_params.get('search', '').strip()
+    if search:
+        queryset = queryset.filter(
+            Q(ho_ten__icontains=search) | 
+            Q(so_cccd__icontains=search) | 
+            Q(nghe_nghiep__icontains=search)
+        )
+    
+    # Tìm kiếm nâng cao - lấy các tham số từ query string
+    ho_ten = request.query_params.get('ho_ten', '').strip()
+    so_cccd = request.query_params.get('so_cccd', '').strip()
+    ngay_sinh = request.query_params.get('ngay_sinh', '').strip()
+    so_ho_khau = request.query_params.get('so_ho_khau', '').strip()
+    noi_sinh = request.query_params.get('noi_sinh', '').strip()
+    nguyen_quan = request.query_params.get('nguyen_quan', '').strip()
+    dan_toc = request.query_params.get('dan_toc', '').strip()
+    gioi_tinh = request.query_params.get('gioi_tinh', '').strip()
+    nghe_nghiep = request.query_params.get('nghe_nghiep', '').strip()
+    noi_lam_viec = request.query_params.get('noi_lam_viec', '').strip()
+    dia_chi_thuong_tru_truoc_day = request.query_params.get('dia_chi_thuong_tru_truoc_day', '').strip()
+    trang_thai = request.query_params.get('trang_thai', '').strip()
+    quan_he_voi_chu_ho = request.query_params.get('quan_he_voi_chu_ho', '').strip()
+    dia_chi = request.query_params.get('dia_chi', '').strip()
+
+    # Áp dụng các bộ lọc nâng cao - chỉ khi tham số không trống
+    if ho_ten:
+        queryset = queryset.filter(Q(ho_ten__icontains=ho_ten) | Q(bi_danh__icontains=ho_ten))
+    if so_cccd:
+        queryset = queryset.filter(so_cccd__icontains=so_cccd)
+    if ngay_sinh:
+        queryset = queryset.filter(ngay_sinh=ngay_sinh)
+    if so_ho_khau:
+        queryset = queryset.filter(ho_gia_dinh__so_ho_khau__icontains=so_ho_khau)
+    if noi_sinh:
+        queryset = queryset.filter(noi_sinh__icontains=noi_sinh)
+    if nguyen_quan:
+        queryset = queryset.filter(nguyen_quan__icontains=nguyen_quan)
+    if dan_toc:
+        queryset = queryset.filter(dan_toc__icontains=dan_toc)
+    if gioi_tinh:
+        queryset = queryset.filter(gioi_tinh=gioi_tinh)
+    if nghe_nghiep:
+        queryset = queryset.filter(nghe_nghiep__icontains=nghe_nghiep)
+    if noi_lam_viec:
+        queryset = queryset.filter(noi_lam_viec__icontains=noi_lam_viec)
+    if dia_chi_thuong_tru_truoc_day:
+        queryset = queryset.filter(dia_chi_thuong_tru_truoc_day__icontains=dia_chi_thuong_tru_truoc_day)
+    if trang_thai:
+        queryset = queryset.filter(trang_thai=trang_thai)
+    if quan_he_voi_chu_ho:
+        queryset = queryset.filter(quan_he_voi_chu_ho__icontains=quan_he_voi_chu_ho)
+    if dia_chi:
+        queryset = queryset.filter(ho_gia_dinh__dia_chi__icontains=dia_chi)
+    
+    # Phân trang - với error handling
+    try:
+        page = int(request.query_params.get('page', 1))
+        limit = int(request.query_params.get('limit', 10))
+        if page < 1 or limit < 1:
+            return Response({
+                'status': 'error',
+                'message': 'page và limit phải lớn hơn 0'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except (ValueError, TypeError):
+        return Response({
+            'status': 'error',
+            'message': 'page và limit phải là số nguyên'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    start = (page - 1) * limit
+    end = start + limit
+
+    results = queryset.order_by('ho_ten')[start:end]
+    total = queryset.count()
+
+    serializer = NhanKhauSerializer(results, many=True)
+
+    return Response({
+        'status': 'success',
+        'total': total,
+        'page': page,
+        'limit': limit,
+        'results': serializer.data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def tim_kiem_nhan_khau(request):
     """
-    API tìm kiếm nhân khẩu
+    API tìm kiếm nhân khẩu nâng cao
     ?ho_ten=Nguyễn Văn
     &so_cccd=0012
     &ngay_sinh=1990-05-20
@@ -185,6 +267,7 @@ def tim_kiem_nhan_khau(request):
     noi_sinh = request.query_params.get('noi_sinh', '').strip()
     nguyen_quan = request.query_params.get('nguyen_quan', '').strip()
     dan_toc = request.query_params.get('dan_toc', '').strip()
+    gioi_tinh = request.query_params.get('gioi_tinh', '').strip()
     nghe_nghiep = request.query_params.get('nghe_nghiep', '').strip()
     noi_lam_viec = request.query_params.get('noi_lam_viec', '').strip()
     dia_chi_thuong_tru_truoc_day = request.query_params.get('dia_chi_thuong_tru_truoc_day', '').strip()
@@ -207,6 +290,8 @@ def tim_kiem_nhan_khau(request):
         queryset = queryset.filter(nguyen_quan__icontains=nguyen_quan)
     if dan_toc:
         queryset = queryset.filter(dan_toc__icontains=dan_toc)
+    if gioi_tinh:
+        queryset = queryset.filter(gioi_tinh=gioi_tinh)
     if nghe_nghiep:
         queryset = queryset.filter(nghe_nghiep__icontains=nghe_nghiep)
     if noi_lam_viec:
@@ -218,9 +303,21 @@ def tim_kiem_nhan_khau(request):
     if quan_he_voi_chu_ho:
         queryset = queryset.filter(quan_he_voi_chu_ho__icontains=quan_he_voi_chu_ho)
 
-    # phân trang
-    page = int(request.query_params.get('page', 1))
-    limit = int(request.query_params.get('limit', 20))
+    # phân trang - với error handling
+    try:
+        page = int(request.query_params.get('page', 1))
+        limit = int(request.query_params.get('limit', 20))
+        if page < 1 or limit < 1:
+            return Response({
+                'status': 'error',
+                'message': 'page và limit phải lớn hơn 0'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except (ValueError, TypeError):
+        return Response({
+            'status': 'error',
+            'message': 'page và limit phải là số nguyên'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
     start = (page - 1) * limit
     end = start + limit
 
@@ -241,8 +338,8 @@ def tim_kiem_nhan_khau(request):
 @permission_classes([IsAuthenticated])
 def xoa_nhan_khau(request, pk):
     """
-    API Xóa nhân khẩu (Thực chất là Soft Delete - Đánh dấu là đã xóa).
-    Dùng cho trường hợp nhập sai hoặc xóa nhầm, không phải chuyển đi/chết.
+    API Xóa nhân khẩu (Hard Delete - Xóa hoàn toàn dữ liệu).
+    Dùng cho trường hợp nhập sai hoặc xóa nhầm.
     """
     try:
         nhan_khau = NhanKhau.objects.get(pk=pk)
@@ -253,27 +350,13 @@ def xoa_nhan_khau(request, pk):
 
     try:
         with transaction.atomic():
-            # 1. Tạo biến động loại XOA (kiểm tra quyền và lấy CanBo nếu có)
             user = request.user
             if not _user_is_authorized_can_bo(user):
                 return Response({'status': 'error', 'message': 'User không có quyền (chỉ cán bộ: tổ trưởng/tổ phó/cán bộ được phép)'}, status=status.HTTP_403_FORBIDDEN)
 
-            can_bo = CanBo.objects.filter(tai_khoan=user).first()
-            BienDongNhanKhau.objects.create(
-                nhan_khau=nhan_khau,
-                ho_khau=nhan_khau.ho_gia_dinh,
-                can_bo_thuc_hien=can_bo,
-                loai_bien_dong='XOA',
-                mo_ta=ly_do
-            )
+            nhan_khau.delete()
 
-            # 2. Xử lý trạng thái (Có thể xóa hẳn record hoặc để Null hộ khẩu)
-            # Ở đây mình chọn cách xóa quan hệ với Hộ khẩu nhưng giữ record
-            nhan_khau.ho_gia_dinh = None
-            nhan_khau.ghi_chu = f"Đã xóa. Lý do: {ly_do}"
-            nhan_khau.save()
-
-        return Response({'status': 'success', 'message': 'Đã xóa nhân khẩu khỏi hộ gia đình'}, status=status.HTTP_200_OK)
+        return Response({'status': 'success', 'message': 'Đã xóa nhân khẩu thành công'}, status=status.HTTP_200_OK)
     
     except Exception as e:
         return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -308,7 +391,7 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     """
     # 1. Kiểm tra hộ khẩu có tồn tại không
     try:
-        ho_gia_dinh = HoGiaDinh.objects.get(pk=ho_khau_id)
+        ho_gia_dinh = HoGiaDinh.objects.select_related('id_chu_ho').get(pk=ho_khau_id)
     except HoGiaDinh.DoesNotExist:
         return Response({
             'status': 'error',
@@ -318,8 +401,8 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     # 2. Truy vấn bảng Biến động, lọc theo ho_khau
     # select_related để tối ưu truy vấn (tránh query lặp lại vào bảng NhanKhau và CanBo)
     lich_su = BienDongNhanKhau.objects.filter(ho_khau_id=ho_khau_id)\
-                                      .select_related('nhan_khau', 'can_bo_thuc_hien')\
-                                      .order_by('-ngay_thay_doi') # Mới nhất lên đầu
+                                      .select_related('nhan_khau')\
+                                      .order_by('-thoi_gian') # Mới nhất lên đầu
 
     # 3. Serialize dữ liệu
     serializer = BienDongNhanKhauSerializer(lich_su, many=True)
@@ -327,7 +410,92 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     return Response({
         'status': 'success',
         'ho_gia_dinh': ho_gia_dinh.so_ho_khau, # Trả về số sổ để frontend hiển thị tiêu đề
-        'chu_ho': ho_gia_dinh.chu_ho.ho_ten if ho_gia_dinh.chu_ho else "Chưa có chủ hộ",
+        'chu_ho': ho_gia_dinh.id_chu_ho.ho_ten if ho_gia_dinh.id_chu_ho else "Chưa có chủ hộ",
         'tong_so_bien_dong': lich_su.count(),
         'data': serializer.data
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def danh_sach_ho_gia_dinh(request):
+    """
+    API lấy danh sách tất cả hộ gia đình (để chọn khi thêm/sửa nhân khẩu)
+    """
+    try:
+        ho_gia_dinh_list = HoGiaDinh.objects.all().order_by('ho_ten_chu_ho')
+        data = [
+            {
+                'id': hgd.id,
+                'ten_ho_khau': hgd.ho_ten_chu_ho,
+                'dia_chi': hgd.dia_chi,
+                'so_ho_khau': hgd.so_ho_khau,
+                'phuong_xa': hgd.phuong_xa
+            }
+            for hgd in ho_gia_dinh_list
+        ]
+        return Response({
+            'status': 'success',
+            'data': data
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_citizen_profile(request):
+    """
+    API lấy thông tin hộ khẩu và nhân khẩu dựa vào số CCCD của user đăng nhập
+    - User phải là 'nguoi_dan'
+    - Tìm nhân khẩu có so_cccd trùng với TaiKhoan.cccd
+    - Lấy thông tin hộ khẩu từ nhân khẩu đó
+    """
+    try:
+        user = request.user
+        
+        # Kiểm tra user là người dân
+        if user.role != 'nguoi_dan':
+            return Response({
+                'status': 'error',
+                'message': 'Chỉ người dân mới có quyền truy cập tính năng này'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Kiểm tra user có CCCD không
+        if not user.cccd:
+            return Response({
+                'status': 'error',
+                'message': 'Tài khoản của bạn chưa có thông tin CCCD'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Tìm nhân khẩu dựa vào CCCD
+        nhan_khau = NhanKhau.objects.select_related('ho_gia_dinh').get(so_cccd=user.cccd)
+        
+        # Lấy thông tin hộ khẩu
+        ho_gia_dinh = nhan_khau.ho_gia_dinh
+        
+        nhan_khau_data = NhanKhauSerializer(nhan_khau).data
+        ho_gia_dinh_data = HoGiaDinhSerializer(ho_gia_dinh).data if ho_gia_dinh else None
+        
+        return Response({
+            'status': 'success',
+            'nhan_khau': nhan_khau_data,
+            'ho_gia_dinh': ho_gia_dinh_data
+        }, status=status.HTTP_200_OK)
+        
+    except NhanKhau.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Không tìm thấy thông tin nhân khẩu tương ứng với CCCD của bạn'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        import traceback
+        print(f"Error in get_citizen_profile: {str(e)}")
+        print(traceback.format_exc())
+        return Response({
+            'status': 'error',
+            'message': f'Lỗi server: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -9,12 +9,26 @@ from apps.tai_khoan.serializers import MeUpdateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
+def _user_is_authorized_admin(user):
+    """Return True if user is allowed to perform admin actions.
+    Allowed when user is superuser OR user.role == 'can_bo' AND user.chuc_vu in allowed list.
+    """
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    if user.is_superuser:
+        return True
+    # positions that are considered authorized: tổ trưởng, tổ phó
+    allowed_positions = ['to_truong', 'to_pho']
+    return getattr(user, 'role', None) == 'can_bo' and getattr(user, 'chuc_vu', None) in allowed_positions
+
+
 @api_view(['POST'])
 def register_view(request):
     data = {
         'username': request.data.get('username'),
         'email': request.data.get('email'),
         'password': request.data.get('password'),
+        'cccd': request.data.get('cccd'),
     }
     serializer = TaiKhoanRegisterSerializer(data=data)
     if serializer.is_valid():
@@ -26,6 +40,7 @@ def register_view(request):
         }, status=status.HTTP_201_CREATED)
     return Response({
         'status': 'error',
+        'message': 'Đăng ký thất bại',
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -53,21 +68,28 @@ def login_view(request):
     })
     
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def logout_view(request):
     logout(request)
     return Response({'status': 'success', 'message': 'Đăng xuất thành công.'})
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def list_users(request):
+    if not _user_is_authorized_admin(request.user):
+        return Response({'status': 'error', 'message': 'Bạn không có quyền truy cập danh sách tài khoản'}, status=status.HTTP_403_FORBIDDEN)
+    
     users = TaiKhoan.objects.all()
     serializer = TaiKhoanDetailSerializer(users, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def user_detail(request, user_id):
+    if not _user_is_authorized_admin(request.user):
+        return Response({'status': 'error', 'message': 'Bạn không có quyền truy cập thông tin tài khoản'}, status=status.HTTP_403_FORBIDDEN)
+    
     try:
         user = TaiKhoan.objects.get(id=user_id)
     except TaiKhoan.DoesNotExist:
@@ -76,8 +98,11 @@ def user_detail(request, user_id):
     return Response(serializer.data)
 
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def update_user(request, user_id):
+    if not _user_is_authorized_admin(request.user):
+        return Response({'status': 'error', 'message': 'Bạn không có quyền cập nhật tài khoản'}, status=status.HTTP_403_FORBIDDEN)
+    
     try: 
         user = TaiKhoan.objects.get(id=user_id)
     except TaiKhoan.DoesNotExist:
@@ -90,8 +115,11 @@ def update_user(request, user_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def delete_user(request, user_id):
+    if not _user_is_authorized_admin(request.user):
+        return Response({'status': 'error', 'message': 'Bạn không có quyền xóa tài khoản'}, status=status.HTTP_403_FORBIDDEN)
+    
     try:
         user = TaiKhoan.objects.get(id=user_id)
         user.delete()
