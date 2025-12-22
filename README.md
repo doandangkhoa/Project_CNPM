@@ -69,14 +69,10 @@
 ### 3️. Quản lý Tạm trú - Tạm vắng (ứng với trang phê duyệt yêu cầu của cán bộ) - Đỗ Sơn
 - Mục tiêu: Theo dõi biến động nhân khẩu trong khu dân cư.
 - Chức năng:
-    - Tạo phiếu tạm trú / tạm vTuấn
-- Mục tiêu: Quản lý các buổi họp dân cư, ghi nhận tham gia.
-- Chức năng:
-    - Tạo buổi sinh hoạt (chủ đề, ngày giờ, địa điểm, nội dung).
-    - Cập nhật thông tin buổi sinh hoạt.
-    - Xem danh sách hộ gia đình tham gia / vắng mặt.
-    - Ghi nhận tham gia / vắng mặt (cần trao đổi lại để rõ ràng hơn nên làm thế nào).
-    - Thống kê tỷ lệ tham gia theo buổi / theo hộ (dùng để đánh giá gia đình văn hóa cuối năm).
+    - Tạo phiếu tạm trú / tạm vắng cho nhân khẩu. (+ ghi nhận biến động nhân khẩu dạng tạm trú/tạm vắng - có thể là xử trong phần serializers)
+    - Xem chi tiết phiếu.
+    - Lọc theo loại phiếu, thời gian, trạng thái còn hiệu lực.
+    -Xuất danh sách người đang tạm trú / tạm vắng.
 
 
 ### 4. Quản lý Sự kiện & Thông báo (Tuấn)
