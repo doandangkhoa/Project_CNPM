@@ -2,13 +2,14 @@ from django.urls import path
 from apps.tai_khoan import views as tai_khoan_views
 from apps.nhan_khau import views as nhan_khau_views
 from apps.ho_gia_dinh import views as ho_gia_dinh_views
+from apps.tam_tru_tam_vang import views as tam_tru_tam_vang_views
 
 urlpatterns = [
     # Tai khoan
     path('register/', tai_khoan_views.register_view, name='register'),
     path('login/', tai_khoan_views.login_view, name='login'),
     path('logout/', tai_khoan_views.logout_view, name='logout'),
-    path('me/change-password', tai_khoan_views.change_password, name='change-password'),
+    path('me/change-password/', tai_khoan_views.change_password, name='change-password'),
     path('me/', tai_khoan_views.me_view, name='me'),
     
     # admin url
@@ -35,4 +36,8 @@ urlpatterns = [
     path('ho-gia-dinh/<int:pk>/cap-nhat/', ho_gia_dinh_views.cap_nhat_ho_gia_dinh, name='cap-nhat-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/chi-tiet/', ho_gia_dinh_views.chi_tiet_ho_gia_dinh, name='chi-tiet-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/xoa/', ho_gia_dinh_views.xoa_ho_gia_dinh, name='xoa-ho-gia-dinh'),
+
+    #tam tru tam vang
+    path('tam-tru-tam-vang/', tam_tru_tam_vang_views.danh_sach_phieu_view, name='danh-sach-phieu-tam-tru-tam-vang'),
+    path('tam-tru-tam-vang/tao-phieu/', tam_tru_tam_vang_views.tao_phieu_view, name='tao-phieu-tam-tru-tam-vang'),
 ]
