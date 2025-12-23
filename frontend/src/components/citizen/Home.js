@@ -20,20 +20,11 @@ const CitizenHome = ({ currentUser }) => {
           <div className="services-grid">
             <div className="service-card">
               <div className="service-icon">🏠</div>
-              <h3>Đăng Ký Tạm Trú</h3>
+              <h3>Đăng Ký Tạm Trú/Tạm Vắng</h3>
               <p>Đăng ký tạm trú tại địa chỉ khác</p>
-              <a href="/citizen/services?type=tam_tru" className="service-btn">
-                Nộp Đơn
-              </a>
-            </div>
-
-            <div className="service-card">
-              <div className="service-icon">📋</div>
-              <h3>Khai Báo Tạm Vắng</h3>
-              <p>Khai báo khi tạm vắng khỏi nơi cư trú</p>
-              <a href="/citizen/services?type=tam_vang" className="service-btn">
-                Nộp Đơn
-              </a>
+              <Link to="/citizen/tam-tru-tam-vang" className="service-btn">
+                Nộp đơn
+              </Link>
             </div>
 
             <div className="service-card">

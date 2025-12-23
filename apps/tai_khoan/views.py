@@ -146,7 +146,7 @@ def change_password(request):
     )
     
     if serializer.is_valid():
-        new_password = serializer.validate['new_password']
+        new_password = serializer.validated_data['new_password']
         user.set_password(new_password)
         user.save()
         return Response({"status":"success", "message":"Đổi mật khẩu thành công"})

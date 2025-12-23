@@ -23,6 +23,7 @@ import CitizenHomePage from './pages/citizen/HomePage';
 import CitizenHouseholdPage from './pages/citizen/HouseholdPage';
 import CitizenServicesPage from './pages/citizen/ServicesPage';
 import CitizenUserProfilePage from './pages/citizen/UserProfilePage';
+import CitizenTamTruPage from './pages/citizen/TamTruPage';
 
 // User Pages
 import UserProfilePage from './pages/UserProfilePage';
@@ -195,6 +196,20 @@ function App() {
               requiredRoles={['nguoi_dan']}
             >
               <CitizenServicesPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/tam-tru-tam-vang"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <CitizenTamTruPage
                 currentUser={currentUser}
                 onLogout={handleLogout}
               />

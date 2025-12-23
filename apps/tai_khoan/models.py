@@ -16,6 +16,16 @@ class TaiKhoan(AbstractUser):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     cccd = models.CharField(max_length=12, unique=True, blank=True, null=True, verbose_name='Số CCCD')
 
+    # Thêm liên kết đến nhân khẩu (có thể null)
+    nhan_khau = models.ForeignKey(
+        'nhan_khau.NhanKhau',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tai_khoan',
+        verbose_name='Nhân khẩu',
+    )
+
     # Override để tránh xung đột với auth.User
     groups = models.ManyToManyField(
         Group,

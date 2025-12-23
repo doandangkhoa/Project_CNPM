@@ -31,7 +31,7 @@ const ChangePasswordPage = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:8000/api/me/change-password', {
+      const res = await fetch('http://localhost:8000/api/me/change-password/', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -68,6 +68,7 @@ const ChangePasswordPage = () => {
         setError(errs);
       }
     } catch (err) {
+      console.error('Lỗi kết nối server:', err);
       setError(['Không thể kết nối server']);
     }
   };
