@@ -42,4 +42,11 @@ class TaiKhoan(AbstractUser):
     def save(self, *args, **kwargs):
         if self.is_superuser:
             self.role = 'admin'
+        # Auto-link to NhanKhau if CCCD is provided
+        if self.cccd and not self.nhan_khau:
+            try:
+                from apps.nhan_khau.models import NhanKhau
+                self.nhan_khau = NhanKhau.objects.get(so_cccd=self.cccd)
+            except:
+                pass
         super().save(*args, **kwargs)

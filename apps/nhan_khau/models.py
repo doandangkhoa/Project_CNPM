@@ -34,9 +34,6 @@ class NhanKhau(models.Model):
     ],
     default="thuong_tru", # Mặc định sinh ra là thường trú (con cái)
     )
-    # Fields for moving/relocation
-    ngay_chuyen_di = models.DateField(null=True, blank=True, help_text="Ngày chuyển đi ")
-    noi_chuyen = models.CharField(max_length=255, null=True, blank=True, help_text="Nơi chuyển tới ")
     quan_he_voi_chu_ho = models.CharField(max_length=50, null=True, blank=True)
     ghi_chu = models.TextField(null=True, blank=True)
     
@@ -62,6 +59,36 @@ class BienDongNhanKhau(models.Model):
     ho_khau = models.ForeignKey('ho_gia_dinh.HoGiaDinh', on_delete=models.CASCADE, related_name='bien_dong_ho_khau', null=True, blank=True)
     loai_bien_dong = models.CharField(max_length=20, choices=LOAI_BIEN_DONG)
     mo_ta = models.TextField(null=True, blank=True)  # Ghi chú cụ thể: lý do, nơi chuyển đi/đến...
+    
+    # Thời gian sự kiện - Ngày sự kiện do người dùng nhập (dùng DateField vì chỉ ghi ngày/tháng/năm)
+    ngay_bat_dau = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Ngày bắt đầu",
+        help_text="Ngày sự kiện (Bắt buộc cho tạm trú, tạm vắng, mới sinh, khai tử, chuyển đi)"
+    )
+    ngay_ket_thuc = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Ngày kết thúc",
+        help_text="Ngày kết thúc (Chỉ áp dụng cho tạm trú, tạm vắng)"
+    )
+    
+    # Fields cho biến động chuyển đi/đến
+    noi_chuyen = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Nơi chuyển tới",
+        help_text="Địa chỉ nơi chuyển đi hoặc nơi chuyển đến từ"
+    )
+    ngay_chuyen_di = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Ngày chuyển đi",
+        help_text="Ngày chuyển đi (Dùng khi có cụ thể ngày khác so với ngay_bat_dau)"
+    )
+    
     thoi_gian = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

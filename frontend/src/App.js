@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProtectedRoute from './utils/ProtectedRoute';
@@ -17,6 +22,7 @@ import OfficerRequestsPage from './pages/officer/RequestsPage';
 import CitizenHomePage from './pages/citizen/HomePage';
 import CitizenHouseholdPage from './pages/citizen/HouseholdPage';
 import CitizenServicesPage from './pages/citizen/ServicesPage';
+import CitizenUserProfilePage from './pages/citizen/UserProfilePage';
 
 // User Pages
 import UserProfilePage from './pages/UserProfilePage';
@@ -39,21 +45,18 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route
-          path="/login"
-          element={<LoginPage onLogin={handleLogin} />}
-        />
-        <Route
-          path="/register"
-          element={<RegisterPage />}
-        />
+        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* User Profile Routes */}
         <Route
           path="/user-profile"
           element={
             <ProtectedRoute currentUser={currentUser}>
-              <UserProfilePage currentUser={currentUser} onLogout={handleLogout} />
+              <UserProfilePage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
@@ -88,11 +91,11 @@ function App() {
         <Route
           path="/admin/users"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
-              requiredRoles={['admin']}
-            >
-              <AdminUsersPage currentUser={currentUser} onLogout={handleLogout} />
+            <ProtectedRoute currentUser={currentUser} requiredRoles={['admin']}>
+              <AdminUsersPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
@@ -101,44 +104,56 @@ function App() {
         <Route
           path="/officer/dashboard"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
+            <ProtectedRoute
+              currentUser={currentUser}
               requiredRoles={['can_bo']}
             >
-              <OfficerDashboardPage currentUser={currentUser} onLogout={handleLogout} />
+              <OfficerDashboardPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
         <Route
           path="/officer/households"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
+            <ProtectedRoute
+              currentUser={currentUser}
               requiredRoles={['can_bo']}
             >
-              <OfficerHouseholdsPage currentUser={currentUser} onLogout={handleLogout} />
+              <OfficerHouseholdsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
         <Route
           path="/officer/residents"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
+            <ProtectedRoute
+              currentUser={currentUser}
               requiredRoles={['can_bo']}
             >
-              <OfficerResidentsPage currentUser={currentUser} onLogout={handleLogout} />
+              <OfficerResidentsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
         <Route
           path="/officer/requests"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
+            <ProtectedRoute
+              currentUser={currentUser}
               requiredRoles={['can_bo']}
             >
-              <OfficerRequestsPage currentUser={currentUser} onLogout={handleLogout} />
+              <OfficerRequestsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
@@ -147,33 +162,56 @@ function App() {
         <Route
           path="/citizen/home"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
+            <ProtectedRoute
+              currentUser={currentUser}
               requiredRoles={['nguoi_dan']}
             >
-              <CitizenHomePage currentUser={currentUser} onLogout={handleLogout} />
+              <CitizenHomePage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
         <Route
           path="/citizen/household"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
+            <ProtectedRoute
+              currentUser={currentUser}
               requiredRoles={['nguoi_dan']}
             >
-              <CitizenHouseholdPage currentUser={currentUser} onLogout={handleLogout} />
+              <CitizenHouseholdPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />
         <Route
           path="/citizen/services"
           element={
-            <ProtectedRoute 
-              currentUser={currentUser} 
+            <ProtectedRoute
+              currentUser={currentUser}
               requiredRoles={['nguoi_dan']}
             >
-              <CitizenServicesPage currentUser={currentUser} onLogout={handleLogout} />
+              <CitizenServicesPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/profile"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <CitizenUserProfilePage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
         />

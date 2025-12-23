@@ -8,9 +8,11 @@ from rest_framework import status
 from django.db.models import Q
 from datetime import date, datetime
 
+from rest_framework import serializers
 from .models import NhanKhau, BienDongNhanKhau
 from apps.can_bo.models import CanBo
 from apps.ho_gia_dinh.models import HoGiaDinh
+from apps.ho_gia_dinh.serializers import HoGiaDinhSerializer
 from .serializers import NhanKhauSerializer, BienDongNhanKhauSerializer, NhanKhauCreateUpdateSerializer
 
 
@@ -99,7 +101,7 @@ def them_moi_nhan_khau(request):
 def cap_nhat_nhan_khau(request, pk):
     """
     API cập nhật thông tin nhân khẩu.
-    Tự động ghi log 'CAP_NHAT'.
+    Tự động ghi log biến động nhân khẩu.
     """
     try:
         nhan_khau = NhanKhau.objects.get(pk=pk)
@@ -117,9 +119,7 @@ def cap_nhat_nhan_khau(request, pk):
         try:
             with transaction.atomic():
                 serializer.save()
-
-
-
+                
             return Response({'status': 'success', 'message': 'Cập nhật thành công'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -414,6 +414,7 @@ def lich_su_thay_doi_ho_khau(request, ho_khau_id):
     }, status=status.HTTP_200_OK)
 
 
+# chức năng này bổ sung cho chức năng thêm nhân khẩu
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def danh_sach_ho_gia_dinh(request):
@@ -441,3 +442,66 @@ def danh_sach_ho_gia_dinh(request):
             'status': 'error',
             'message': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_citizen_profile(request):
+    """
+    API lấy thông tin hộ khẩu và nhân khẩu dựa vào user đăng nhập
+    - User phải là 'nguoi_dan'
+    - Sử dụng liên kết OneToOneField nhan_khau từ TaiKhoan, fallback to CCCD lookup
+    - Lấy thông tin hộ khẩu từ nhân khẩu đó
+    """
+    try:
+        user = request.user
+        
+        # Kiểm tra user là người dân
+        if user.role != 'nguoi_dan':
+            return Response({
+                'status': 'error',
+                'message': 'Chỉ người dân mới có quyền truy cập tính năng này'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Kiểm tra user có liên kết nhan_khau hoặc CCCD
+        if not user.nhan_khau and not user.cccd:
+            return Response({
+                'status': 'error',
+                'message': 'Tài khoản của bạn chưa có thông tin CCCD'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Ưu tiên sử dụng liên kết nhan_khau nếu có
+        if user.nhan_khau:
+            nhan_khau = user.nhan_khau
+        else:
+            # Fallback: Tìm nhân khẩu dựa vào CCCD và tự động liên kết
+            nhan_khau = NhanKhau.objects.get(so_cccd=user.cccd)
+            user.nhan_khau = nhan_khau
+            user.save()
+        
+        # Load related household data
+        nhan_khau = NhanKhau.objects.select_related('ho_gia_dinh').get(id=nhan_khau.id)
+        ho_gia_dinh = nhan_khau.ho_gia_dinh
+        
+        nhan_khau_data = NhanKhauSerializer(nhan_khau).data
+        ho_gia_dinh_data = HoGiaDinhSerializer(ho_gia_dinh).data if ho_gia_dinh else None
+        
+        return Response({
+            'status': 'success',
+            'nhan_khau': nhan_khau_data,
+            'ho_gia_dinh': ho_gia_dinh_data
+        }, status=status.HTTP_200_OK)
+        
+    except NhanKhau.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Không tìm thấy thông tin nhân khẩu tương ứng với CCCD của bạn. Vui lòng liên hệ cán bộ để đăng ký thông tin nhân khẩu.'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        import traceback
+        print(f"Error in get_citizen_profile: {str(e)}")
+        print(traceback.format_exc())
+        return Response({
+            'status': 'error',
+            'message': f'Lỗi server: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

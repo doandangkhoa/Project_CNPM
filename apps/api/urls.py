@@ -2,6 +2,7 @@ from django.urls import path
 from apps.tai_khoan import views as tai_khoan_views
 from apps.nhan_khau import views as nhan_khau_views
 from apps.ho_gia_dinh import views as ho_gia_dinh_views
+from apps.tam_tru_tam_vang import views as tam_tru_tam_vang_views
 
 urlpatterns = [
     # Tai khoan
@@ -27,6 +28,7 @@ urlpatterns = [
     path('nhan-khau/<int:pk>/xoa/', nhan_khau_views.xoa_nhan_khau, name='xoa-nhan-khau'), # xóa do nhập sai
     path('nhan-khau/bien-dong/ho-khau/<int:ho_khau_id>/', nhan_khau_views.lich_su_thay_doi_ho_khau, name='lich-su-ho-khau'),
     path('nhan-khau/danh-sach-ho-khau/', nhan_khau_views.danh_sach_ho_gia_dinh, name='danh-sach-ho-khau'),
+    path('citizen/profile/', nhan_khau_views.get_citizen_profile, name='citizen-profile'),
     
     # ho gia dinh
     path('ho-gia-dinh/', ho_gia_dinh_views.tim_kiem_ho_gia_dinh, name='danh-sach-ho-gia-dinh'),
@@ -34,4 +36,12 @@ urlpatterns = [
     path('ho-gia-dinh/<int:pk>/cap-nhat/', ho_gia_dinh_views.cap_nhat_ho_gia_dinh, name='cap-nhat-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/chi-tiet/', ho_gia_dinh_views.chi_tiet_ho_gia_dinh, name='chi-tiet-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/xoa/', ho_gia_dinh_views.xoa_ho_gia_dinh, name='xoa-ho-gia-dinh'),
+    path('ho-gia-dinh/<int:pk>/tach-ho/', ho_gia_dinh_views.tach_ho_gia_dinh, name='tach-ho-gia-dinh'),
+
+    #tam_tru_tam_vang
+    path('tam-tru-tam-vang/tao-phieu/', tam_tru_tam_vang_views.tao_phieu_view, name='tao-phieu-tam-tru-tam-vang'),
+    path('tam-tru-tam-vang/<int:id>/chi-tiet/', tam_tru_tam_vang_views.chi_tiet_phieu_view, name='chi-tiet-phieu-tam-tru-tam-vang'),
+    path('tam-tru-tam-vang/loc/', tam_tru_tam_vang_views.loc_phieu_view, name='loc-phieu-tam-tru-tam-vang'),
+    path('tam-tru-tam-vang/dang-hieu-luc/', tam_tru_tam_vang_views.danh_sach_dang_hieu_luc_view, name='danh-sach-phieu-dang-hieu-luc'),
+
 ]

@@ -331,7 +331,8 @@ const OfficerPopulationManagement = () => {
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
       ho_gia_dinh: '',
-      ngay_chuyen_di: '',
+      ngay_bat_dau: '',
+      ngay_ket_thuc: '',
       noi_chuyen: '',
     });
     setIsEditMode(false);
@@ -361,8 +362,9 @@ const OfficerPopulationManagement = () => {
         population.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: population.ghi_chu || '',
       ho_gia_dinh: population.ho_gia_dinh?.id || population.ho_gia_dinh || '',
-      ngay_chuyen_di: population.ngay_chuyen_di || '',
-      noi_chuyen: population.noi_chuyen || '',
+      ngay_bat_dau: '',
+      ngay_ket_thuc: '',
+      noi_chuyen: '',
     });
     setEditingId(population.id);
     setIsEditMode(true);
