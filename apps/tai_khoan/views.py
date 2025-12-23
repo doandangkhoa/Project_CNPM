@@ -33,6 +33,15 @@ def register_view(request):
     serializer = TaiKhoanRegisterSerializer(data=data)
     if serializer.is_valid():
         user = serializer.save() # role: nguoi_dan, chuc_vu: None
+        # Try to auto-link with NhanKhau by CCCD
+        if user.cccd:
+            try:
+                from apps.nhan_khau.models import NhanKhau
+                nhan_khau = NhanKhau.objects.get(so_cccd=user.cccd)
+                user.nhan_khau = nhan_khau
+                user.save()
+            except:
+                pass
         return Response({
             'status': 'success',
             'message': 'Đăng ký thành công.',
@@ -137,7 +146,7 @@ def change_password(request):
     )
     
     if serializer.is_valid():
-        new_password = serializer.validate['new_password']
+        new_password = serializer.validated_data['new_password']
         user.set_password(new_password)
         user.save()
         return Response({"status":"success", "message":"Đổi mật khẩu thành công"})
