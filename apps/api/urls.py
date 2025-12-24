@@ -39,9 +39,12 @@ urlpatterns = [
     path('ho-gia-dinh/<int:pk>/tach-ho/', ho_gia_dinh_views.tach_ho_gia_dinh, name='tach-ho-gia-dinh'),
 
     #tam_tru_tam_vang
+    path('tam-tru-tam-vang/', tam_tru_tam_vang_views.danh_sach_phieu_user_view, name='danh-sach-phieu-user'),
+    path('officer/tam-tru-tam-vang/', tam_tru_tam_vang_views.officer_danh_sach_phieu_view, name='officer-danh-sach-phieu'),
     path('tam-tru-tam-vang/tao-phieu/', tam_tru_tam_vang_views.tao_phieu_view, name='tao-phieu-tam-tru-tam-vang'),
     path('tam-tru-tam-vang/<int:id>/chi-tiet/', tam_tru_tam_vang_views.chi_tiet_phieu_view, name='chi-tiet-phieu-tam-tru-tam-vang'),
     path('tam-tru-tam-vang/loc/', tam_tru_tam_vang_views.loc_phieu_view, name='loc-phieu-tam-tru-tam-vang'),
     path('tam-tru-tam-vang/dang-hieu-luc/', tam_tru_tam_vang_views.danh_sach_dang_hieu_luc_view, name='danh-sach-phieu-dang-hieu-luc'),
+    path('officer/tam-tru-tam-vang/<int:id>/duyet/', tam_tru_tam_vang_views.officer_approve_phieu_view, name='officer-duyet-phieu'),
 
 ]

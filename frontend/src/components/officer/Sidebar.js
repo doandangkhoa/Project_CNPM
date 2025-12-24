@@ -7,7 +7,7 @@ const OfficerSidebar = ({ currentUser, isCollapsed, onToggleCollapse }) => {
     <aside className={`officer-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <h2 className="sidebar-title">Cán Bộ</h2>
-        <button 
+        <button
           className="sidebar-toggle-btn"
           onClick={onToggleCollapse}
           title={isCollapsed ? 'Mở sidebar' : 'Đóng sidebar'}
@@ -15,12 +15,12 @@ const OfficerSidebar = ({ currentUser, isCollapsed, onToggleCollapse }) => {
           {isCollapsed ? '→' : '←'}
         </button>
       </div>
-      
+
       <nav className="sidebar-nav">
         <ul className="menu-list">
           <li>
             <Link to="/officer/dashboard" className="menu-item">
-              <span className="label">Dashboard</span>
+              <span className="label">Báo Cáo Thống Kê</span>
             </Link>
           </li>
           <li>
@@ -38,14 +38,8 @@ const OfficerSidebar = ({ currentUser, isCollapsed, onToggleCollapse }) => {
               <span className="label">Phê Duyệt Yêu Cầu</span>
             </Link>
           </li>
-          <li>
-            <Link to="/officer/reports" className="menu-item">
-              <span className="label">Báo Cáo Thống Kê</span>
-            </Link>
-          </li>
         </ul>
       </nav>
-
     </aside>
   );
 };

@@ -16,6 +16,11 @@ class PhieuTamTruTamVang(models.Model):
     ly_do = models.TextField()
     dia_chi_tam_tru = models.CharField(max_length=255, null=True, blank=True)
     ghi_chu = models.TextField(null=True, blank=True)
+    TRANG_THAI_CHOICES = [
+        ('cho_duyet', 'Chưa duyệt'),
+        ('da_duyet', 'Đã duyệt'),
+    ]
+    trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_CHOICES, default='cho_duyet')
     
     def __str__(self):
         return f"{self.nhan_khau.ho_ten} - {self.get_loai_phieu_display()}"

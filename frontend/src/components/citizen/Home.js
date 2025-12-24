@@ -22,7 +22,7 @@ const CitizenHome = ({ currentUser }) => {
               <div className="service-icon">🏠</div>
               <h3>Đăng Ký Tạm Trú/Tạm Vắng</h3>
               <p>Đăng ký tạm trú tại địa chỉ khác</p>
-              <Link to="/citizen/tam-tru-tam-vang" className="service-btn">
+              <Link to="/citizen/request" className="service-btn">
                 Nộp đơn
               </Link>
             </div>

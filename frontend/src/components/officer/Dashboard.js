@@ -25,11 +25,16 @@ const OfficerDashboard = ({ currentUser }) => {
 
   return (
     <div className="officer-dashboard">
-      <h2>Dashboard Cán Bộ</h2>
-      
+      <h2>Báo Cáo Thống Kê</h2>
+
       <div className="welcome-section">
-        <p>Chào mừng, <strong>{currentUser?.ho_ten || currentUser?.username}</strong>!</p>
-        <p className="subtitle">Quản lý dữ liệu dân cư và xử lý yêu cầu từ người dân</p>
+        <p>
+          Chào mừng,{' '}
+          <strong>{currentUser?.ho_ten || currentUser?.username}</strong>!
+        </p>
+        <p className="subtitle">
+          Quản lý dữ liệu dân cư và xử lý yêu cầu từ người dân
+        </p>
       </div>
 
       <div className="stats-grid">
@@ -101,11 +106,15 @@ const OfficerDashboard = ({ currentUser }) => {
           </div>
           <div className="activity-item">
             <span className="time">Hôm nay 13:15</span>
-            <span className="description">Duyệt yêu cầu đăng ký tạm trú từ Nguyễn A</span>
+            <span className="description">
+              Duyệt yêu cầu đăng ký tạm trú từ Nguyễn A
+            </span>
           </div>
           <div className="activity-item">
             <span className="time">Hôm nay 11:45</span>
-            <span className="description">Thêm nhân khẩu mới vào hộ khẩu #025</span>
+            <span className="description">
+              Thêm nhân khẩu mới vào hộ khẩu #025
+            </span>
           </div>
         </div>
       </div>
