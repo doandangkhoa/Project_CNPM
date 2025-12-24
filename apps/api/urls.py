@@ -4,6 +4,7 @@ from apps.nhan_khau import views as nhan_khau_views
 from apps.ho_gia_dinh import views as ho_gia_dinh_views
 from apps.sinh_hoat import views as sinh_hoat_views
 from apps.tam_tru_tam_vang import views as tam_tru_tam_vang_views
+from apps.thong_ke import views as thong_ke_views
 
 urlpatterns = [
     # Tai khoan
@@ -58,4 +59,13 @@ urlpatterns = [
     path('sinh-hoat/<int:pk>/xoa/', sinh_hoat_views.xoa_lich_sinh_hoat, name='xoa-lich-sinh-hoat'),
 	path('sinh-hoat/diem-danh/<int:lich_sinh_hoat_id>/', sinh_hoat_views.lay_danh_sach_diem_danh, name='xem-ds-diem-danh'),
     path('sinh-hoat/diem-danh/toggle/', sinh_hoat_views.tich_diem_danh_tung_nguoi, name='diem-danh-tung-nguoi'),
+    
+    # thống kê
+    path('api/thong-ke/tao-bao-cao/', thong_ke_views.tao_bao_cao_thong_ke_view, name='tao-bao-cao'),
+    path('api/thong-ke/danh-sach/', thong_ke_views.danh_sach_thong_ke_view, name='danh-sach-thong-ke'),
+    path('api/thong-ke/chi-tiet/<int:pk>/', thong_ke_views.chi_tiet_thong_ke_view, name='chi-tiet-thong-ke'),
+    path('api/thong-ke/xoa/<int:pk>/', thong_ke_views.xoa_thong_ke_view, name='xoa-thong-ke'),
+    path('api/thong-ke/gia-dinh-van-hoa/', thong_ke_views.bao_cao_gia_dinh_van_hoa_view, name='bao-cao-gia-dinh-van-hoa'),
+    path('api/thong-ke/kpi/', thong_ke_views.lay_kpi_thong_ke_view, name='lay-kpi'),
+    path('api/thong-ke/bieu-do-tuoi/', thong_ke_views.lay_bieu_do_tuoi_view, name='lay-bieu-do-tuoi'),
 ]
