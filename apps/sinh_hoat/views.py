@@ -146,22 +146,27 @@ def tich_diem_danh_tung_nguoi(request):
 @permission_classes([IsAuthenticated])
 def lay_danh_sach_diem_danh(request, lich_sinh_hoat_id):
     """
-    Trả về danh sách tất cả các hộ kèm trạng thái đã tham gia hay chưa của buổi họp đó
+    Luôn trả về FULL danh sách hộ, kèm trạng thái tick (True/False)
     """
-    # Nếu chưa điểm danh bao giờ, trả về list hộ để người dùng tích
-    # Nếu đã điểm danh rồi, trả về kết quả cũ
+    # 1. Lấy tất cả hộ gia đình trong khu dân cư (Ví dụ 100 hộ)
+    tat_ca_ho = HoGiaDinh.objects.all().order_by('so_ho_khau') # Sắp xếp cho dễ nhìn
     
-    records = ThamGiaSinhHoat.objects.filter(lich_sinh_hoat_id=lich_sinh_hoat_id).select_related('ho_gia_dinh')
+    # 2. Lấy danh sách ID của những hộ ĐÃ điểm danh trong buổi này
+    # values_list('ho_gia_dinh_id', flat=True) sẽ trả về list dạng [1, 5, 9...] giúp tra cứu cực nhanh
+    cac_ho_da_tham_gia = set(
+        ThamGiaSinhHoat.objects.filter(lich_sinh_hoat_id=lich_sinh_hoat_id)
+        .values_list('ho_gia_dinh_id', flat=True)
+    )
     
-    if not records.exists():
-        # Trường hợp chưa điểm danh lần nào: Trả về danh sách hộ gia đình thô
-        # Frontend sẽ hiển thị tất cả là chưa tích
-        ds_ho = HoGiaDinh.objects.all()
-        data = [{'ho_gia_dinh': ho.id, 
-                 'ten_chu_ho': ho.ho_ten_chu_ho, 
-                 'so_ho_khau': ho.so_ho_khau, 
-                 'da_tham_gia': False} for ho in ds_ho]
-        return Response(data)
-    
-    serializer = ThamGiaSinhHoatSerializer(records, many=True)
-    return Response(serializer.data)
+    # 3. Ghép dữ liệu (Mapping)
+    ket_qua = []
+    for ho in tat_ca_ho:
+        ket_qua.append({
+            'ho_gia_dinh_id': ho.id,
+            'so_ho_khau': ho.so_ho_khau,
+            'ten_chu_ho': ho.ho_ten_chu_ho, # Hoặc trường tên chủ hộ của bạn
+            # Kiểm tra xem ID hộ này có nằm trong danh sách đã tham gia không
+            'da_tham_gia': ho.id in cac_ho_da_tham_gia 
+        })
+        
+    return Response(ket_qua)
