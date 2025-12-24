@@ -1,11 +1,11 @@
 import React from 'react';
 import OfficerLayout from '../../layouts/OfficerLayout';
-import Dashboard from '../../components/officer/Dashboard';
+import ReportPage from './ReportPage';
 
 const OfficerDashboardPage = ({ currentUser, onLogout }) => {
   return (
     <OfficerLayout currentUser={currentUser} onLogout={onLogout}>
-      <Dashboard currentUser={currentUser} />
+      <ReportPage />
     </OfficerLayout>
   );
 };

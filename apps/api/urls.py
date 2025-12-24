@@ -2,6 +2,7 @@ from django.urls import path
 from apps.tai_khoan import views as tai_khoan_views
 from apps.nhan_khau import views as nhan_khau_views
 from apps.ho_gia_dinh import views as ho_gia_dinh_views
+from apps.sinh_hoat import views as sinh_hoat_views
 from apps.tam_tru_tam_vang import views as tam_tru_tam_vang_views
 
 urlpatterns = [
@@ -47,4 +48,14 @@ urlpatterns = [
     path('tam-tru-tam-vang/dang-hieu-luc/', tam_tru_tam_vang_views.danh_sach_dang_hieu_luc_view, name='danh-sach-phieu-dang-hieu-luc'),
     path('officer/tam-tru-tam-vang/<int:id>/duyet/', tam_tru_tam_vang_views.officer_approve_phieu_view, name='officer-duyet-phieu'),
 
+	
+    #sinh hoat
+	path('sinh-hoat/danh-sach-sinh-hoat/', sinh_hoat_views.xem_danh_sach_sinh_hoat, name='danh-sach-lich-sinh-hoat'),
+	path('sinh-hoat/tim-kiem/', sinh_hoat_views.tim_kiem_lich_sinh_hoat, name='tim-kiem-lich-sinh-hoat'),
+    path('sinh-hoat/them-moi/', sinh_hoat_views.them_moi_lich_sinh_hoat, name='them-moi-lich-sinh-hoat'),
+    path('sinh-hoat/<int:pk>/cap-nhat/', sinh_hoat_views.cap_nhat_lich_sinh_hoat, name='cap-nhat-lich-sinh-hoat'),
+    path('sinh-hoat/<int:pk>/chi-tiet/', sinh_hoat_views.xem_chi_tiet_lich_sinh_hoat, name='chi-tiet-lich-sinh-hoat'),
+    path('sinh-hoat/<int:pk>/xoa/', sinh_hoat_views.xoa_lich_sinh_hoat, name='xoa-lich-sinh-hoat'),
+	path('sinh-hoat/diem-danh/<int:lich_sinh_hoat_id>/', sinh_hoat_views.lay_danh_sach_diem_danh, name='xem-ds-diem-danh'),
+    path('sinh-hoat/diem-danh/toggle/', sinh_hoat_views.tich_diem_danh_tung_nguoi, name='diem-danh-tung-nguoi'),
 ]

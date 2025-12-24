@@ -116,4 +116,5 @@ dmypy.json
 
 # System
 Thumbs.db
+
 node_modules/
