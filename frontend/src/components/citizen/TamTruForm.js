@@ -125,7 +125,17 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
         }
       );
 
-      const data = await response.json();
+      // Đọc response text trước, không parse JSON ngay
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        setError(
+          'Lỗi server: ' + responseText.substring(0, 100)
+        );
+        return;
+      }
 
       if (response.ok && data.status === 'success') {
         setSuccess(

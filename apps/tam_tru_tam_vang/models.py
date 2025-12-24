@@ -19,6 +19,7 @@ class PhieuTamTruTamVang(models.Model):
     TRANG_THAI_CHOICES = [
         ('cho_duyet', 'Chưa duyệt'),
         ('da_duyet', 'Đã duyệt'),
+        ('tu_choi', 'Từ chối'),
     ]
     trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_CHOICES, default='cho_duyet')
     

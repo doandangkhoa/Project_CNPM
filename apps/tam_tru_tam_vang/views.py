@@ -76,34 +76,44 @@ def danh_sach_phieu_user_view(request):
 
 #Tạo phiếu tạm trú - tạm vắng
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def tao_phieu_view(request):
-    serializer = PhieuTamTruTamVangSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({
-            "status": "success",
-            "message": "Tạo phiếu thành công",
-            "data": serializer.data
-        }, status=status.HTTP_201_CREATED)
+    try:
+        serializer = PhieuTamTruTamVangSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "status": "success",
+                "message": "Tạo phiếu thành công",
+                "data": serializer.data
+            }, status=status.HTTP_201_CREATED)
 
-    return Response({
-        "status": "error",
-        "errors": serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "status": "error",
+            "message": "Dữ liệu không hợp lệ",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            "status": "error",
+            "message": f"Lỗi server: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 #Xem chi tiết phiếu
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def chi_tiet_phieu_view(request, id):
     try:
         phieu = PhieuTamTruTamVang.objects.get(id=id)
     except PhieuTamTruTamVang.DoesNotExist:
-        return Response({"error": "Không tìm thấy phiếu"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"status": "error", "message": "Không tìm thấy phiếu"}, status=status.HTTP_404_NOT_FOUND)
 
     serializer = PhieuTamTruTamVangSerializer(phieu)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
 #Lọc phiếu theo thời gian - hiệu lực 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def loc_phieu_view(request):
     loai = request.GET.get("loai", "")
     tu_ngay = request.GET.get("from", "")
@@ -131,6 +141,7 @@ def loc_phieu_view(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 #Xuất danh sách người đang tạm trú / tạm vắng.
+@permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def danh_sach_dang_hieu_luc_view(request):
     loai = request.GET.get("loai", "")
