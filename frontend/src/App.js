@@ -17,6 +17,7 @@ import OfficerDashboardPage from './pages/officer/DashboardPage';
 import OfficerHouseholdsPage from './pages/officer/HouseholdsPage';
 import OfficerResidentsPage from './pages/officer/ResidentsPage';
 import OfficerRequestsPage from './pages/officer/RequestsPage';
+import OfficerMeetingsPage from './pages/officer/MeetingsPage';
 
 // Citizen Pages
 import CitizenHomePage from './pages/citizen/HomePage';
@@ -158,8 +159,20 @@ function App() {
               />
             </ProtectedRoute>
           }
+        />        <Route
+          path="/officer/meetings"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['can_bo']}
+            >
+              <OfficerMeetingsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
         />
-
         {/* Citizen Routes */}
         <Route
           path="/citizen/home"

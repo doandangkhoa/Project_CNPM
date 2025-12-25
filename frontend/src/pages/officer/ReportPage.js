@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Table, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Container, Row, Col, Card, Form, Table, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import thongKeAPI from '../../utils/thongKeAPI';
 import './ReportPage.css';
 
@@ -14,400 +14,459 @@ const ReportPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [viewMode, setViewMode] = useState('create'); // 'create' or 'view'
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Lấy dữ liệu KPI
-  const fetchKPIData = async () => {
-    
+  // Hàm xử lý preset ngày tháng
+  const setDatePreset = (preset) => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    let start, end;
+
+    switch (preset) {
+      case 'month':
+        start = new Date(year, month, 1);
+        end = today;
+        break;
+      case 'quarter':
+        const quarter = Math.floor(month / 3);
+        start = new Date(year, quarter * 3, 1);
+        end = today;
+        break;
+      case 'year':
+        start = new Date(year, 0, 1);
+        end = today;
+        break;
+      default:
+        return;
+    }
+
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    setFromDate(formatDate(start));
+    setToDate(formatDate(end));
+  };
+
+  // Hàm xem chi tiết báo cáo cũ
+  const viewReportDetails = (report) => {
+    setSelectedReport(report);
+    setViewMode('view');
+    setKpiData({
+      tong_nhan_khau: report.tong_so_nhan_khau || 0,
+      so_nam: report.so_nam || 0,
+      so_nu: report.so_nu || 0,
+      so_tam_tru: report.tam_tru || 0,
+      so_tam_vang: report.tam_vang || 0
+    });
+  };
+
+  // Hàm quay lại chế độ tạo mới
+  const backToCreate = () => {
+    setViewMode('create');
+    setSelectedReport(null);
+    setFromDate('');
+    setToDate('');
+    fetchAllData();
+  };
+
+  // Hàm xóa báo cáo
+  const deleteReport = async (reportId) => {
+    if (!window.confirm('Bạn chắc chắn muốn xóa báo cáo này?')) return;
     try {
-      const data = await thongKeAPI.getKPI(fromDate || null, toDate || null);
-      if (data.status === 'success') {
-        setKpiData(data.data);
+      const response = await thongKeAPI.deleteReport(reportId);
+      if (response.status === 'success') {
+        alert('Xóa báo cáo thành công!');
+        fetchAllData();
       }
     } catch (err) {
-      setError(err.message);
-      console.error('Lỗi:', err);
+      setError('Lỗi khi xóa báo cáo: ' + err.message);
     }
   };
 
-  // Lấy dữ liệu biểu đồ tuổi
-  const fetchAgeChartData = async () => {
+  // Retry logic with exponential backoff
+  const retryFetch = async (fn, maxRetries = 3, delay = 1000) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const result = await fn();
+        if (result.status === 'error' && i < maxRetries - 1) {
+          await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+          continue;
+        }
+        return result;
+      } catch (err) {
+        if (i < maxRetries - 1) {
+          await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+        } else {
+          return { status: 'error', message: err.message };
+        }
+      }
+    }
+  };
+
+  // Fetch all data with error handling and retry
+  const fetchAllData = async (from = '', to = '') => {
+    setLoading(true);
+    setError(null);
+    setRetryCount(0);
     try {
-      const data = await thongKeAPI.getAgeChart(fromDate || null, toDate || null);
-      if (data.status === 'success') {
-        const chartData = data.labels.map((label, index) => ({
+      const [kpi, age, cultural, history] = await Promise.all([
+        retryFetch(() => thongKeAPI.getKPI(from || null, to || null)),
+        retryFetch(() => thongKeAPI.getAgeChart(from || null, to || null)),
+        retryFetch(() => thongKeAPI.getCulturalFamilies(from || null, to || null)),
+        retryFetch(() => thongKeAPI.getReportHistory())
+      ]);
+
+      if (kpi.status === 'success') setKpiData(kpi.data);
+      if (age.status === 'success') {
+        const chartData = age.labels.map((label, index) => ({
           name: label,
-          value: data.data[index]
+          value: age.data[index]
         }));
         setAgeChartData(chartData);
       }
-    } catch (err) {
-      console.error('Lỗi:', err);
-    }
-  };
-
-  // Lấy dữ liệu Gia đình văn hóa
-  const fetchCulturalFamilies = async () => {
-    try {
-      const data = await thongKeAPI.getCulturalFamilies(fromDate || null, toDate || null);
-      if (data.status === 'success') {
-        setCulturalFamilies(data);
-      } else if (data.status === 'warning') {
-        setCulturalFamilies({ danh_sach: [], so_ho_dat_tieu_chuan: 0, tong_so_buoi_hop: 0 });
+      
+      // Handle cultural families - always expect success even if empty
+      if (cultural.status === 'success') {
+        console.log('Cultural families data:', cultural);
+        setCulturalFamilies({
+          tong_so_buoi_hop: cultural.tong_so_buoi_hop || 0,
+          so_ho_dat_tieu_chuan: cultural.so_ho_dat_tieu_chuan || 0,
+          danh_sach: cultural.danh_sach || []
+        });
+      } else {
+        console.warn('Cultural families error:', cultural);
+        setCulturalFamilies({ 
+          tong_so_buoi_hop: 0,
+          so_ho_dat_tieu_chuan: 0, 
+          danh_sach: [] 
+        });
       }
+      
+      if (history.status === 'success') setReportHistory(history.data);
     } catch (err) {
-      console.error('Lỗi:', err);
-    }
-  };
-
-  // Lấy lịch sử báo cáo
-  const fetchReportHistory = async () => {
-    try {
-      const data = await thongKeAPI.getReportHistory();
-      if (data.status === 'success') {
-        setReportHistory(data.data);
-      }
-    } catch (err) {
-      console.error('Lỗi:', err);
-    }
-  };
-
-  // Gọi API lập báo cáo
-  const handleCreateReport = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data = await thongKeAPI.createReport(
-        fromDate || null,
-        toDate || null,
-        ''
-      );
-
-      if (data.status === 'success') {
-        // Refresh dữ liệu
-        await Promise.all([
-          fetchKPIData(),
-          fetchAgeChartData(),
-          fetchCulturalFamilies(),
-          fetchReportHistory()
-        ]);
-        setError(null);
-        alert('Báo cáo đã được lập thành công!');
-      }
-    } catch (err) {
-      setError(err.message);
-      console.error('Lỗi:', err);
+      setError('Lỗi khi tải dữ liệu: ' + err.message);
+      setRetryCount(r => r + 1);
     } finally {
       setLoading(false);
     }
   };
 
-  // Xuất Excel
-  const handleExportExcel = () => {
-    // Sử dụng thư viện xlsx hoặc tạo CSV
-    alert('Tính năng xuất Excel đang được phát triển!');
+  const handleCreateReport = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await thongKeAPI.createReport(fromDate || null, toDate || null, '');
+      if (data.status === 'success') {
+        await fetchAllData(fromDate, toDate);
+        alert('✓ Báo cáo đã được lập thành công!');
+      } else {
+        setError('Không thể lập báo cáo');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Load dữ liệu khi component mount hoặc date thay đổi
+  const handleExportExcel = () => {
+    alert('Tính năng xuất Excel sẽ được cập nhật trong phiên bản tiếp theo!');
+  };
+
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetchKPIData(),
-      fetchAgeChartData(),
-      fetchCulturalFamilies(),
-      fetchReportHistory()
-    ]).finally(() => setLoading(false));
+    fetchAllData();
   }, []);
 
-  // Tính tỉ lệ Gia đình văn hóa
-  const culturalFamilyPercentage = kpiData && culturalFamilies
-    ? Math.round((culturalFamilies.so_ho_dat_tieu_chuan / (kpiData.tong_nhan_khau / 3.5)) * 100) || 0
-    : 0;
-
-  const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
+  const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'];
 
   return (
-    <Container fluid className="report-page py-4">
-      {/* Khu vực 1: Toolbar */}
-      <Row className="mb-4">
-        <Col md={12}>
+    <div className="report-page">
+      {/* Header */}
+      <div className="report-page-header">
+        <h1>Báo cáo Thống kê</h1>
+        <p>Theo dõi và phân tích dữ liệu khu dân cư</p>
+        {viewMode === 'view' && (
+          <button onClick={backToCreate} className="btn-back">
+            ← Quay lại
+          </button>
+        )}
+      </div>
+
+      <Container fluid className="px-4">
+        {/* Toolbar */}
+        {viewMode === 'create' && (
           <Card className="toolbar-card">
             <Card.Body>
-              <Row className="align-items-end">
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label className="fw-bold">Từ ngày</Form.Label>
-                    <Form.Control
-                      type="date"
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label className="fw-bold">Đến ngày</Form.Label>
-                    <Form.Control
-                      type="date"
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Button
-                    variant="primary"
-                    className="w-100"
-                    onClick={handleCreateReport}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner as="span" animation="border" size="sm" className="me-2" />
-                        Đang xử lý...
-                      </>
-                    ) : (
-                      'Lập báo cáo ngay'
-                    )}
-                  </Button>
-                </Col>
-                <Col md={3}>
-                  <Button
-                    variant="success"
-                    className="w-100"
-                    onClick={handleExportExcel}
-                  >
-                    📊 Xuất Excel
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Hiển thị lỗi */}
-      {error && (
-        <Row className="mb-3">
-          <Col md={12}>
-            <Alert variant="danger" onClose={() => setError(null)} dismissible>
-              {error}
-            </Alert>
-          </Col>
-        </Row>
-      )}
-
-      {/* Khu vực 2: KPI Cards */}
-      <Row className="mb-4">
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="kpi-card">
-            <Card.Body className="text-center">
-              <div className="kpi-number">
-                {kpiData ? kpiData.tong_nhan_khau.toLocaleString() : '-'}
-              </div>
-              <div className="kpi-label">Tổng nhân khẩu</div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="kpi-card">
-            <Card.Body className="text-center">
-              <div className="kpi-stats">
-                <div className="kpi-stat-item">
-                  <div className="kpi-stat-number" style={{ color: '#3498db' }}>
-                    {kpiData ? kpiData.so_nam : '-'}
+              <div className="toolbar-section">
+                <div className="date-inputs">
+                  <div>
+                    <label>Từ ngày</label>
+                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
                   </div>
-                  <div className="kpi-stat-label">Nam</div>
+                  <div>
+                    <label>Đến ngày</label>
+                    <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                  </div>
                 </div>
-                <div className="kpi-stat-item">
-                  <div className="kpi-stat-number" style={{ color: '#e74c3c' }}>
-                    {kpiData ? kpiData.so_nu : '-'}
-                  </div>
-                  <div className="kpi-stat-label">Nữ</div>
+
+                <div className="preset-buttons">
+                  <button 
+                    className="preset-btn" 
+                    onClick={() => setDatePreset('month')}
+                    title="Báo cáo tháng này"
+                  >
+                    Tháng này
+                  </button>
+                  <button 
+                    className="preset-btn" 
+                    onClick={() => setDatePreset('quarter')}
+                    title="Báo cáo quý này"
+                  >
+                    Quý này
+                  </button>
+                  <button 
+                    className="preset-btn" 
+                    onClick={() => setDatePreset('year')}
+                    title="Báo cáo năm nay"
+                  >
+                    Năm nay
+                  </button>
+                </div>
+
+                <div className="toolbar-buttons">
+                  <button className="btn-primary-custom" onClick={handleCreateReport} disabled={loading}>
+                    {loading ? '⏳ Đang xử lý...' : '📈 Lập báo cáo'}
+                  </button>
                 </div>
               </div>
             </Card.Body>
           </Card>
-        </Col>
+        )}
 
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="kpi-card">
-            <Card.Body className="text-center">
-              <div className="kpi-number">
-                {kpiData ? kpiData.so_tam_tru : '-'}
-              </div>
-              <div className="kpi-label">Hộ Tạm trú</div>
-            </Card.Body>
-          </Card>
-        </Col>
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="danger" className="mb-3" dismissible onClose={() => setError(null)}>
+            <strong>⚠️ Lỗi:</strong> {error}
+            <div style={{ marginTop: '10px' }}>
+              <button 
+                className="btn btn-sm btn-warning"
+                onClick={() => fetchAllData(fromDate, toDate)}
+                disabled={loading}
+              >
+                🔄 Thử lại
+              </button>
+            </div>
+          </Alert>
+        )}
 
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="kpi-card">
-            <Card.Body className="text-center">
-              <div className="kpi-number">
-                {kpiData ? kpiData.so_tam_vang : '-'}
-              </div>
-              <div className="kpi-label">Hộ Tạm vắng</div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+        {/* Loading State */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#667eea' }}>
+            <Spinner animation="border" style={{ marginRight: '10px' }} />
+            Đang tải dữ liệu...
+          </div>
+        )}
 
-      {/* Khu vực 3: Charts */}
-      <Row className="mb-4">
-        <Col lg={6} className="mb-3">
-          <Card className="chart-card">
-            <Card.Header className="bg-light">
-              <Card.Title className="mb-0">Phân bố độ tuổi</Card.Title>
-            </Card.Header>
-            <Card.Body>
-              {ageChartData ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={ageChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#3498db" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-5">Đang tải dữ liệu...</div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
+        {!loading && (
+          <>
+            {/* KPI Cards */}
+            <div className="kpi-container">
+              <Card className="kpi-card">
+                <Card.Body>
+                  <div className="kpi-number">{kpiData?.tong_nhan_khau?.toLocaleString() || '-'}</div>
+                  <div className="kpi-label">Tổng nhân khẩu</div>
+                </Card.Body>
+              </Card>
 
-        <Col lg={6} className="mb-3">
-          <Card className="chart-card">
-            <Card.Header className="bg-light">
-              <Card.Title className="mb-0">Tỉ lệ Gia đình văn hóa</Card.Title>
-            </Card.Header>
-            <Card.Body>
-              {culturalFamilies ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Đạt tiêu chuẩn', value: culturalFamilies.so_ho_dat_tieu_chuan || 0 },
-                        { name: 'Chưa đạt', value: Math.max(0, (culturalFamilies.danh_sach ? Math.ceil(kpiData?.tong_nhan_khau / 3.5) : 0) - (culturalFamilies.so_ho_dat_tieu_chuan || 0)) }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      <Cell fill="#2ecc71" />
-                      <Cell fill="#e74c3c" />
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-5">Đang tải dữ liệu...</div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Khu vực 4: Data Tables */}
-      <Row>
-        <Col md={12}>
-          <Card>
-            <Card.Header className="bg-light">
-              <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
-                <Tab eventKey="overview" title="Lịch sử báo cáo">
-                  {reportHistory ? (
-                    <div className="mt-3">
-                      {reportHistory.length > 0 ? (
-                        <Table striped bordered hover responsive>
-                          <thead className="table-dark">
-                            <tr>
-                              <th>#</th>
-                              <th>Ngày lập</th>
-                              <th>Từ ngày</th>
-                              <th>Đến ngày</th>
-                              <th>Tổng nhân khẩu</th>
-                              <th>Nam/Nữ</th>
-                              <th>Tạm trú/Tạm vắng</th>
-                              <th>Ghi chú</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {reportHistory.map((report, index) => (
-                              <tr key={report.id}>
-                                <td>{index + 1}</td>
-                                <td>{new Date(report.ngay_thong_ke).toLocaleDateString('vi-VN')}</td>
-                                <td>{report.tu_ngay || '-'}</td>
-                                <td>{report.den_ngay || '-'}</td>
-                                <td className="fw-bold">{report.tong_nhan_khau}</td>
-                                <td>{report.so_nam}/{report.so_nu}</td>
-                                <td>{report.tam_tru}/{report.tam_vang}</td>
-                                <td>{report.ghi_chu || '-'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                      ) : (
-                        <div className="alert alert-info">Chưa có báo cáo nào</div>
-                      )}
+              <Card className="kpi-card">
+                <Card.Body>
+                  <div className="kpi-stats">
+                    <div className="kpi-stat-item">
+                      <div className="kpi-stat-number" style={{ color: '#667eea' }}>
+                        {kpiData?.so_nam || 0}
+                      </div>
+                      <div className="kpi-stat-label">Nam</div>
                     </div>
-                  ) : (
-                    <div className="text-center py-5">Đang tải dữ liệu...</div>
-                  )}
-                </Tab>
+                    <div className="kpi-stat-item">
+                      <div className="kpi-stat-number" style={{ color: '#f093fb' }}>
+                        {kpiData?.so_nu || 0}
+                      </div>
+                      <div className="kpi-stat-label">Nữ</div>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
 
-                <Tab eventKey="cultural" title="Gia đình văn hóa">
+              <Card className="kpi-card">
+                <Card.Body>
+                  <div className="kpi-number">{kpiData?.so_tam_tru || 0}</div>
+                  <div className="kpi-label">Tạm trú</div>
+                </Card.Body>
+              </Card>
+
+              <Card className="kpi-card">
+                <Card.Body>
+                  <div className="kpi-number">{kpiData?.so_tam_vang || 0}</div>
+                  <div className="kpi-label">Tạm vắng</div>
+                </Card.Body>
+              </Card>
+            </div>
+
+            {/* Charts */}
+            <div className="charts-container">
+              <Card className="chart-card">
+                <Card.Header>
+                  <Card.Title>Phân bố độ tuổi</Card.Title>
+                </Card.Header>
+                <Card.Body>
+                  {ageChartData ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={ageChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                        <YAxis />
+                        <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                        <Bar dataKey="value" fill="#667eea" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="chart-loading">Đang tải dữ liệu...</div>
+                  )}
+                </Card.Body>
+              </Card>
+
+              <Card className="chart-card cultural-families-card">
+                <Card.Header>
+                  <Card.Title>Gia đình văn hóa</Card.Title>
+                </Card.Header>
+                <Card.Body>
                   {culturalFamilies ? (
-                    <div className="mt-3">
-                      <Alert variant="info">
-                        Tổng buổi họp: <strong>{culturalFamilies.tong_so_buoi_hop}</strong> | 
-                        Hộ đạt tiêu chuẩn: <strong>{culturalFamilies.so_ho_dat_tieu_chuan}</strong>
-                      </Alert>
-                      {culturalFamilies.danh_sach && culturalFamilies.danh_sach.length > 0 ? (
-                        <Table striped bordered hover responsive>
-                          <thead className="table-dark">
-                            <tr>
-                              <th>#</th>
-                              <th>Chủ hộ</th>
-                              <th>Địa chỉ</th>
-                              <th>Số lần tham gia</th>
-                              <th>Tỉ lệ đạt</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {culturalFamilies.danh_sach.map((family, index) => (
-                              <tr key={family.id}>
-                                <td>{index + 1}</td>
-                                <td>{family.chu_ho}</td>
-                                <td>{family.dia_chi}</td>
-                                <td>{family.so_lan_tham_gia}</td>
-                                <td>
-                                  <span className="badge bg-success">{family.ty_le_dat}</span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                      ) : (
-                        <div className="alert alert-warning">Không có hộ nào đạt tiêu chuẩn Gia đình văn hóa</div>
-                      )}
+                    <div className="cultural-pie-container">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              {
+                                name: 'Đạt tiêu chuẩn',
+                                value: culturalFamilies.so_ho_dat_tieu_chuan || 0
+                              },
+                              {
+                                name: 'Chưa đạt',
+                                value: Math.max(
+                                  0,
+                                  (culturalFamilies.danh_sach?.length || 1) - (culturalFamilies.so_ho_dat_tieu_chuan || 0)
+                                )
+                              }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={70}
+                            outerRadius={120}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            labelLine={false}
+                          >
+                            <Cell fill="#2ecc71" />
+                            <Cell fill="#bdc3c7" />
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              borderRadius: '8px',
+                              border: 'none',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              backgroundColor: '#fff'
+                            }}
+                            formatter={(value) => [value, 'Hộ']}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+
+                      <div className="cultural-summary">
+                        <div className="summary-stat achieved">
+                          <span className="summary-number">{culturalFamilies.so_ho_dat_tieu_chuan || 0}</span>
+                          <span className="summary-text">hộ đạt</span>
+                        </div>
+                        <span className="summary-separator">/</span>
+                        <div className="summary-stat total">
+                          <span className="summary-number">{culturalFamilies.danh_sach?.length || 0}</span>
+                          <span className="summary-text">tổng hộ</span>
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-5">Đang tải dữ liệu...</div>
+                    <div className="chart-loading">⏳ Đang tải dữ liệu...</div>
                   )}
-                </Tab>
-              </Tabs>
-            </Card.Header>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                </Card.Body>
+              </Card>
+            </div>
+
+            {/* Report History Table */}
+            {reportHistory && reportHistory.length > 0 && (
+              <Card className="history-card">
+                <Card.Header>
+                  <Card.Title>📋 Lịch sử báo cáo</Card.Title>
+                </Card.Header>
+                <Card.Body>
+                  <div className="table-responsive">
+                    <Table hover className="history-table">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Ngày tạo</th>
+                          <th>Người tạo</th>
+                          <th>Tổng nhân khẩu</th>
+                          <th>Thời gian báo cáo</th>
+                          <th>Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportHistory.map((report, idx) => (
+                          <tr key={report.id} className="history-row">
+                            <td className="row-index">{idx + 1}</td>
+                            <td className="date-created">
+                              {report.created_at ? new Date(report.created_at).toLocaleDateString('vi-VN') : '-'}
+                            </td>
+                            <td className="created-by">
+                              {report.nguoi_tao?.ho_ten || report.nguoi_tao?.tai_khoan || 'Hệ thống'}
+                            </td>
+                            <td className="total-population">
+                              <strong>{report.tong_so_nhan_khau || 0}</strong>
+                            </td>
+                            <td className="report-period">
+                              {report.tu_ngay && report.den_ngay
+                                ? `${report.tu_ngay} → ${report.den_ngay}`
+                                : report.tu_ngay || report.den_ngay || 'Toàn bộ'}
+                            </td>
+                            <td className="actions">
+                              <button
+                                className="action-btn view-btn"
+                                onClick={() => viewReportDetails(report)}
+                                title="Xem chi tiết"
+                              >
+                                👁️ Xem
+                              </button>
+                              <button
+                                className="action-btn delete-btn"
+                                onClick={() => deleteReport(report.id)}
+                                title="Xóa báo cáo"
+                              >
+                                🗑️ Xóa
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+          </>
+        )}
+      </Container>
+    </div>
   );
 };
 

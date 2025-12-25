@@ -17,7 +17,7 @@ export const thongKeAPI = {
   // Lấy KPI
   getKPI: async (fromDate = null, toDate = null) => {
     try {
-      let url = `${API_URL}/api/thong-ke/kpi/`;
+      let url = `${API_URL}/thong-ke/kpi/`;
       if (fromDate && toDate) {
         url += `?tu_ngay=${fromDate}&den_ngay=${toDate}`;
       }
@@ -41,7 +41,7 @@ export const thongKeAPI = {
   // Lấy biểu đồ độ tuổi
   getAgeChart: async (fromDate = null, toDate = null) => {
     try {
-      let url = `${API_URL}/api/thong-ke/bieu-do-tuoi/`;
+      let url = `${API_URL}/thong-ke/bieu-do-tuoi/`;
       if (fromDate && toDate) {
         url += `?tu_ngay=${fromDate}&den_ngay=${toDate}`;
       }
@@ -65,7 +65,7 @@ export const thongKeAPI = {
   // Lấy dữ liệu gia đình văn hóa
   getCulturalFamilies: async (fromDate = null, toDate = null) => {
     try {
-      let url = `${API_URL}/api/thong-ke/gia-dinh-van-hoa/`;
+      let url = `${API_URL}/thong-ke/gia-dinh-van-hoa/`;
       if (fromDate && toDate) {
         url += `?tu_ngay=${fromDate}&den_ngay=${toDate}`;
       }
@@ -89,7 +89,7 @@ export const thongKeAPI = {
   // Lập báo cáo mới
   createReport: async (fromDate = null, toDate = null, note = '') => {
     try {
-      const response = await fetch(`${API_URL}/api/thong-ke/tao-bao-cao/`, {
+      const response = await fetch(`${API_URL}/thong-ke/tao-bao-cao/`, {
         method: 'POST',
         headers: defaultHeaders,
         body: JSON.stringify({
@@ -113,7 +113,7 @@ export const thongKeAPI = {
   // Lấy danh sách lịch sử báo cáo
   getReportHistory: async () => {
     try {
-      const response = await fetch(`${API_URL}/api/thong-ke/danh-sach/`, {
+      const response = await fetch(`${API_URL}/thong-ke/danh-sach/`, {
         method: 'GET',
         headers: defaultHeaders
       });
@@ -132,7 +132,7 @@ export const thongKeAPI = {
   // Xóa báo cáo
   deleteReport: async (reportId) => {
     try {
-      const response = await fetch(`${API_URL}/api/thong-ke/xoa/${reportId}/`, {
+      const response = await fetch(`${API_URL}/thong-ke/xoa/${reportId}/`, {
         method: 'DELETE',
         headers: defaultHeaders
       });

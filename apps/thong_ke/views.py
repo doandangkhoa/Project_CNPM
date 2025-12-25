@@ -74,7 +74,7 @@ def tao_bao_cao_thong_ke_view(request):
         
         record = ThongKeNhanKhau.objects.create(
             nguoi_tao=nguoi_tao,
-            tong_so_nhan_khau=tong_so_nhan_khau,
+            tong_nhan_khau=tong_so_nhan_khau,
             so_nam=so_nam,
             so_nu=so_nu,
             
@@ -104,6 +104,9 @@ def tao_bao_cao_thong_ke_view(request):
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"ERROR in tao_bao_cao: {error_detail}")
         return Response({
             "status": "error",
             "message": f"Lỗi khi tạo thống kê: {str(e)}"
@@ -158,37 +161,56 @@ def bao_cao_gia_dinh_van_hoa_view(request):
             meetings_query = meetings_query.filter(ngay_to_chuc__range=[tu_ngay, den_ngay])
         
         total_meetings = meetings_query.count()
+        
+        # Convert to list of IDs to avoid SQL Server issues with __in in Count filter
+        meeting_ids = list(meetings_query.values_list('id', flat=True))
 
         # 2. Kiểm tra division by zero
-        if total_meetings == 0:
+        if total_meetings == 0 or not meeting_ids:
+            # Trả về danh sách tất cả hộ nhưng với 0 lần tham gia
+            all_households = HoGiaDinh.objects.all()
+            danh_sach = [{
+                "id": ho.id,
+                "chu_ho": ho.ho_ten_chu_ho if ho.ho_ten_chu_ho else "Chưa xác định",
+                "dia_chi": ho.dia_chi,
+                "so_lan_tham_gia": 0,
+                "ty_le_dat": "0%"
+            } for ho in all_households]
+            
             return Response({
-                "status": "warning",
+                "status": "success",
                 "message": "Chưa có cuộc họp nào trong khoảng thời gian này.",
-                "data": []
+                "tong_so_buoi_hop": 0,
+                "so_ho_dat_tieu_chuan": 0,
+                "danh_sach": danh_sach
             }, status=status.HTTP_200_OK)
 
         # 3. Tối ưu Query: Dùng annotate để đếm số lần tham gia của mỗi hộ
-        ds_ho_dat = []
-        
+        # Use meeting_ids instead of queryset to avoid SQL Server issues
         all_ho_gia_dinh = HoGiaDinh.objects.annotate(
             so_lan_tham_gia=Count(
                 'thamgiasinhhoat', 
                 filter=Q(
-                    thamgiasinhhoat__lich_sinh_hoat=meetings_query, # Chỉ đếm các cuộc họp trong range
+                    thamgiasinhhoat__lich_sinh_hoat_id__in=meeting_ids,
                     thamgiasinhhoat__da_tham_gia=True
                 )
             )
         )
 
         count_dat = 0
+        ds_ho_dat = []
+        
         for ho in all_ho_gia_dinh:
-            ty_le = ho.so_lan_tham_gia / total_meetings
+            ty_le = ho.so_lan_tham_gia / total_meetings if total_meetings > 0 else 0
             
             if ty_le >= 0.8: # Tiêu chuẩn 80%
                 count_dat += 1
+            
+            # Thêm vào danh sách nếu có tham gia hoặc đạt tiêu chuẩn
+            if ho.so_lan_tham_gia > 0 or ty_le >= 0.8:
                 ds_ho_dat.append({
                     "id": ho.id,
-                    "chu_ho": ho.chu_ho.ho_ten if ho.chu_ho else "Chưa xác định",
+                    "chu_ho": ho.ho_ten_chu_ho if ho.ho_ten_chu_ho else "Chưa xác định",
                     "dia_chi": ho.dia_chi,
                     "so_lan_tham_gia": ho.so_lan_tham_gia,
                     "ty_le_dat": f"{round(ty_le * 100, 1)}%"
@@ -202,6 +224,8 @@ def bao_cao_gia_dinh_van_hoa_view(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return Response({
             "status": "error",
             "message": f"Lỗi hệ thống: {str(e)}"
