@@ -197,7 +197,7 @@ const MeetingManagement = () => {
         ho_id: parseInt(hoId),
         trang_thai: !!checked,
       };
-      const res = await fetch(`${API_BASE_URL}/sinh-hoat/diem-danh/toggle/`, {
+      const res = await fetch(`${API_BASE_URL}/sinh-hoat/diem-danh/cap-nhat/`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },

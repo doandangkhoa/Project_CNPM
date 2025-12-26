@@ -12,10 +12,11 @@
   display: flex;
   flex-direction: column;
   transition: margin-left 0.3s ease;
+  margin-left: 260px;
 }
 
 .admin-content.sidebar-collapsed {
-  /* Margin adjustment handled by sidebar width change */
+  margin-left: 70px;
 }
 
 .admin-header {

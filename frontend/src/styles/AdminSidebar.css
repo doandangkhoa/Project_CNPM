@@ -10,6 +10,10 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #475569 #1e293b;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
 }
 
 .admin-sidebar::-webkit-scrollbar {

@@ -44,6 +44,7 @@ const UserManagement = () => {
     password: '',
     role: 'nguoi_dan',
     chuc_vu: '',
+    cccd: '',
     is_active: true,
   });
 
@@ -141,6 +142,7 @@ const UserManagement = () => {
           password: '',
           role: 'nguoi_dan',
           chuc_vu: '',
+          cccd: '',
           is_active: true,
         });
         setTimeout(() => setSuccess(null), 3000);
@@ -341,10 +343,31 @@ const UserManagement = () => {
             </div>
 
             <div className="form-group">
+              <label>CCCD</label>
+              <input
+                type="text"
+                name="cccd"
+                value={formData.cccd}
+                onChange={handleChange}
+                placeholder="Nhập số CCCD"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
               <label>Vai trò</label>
-              <select name="role" value={formData.role} onChange={handleChange}>
+              <select name="role" value={formData.role} onChange={(e) => {
+                const newRole = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  role: newRole,
+                  chuc_vu: newRole === 'admin' ? 'admin' : prev.chuc_vu
+                }));
+              }}>
                 <option value="nguoi_dan">Người dân</option>
                 <option value="can_bo">Cán bộ</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
           </div>
@@ -358,6 +381,19 @@ const UserManagement = () => {
                 <option value="to_pho">Tổ phó</option>
                 <option value="can_bo">Cán bộ</option>
               </select>
+            </div>
+          )}
+
+          {formData.role === 'admin' && (
+            <div className="form-group">
+              <label>Chức vụ</label>
+              <input
+                type="text"
+                name="chuc_vu"
+                value={formData.chuc_vu}
+                readOnly
+                placeholder="Admin"
+              />
             </div>
           )}
 
@@ -395,24 +431,56 @@ const UserManagement = () => {
           <div className="form-row">
             <div className="form-group">
               <label>Vai trò</label>
-              <select name="role" value={formData.role} onChange={handleChange}>
+              <select name="role" value={formData.role} onChange={(e) => {
+                const newRole = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  role: newRole,
+                  chuc_vu: newRole === 'admin' ? 'admin' : prev.chuc_vu
+                }));
+              }}>
                 <option value="nguoi_dan">Người dân</option>
                 <option value="can_bo">Cán bộ</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
 
-            {formData.role === 'can_bo' && (
-              <div className="form-group">
-                <label>Chức vụ</label>
-                <select name="chuc_vu" value={formData.chuc_vu} onChange={handleChange}>
-                  <option value="">Chọn chức vụ</option>
-                  <option value="to_truong">Tổ trưởng</option>
-                  <option value="to_pho">Tổ phó</option>
-                  <option value="can_bo">Cán bộ</option>
-                </select>
-              </div>
-            )}
+            <div className="form-group">
+              <label>CCCD</label>
+              <input
+                type="text"
+                name="cccd"
+                value={formData.cccd}
+                onChange={handleChange}
+                placeholder="Nhập số CCCD"
+              />
+            </div>
           </div>
+
+          {formData.role === 'can_bo' && (
+            <div className="form-group">
+              <label>Chức vụ</label>
+              <select name="chuc_vu" value={formData.chuc_vu} onChange={handleChange}>
+                <option value="">Chọn chức vụ</option>
+                <option value="to_truong">Tổ trưởng</option>
+                <option value="to_pho">Tổ phó</option>
+                <option value="can_bo">Cán bộ</option>
+              </select>
+            </div>
+          )}
+
+          {formData.role === 'admin' && (
+            <div className="form-group">
+              <label>Chức vụ</label>
+              <input
+                type="text"
+                name="chuc_vu"
+                value={formData.chuc_vu}
+                readOnly
+                placeholder="Admin"
+              />
+            </div>
+          )}
 
           <div className="form-group">
             <label>Mật khẩu mới (bỏ trống nếu không thay đổi)</label>
@@ -467,7 +535,7 @@ const UserManagement = () => {
               </div>
               <div className="detail-row">
                 <label>Chức vụ:</label>
-                <span>{selectedUser.chuc_vu_hien_thi || selectedUser.chuc_vu || '-'}</span>
+                <span>{selectedUser.role === 'admin' ? 'admin' : (selectedUser.chuc_vu_hien_thi || selectedUser.chuc_vu || '-')}</span>
               </div>
               <div className="detail-row">
                 <label>Trạng thái:</label>
@@ -539,7 +607,7 @@ const UserManagement = () => {
                       {user.role_hien_thi || user.role}
                     </span>
                   </td>
-                  <td>{user.chuc_vu_hien_thi || user.chuc_vu || '-'}</td>
+                  <td>{user.role === 'admin' ? 'admin' : (user.chuc_vu_hien_thi || user.chuc_vu || 'không có')}</td>
                   <td>
                     <span className={`badge-status ${user.is_active ? 'active' : 'inactive'}`}>
                       {user.is_active ? 'Hoạt động' : 'Bị khóa'}

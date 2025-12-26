@@ -265,7 +265,7 @@ const OfficerRequestApproval = () => {
             <div className="request-body">
               <div className="request-info">
                 <p>
-                  <strong>CCCD:</strong> {request.cccd || ''}
+                  <strong>CCCD:</strong> {request.nhan_khau_cccd || ''}
                 </p>
                 <p>
                   <strong>Loại yêu cầu:</strong>{' '}

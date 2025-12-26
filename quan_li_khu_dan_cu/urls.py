@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include("apps.api.urls")), # tất cả API sẽ ở đường dẫn /api/...
+    path('api/', include("apps.api.urls")),
 ]
 
 if settings.DEBUG:

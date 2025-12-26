@@ -163,5 +163,30 @@ def danh_sach_dang_hieu_luc_view(request):
     }, status=status.HTTP_200_OK)
 
 
- 
-
+# API: Lấy 3 yêu cầu gần đây nhất của người dùng
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def yeu_cau_gan_day_view(request):
+    """
+    Lấy 3 yêu cầu tạm trú/tạm vắng mới nhất của người dùng hiện tại
+    """
+    user = request.user
+    nhan_khau = getattr(user, 'nhan_khau', None)
+    if not nhan_khau:
+        return Response({
+            "status": "error",
+            "message": "Tài khoản chưa liên kết nhân khẩu.",
+            "data": []
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Lấy 3 phiếu mới nhất, sắp xếp theo ngay_bat_dau giảm dần
+    phieu_list = PhieuTamTruTamVang.objects.filter(
+        nhan_khau=nhan_khau
+    ).order_by('-ngay_bat_dau')[:3]
+    
+    serializer = PhieuTamTruTamVangSerializer(phieu_list, many=True)
+    
+    return Response({
+        "status": "success",
+        "data": serializer.data
+    }, status=status.HTTP_200_OK)

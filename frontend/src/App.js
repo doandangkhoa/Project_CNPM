@@ -18,6 +18,8 @@ import OfficerHouseholdsPage from './pages/officer/HouseholdsPage';
 import OfficerResidentsPage from './pages/officer/ResidentsPage';
 import OfficerRequestsPage from './pages/officer/RequestsPage';
 import OfficerMeetingsPage from './pages/officer/MeetingsPage';
+import InvitationPage from './pages/officer/InvitationPage';
+import GiaDinhVanHoaPage from './pages/officer/GiaDinhVanHoaPage';
 
 // Citizen Pages
 import CitizenHomePage from './pages/citizen/HomePage';
@@ -167,6 +169,34 @@ function App() {
               requiredRoles={['can_bo']}
             >
               <OfficerMeetingsPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/officer/invitations"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['can_bo']}
+            >
+              <InvitationPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/officer/gia-dinh-van-hoa"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['can_bo']}
+            >
+              <GiaDinhVanHoaPage
                 currentUser={currentUser}
                 onLogout={handleLogout}
               />

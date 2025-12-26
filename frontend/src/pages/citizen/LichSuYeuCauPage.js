@@ -85,6 +85,12 @@ const LichSuYeuCau = ({ currentUser }) => {
                 </div>
                 <div className="phieu-content">
                   <div className="phieu-info-row">
+                    <span className="label">CCCD:</span>
+                    <span className="value">
+                      {phieu.nhan_khau_cccd || 'Chưa cập nhật'}
+                    </span>
+                  </div>
+                  <div className="phieu-info-row">
                     <span className="label">Ngày bắt đầu:</span>
                     <span className="value">
                       {formatDate(phieu.ngay_bat_dau)}

@@ -1,8 +1,90 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../../styles/CitizenHome.css';
 
 const CitizenHome = ({ currentUser }) => {
+  const [recentRequests, setRecentRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchRecentRequests();
+  }, []);
+
+  const fetchRecentRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(
+        'http://localhost:8000/api/tam-tru-tam-vang/gan-day/',
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecentRequests(Array.isArray(data.data) ? data.data : []);
+      } else {
+        setError('Không thể tải yêu cầu gần đây');
+      }
+    } catch (err) {
+      setError('Lỗi kết nối: ' + err.message);
+      console.error('Error fetching recent requests:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'da_duyet':
+        return 'approved';
+      case 'cho_duyet':
+        return 'pending';
+      case 'tu_choi':
+        return 'rejected';
+      default:
+        return 'pending';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'da_duyet':
+        return 'Đã Duyệt';
+      case 'cho_duyet':
+        return 'Chờ Duyệt';
+      case 'tu_choi':
+        return 'Từ Chối';
+      default:
+        return status;
+    }
+  };
+
+  const getLoaiPhieuLabel = (loai) => {
+    switch (loai) {
+      case 'tam_tru':
+        return 'Đăng Ký Tạm Trú';
+      case 'tam_vang':
+        return 'Khai Báo Tạm Vắng';
+      default:
+        return loai;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
   return (
     <div className="citizen-home">
       <div className="welcome-banner">
@@ -53,34 +135,35 @@ const CitizenHome = ({ currentUser }) => {
         {/* Recent Requests */}
         <section className="recent-section">
           <h2>Yêu Cầu Gần Đây</h2>
-          <div className="recent-list">
-            <div className="recent-item">
-              <div className="item-status approved">Đã Duyệt</div>
-              <div className="item-content">
-                <h4>Báo Sai Thông Tin</h4>
-                <p>Cập nhật địa chỉ thường trú</p>
-              </div>
-              <div className="item-date">15/11/2024</div>
+          {error && (
+            <div className="alert alert-warning">
+              {error}. <button onClick={fetchRecentRequests}>Thử lại</button>
             </div>
-
-            <div className="recent-item">
-              <div className="item-status pending">Chờ Duyệt</div>
-              <div className="item-content">
-                <h4>Đăng Ký Tạm Trú</h4>
-                <p>Tạm trú tại địa chỉ 123 Đường Lê Lợi</p>
-              </div>
-              <div className="item-date">01/12/2024</div>
+          )}
+          {loading ? (
+            <div className="loading">Đang tải yêu cầu...</div>
+          ) : recentRequests.length > 0 ? (
+            <div className="recent-list">
+              {recentRequests.map((request) => (
+                <div key={request.id} className="recent-item">
+                  <div className={`item-status ${getStatusBadgeClass(request.trang_thai)}`}>
+                    {getStatusLabel(request.trang_thai)}
+                  </div>
+                  <div className="item-content">
+                    <h4>{getLoaiPhieuLabel(request.loai_phieu)}</h4>
+                    <p>
+                      {request.dia_chi_tam_tru || request.ly_do || 'Không có mô tả'}
+                    </p>
+                  </div>
+                  <div className="item-date">{formatDate(request.ngay_bat_dau)}</div>
+                </div>
+              ))}
             </div>
-
-            <div className="recent-item">
-              <div className="item-status approved">Đã Duyệt</div>
-              <div className="item-content">
-                <h4>Khai Báo Tạm Vắng</h4>
-                <p>Tạm vắng từ 10/12 đến 20/12</p>
-              </div>
-              <div className="item-date">10/12/2024</div>
+          ) : (
+            <div className="empty-state">
+              <p>Chưa có yêu cầu nào. <Link to="/citizen/request">Nộp yêu cầu mới</Link></p>
             </div>
-          </div>
+          )}
         </section>
 
         {/* Help Section */}

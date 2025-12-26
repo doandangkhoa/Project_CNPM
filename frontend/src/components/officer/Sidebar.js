@@ -39,6 +39,16 @@ const OfficerSidebar = ({ currentUser, isCollapsed, onToggleCollapse }) => {
             </Link>
           </li>
           <li>
+            <Link to="/officer/invitations" className="menu-item">
+              <span className="label">Gửi Thư Mời</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/officer/gia-dinh-van-hoa" className="menu-item">
+              <span className="label">Gia Đình Văn Hóa</span>
+            </Link>
+          </li>
+          <li>
             <Link to="/officer/requests" className="menu-item">
               <span className="label">Phê Duyệt Yêu Cầu</span>
             </Link>
