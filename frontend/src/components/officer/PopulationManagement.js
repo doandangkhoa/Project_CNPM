@@ -426,7 +426,9 @@ const OfficerPopulationManagement = () => {
         ngay_cap: formData.ngay_cap || null,
         thoi_gian_dang_ki_thuong_tru:
           formData.thoi_gian_dang_ki_thuong_tru || null,
-        ngay_chuyen_di: formData.ngay_chuyen_di || null,
+        ngay_bat_dau: formData.ngay_bat_dau || null,
+        ngay_ket_thuc: formData.ngay_ket_thuc || null,
+        noi_chuyen: formData.noi_chuyen || '',
       };
 
       console.log('Sending data:', submitData);
@@ -461,6 +463,61 @@ const OfficerPopulationManagement = () => {
 
       const data = await response.json();
       alert(isEditMode ? 'Cập nhật thành công' : 'Thêm mới thành công');
+
+      // If we updated an existing population and relocation fields provided,
+      // create a BienDong record so it appears in household change history.
+      if (isEditMode && editingId) {
+        try {
+          const shouldCreateBienDong =
+            formData.ngay_bat_dau || formData.ngay_ket_thuc || formData.noi_chuyen ||
+            ['tam_tru', 'tam_vang', 'chuyen_di', 'da_chet'].includes(formData.trang_thai);
+
+          if (shouldCreateBienDong) {
+            const mapLoai = {
+              tam_tru: 'TAM_TRU',
+              tam_vang: 'TAM_VANG',
+              chuyen_di: 'CHUYEN_DI',
+              da_chet: 'KHAI_TU',
+            };
+
+            const bdPayload = {
+              nhan_khau: editingId,
+              ho_khau: formData.ho_gia_dinh || null,
+              loai_bien_dong: mapLoai[formData.trang_thai] || 'CAP_NHAT',
+              mo_ta: formData.ghi_chu || (formData.noi_chuyen ? `Nơi chuyển: ${formData.noi_chuyen}` : ''),
+              ngay_bat_dau: formData.ngay_bat_dau || null,
+              ngay_ket_thuc: formData.ngay_ket_thuc || null,
+              noi_chuyen: formData.noi_chuyen || null,
+            };
+
+            const csrfToken2 = getCsrfToken();
+            console.debug('Creating BienDong (population) with payload:', bdPayload);
+            const bdResp = await fetch(`${API_BASE_URL}/nhan-khau/bien-dong/`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken2 || '',
+              },
+              body: JSON.stringify(bdPayload),
+            });
+
+            let bdText = null;
+            try {
+              bdText = await bdResp.text();
+              console.debug('BienDong (population) response status:', bdResp.status, 'body:', bdText);
+            } catch (e) {
+              console.debug('BienDong (population) response read failed', e);
+            }
+
+            if (!bdResp.ok) {
+              console.warn('Failed to create BienDong (population):', bdResp.status, bdText);
+            }
+          }
+        } catch (bdErr) {
+          console.error('Error creating BienDong (population):', bdErr);
+        }
+      }
 
       // Refresh list
       fetchPopulations(currentPage, searchTerm);
@@ -1452,8 +1509,10 @@ const OfficerPopulationManagement = () => {
                   </div>
                 </div>
 
-                {/* Relocation Info - Only show when status is "chuyen_di" */}
-                {formData.trang_thai === 'chuyen_di' && (
+                {/* Relocation Info - show when status is "chuyen_di", "tam_tru" or "tam_vang" */}
+                {(formData.trang_thai === 'chuyen_di' ||
+                  formData.trang_thai === 'tam_tru' ||
+                  formData.trang_thai === 'tam_vang') && (
                   <div className="form-section">
                     <h4>Thông Tin Chuyển Đi</h4>
                     <div
@@ -1463,44 +1522,63 @@ const OfficerPopulationManagement = () => {
                         gap: '12px',
                       }}
                     >
-                      <div>
-                        <label
-                          style={{ display: 'block', marginBottom: '6px' }}
-                        >
-                          Ngày Chuyển Đi
-                        </label>
-                        <input
-                          type="date"
-                          name="ngay_chuyen_di"
-                          value={formData.ngay_chuyen_di}
-                          onChange={handleFormChange}
-                          style={{
-                            width: '100%',
-                            padding: '6px',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      </div>
+                            <div>
+                              <label
+                                style={{ display: 'block', marginBottom: '6px' }}
+                              >
+                                Ngày Bắt Đầu
+                              </label>
+                              <input
+                                type="date"
+                                name="ngay_bat_dau"
+                                value={formData.ngay_bat_dau}
+                                onChange={handleFormChange}
+                                style={{
+                                  width: '100%',
+                                  padding: '6px',
+                                  boxSizing: 'border-box',
+                                }}
+                              />
+                            </div>
 
-                      <div>
-                        <label
-                          style={{ display: 'block', marginBottom: '6px' }}
-                        >
-                          Nơi Chuyển
-                        </label>
-                        <input
-                          type="text"
-                          name="noi_chuyen"
-                          value={formData.noi_chuyen}
-                          onChange={handleFormChange}
-                          placeholder="Nơi chuyển đi"
-                          style={{
-                            width: '100%',
-                            padding: '6px',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      </div>
+                            <div>
+                              <label
+                                style={{ display: 'block', marginBottom: '6px' }}
+                              >
+                                Ngày Kết Thúc
+                              </label>
+                              <input
+                                type="date"
+                                name="ngay_ket_thuc"
+                                value={formData.ngay_ket_thuc}
+                                onChange={handleFormChange}
+                                style={{
+                                  width: '100%',
+                                  padding: '6px',
+                                  boxSizing: 'border-box',
+                                }}
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                style={{ display: 'block', marginBottom: '6px' }}
+                              >
+                                Nơi Chuyển
+                              </label>
+                              <input
+                                type="text"
+                                name="noi_chuyen"
+                                value={formData.noi_chuyen}
+                                onChange={handleFormChange}
+                                placeholder="Nơi chuyển đi"
+                                style={{
+                                  width: '100%',
+                                  padding: '6px',
+                                  boxSizing: 'border-box',
+                                }}
+                              />
+                            </div>
                     </div>
                   </div>
                 )}

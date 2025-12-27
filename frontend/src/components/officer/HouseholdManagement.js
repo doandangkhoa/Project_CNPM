@@ -223,9 +223,10 @@ const HouseholdManagement = () => {
       thoi_gian_dang_ki_thuong_tru: member.thoi_gian_dang_ki_thuong_tru || '',
       dia_chi_thuong_tru_truoc_day: member.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: member.ghi_chu || '',
-      ngay_bat_dau: '',
-      ngay_ket_thuc: '',
-      noi_chuyen: '',
+      ngay_bat_dau: member.ngay_bat_dau || member.ngay_chuyen_di || '',
+      ngay_ket_thuc: member.ngay_ket_thuc || '',
+      ngay_chuyen_di: member.ngay_chuyen_di || '',
+      noi_chuyen: member.noi_chuyen || '',
     });
     setEditingId(member.id);
     setFormType('member');
@@ -502,6 +503,8 @@ const HouseholdManagement = () => {
           const detailData = await response.json();
           setSelectedHousehold(detailData.data || detailData);
           // Refresh population changes after member update
+          // Note: BienDong creation is handled centrally in PopulationManagement
+          // to avoid duplicate entries when multiple components perform updates.
           await fetchPopulationChanges(selectedHousehold.id);
         }
       }
@@ -1846,6 +1849,24 @@ const HouseholdManagement = () => {
                               name="ngay_ket_thuc"
                               value={formData.ngay_ket_thuc}
                               onChange={handleFormChange}
+                              style={{
+                                width: '100%',
+                                padding: '6px',
+                                boxSizing: 'border-box',
+                              }}
+                            />
+                          </div>
+                          <div
+                            className="detail-item"
+                            style={{ gridColumn: '1 / -1' }}
+                          >
+                            <label>Nơi Chuyển</label>
+                            <input
+                              type="text"
+                              name="noi_chuyen"
+                              value={formData.noi_chuyen}
+                              onChange={handleFormChange}
+                              placeholder="Nơi chuyển"
                               style={{
                                 width: '100%',
                                 padding: '6px',
