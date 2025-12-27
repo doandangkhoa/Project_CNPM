@@ -189,10 +189,10 @@ def bao_cao_gia_dinh_van_hoa_view(request):
         # Use meeting_ids instead of queryset to avoid SQL Server issues
         all_ho_gia_dinh = HoGiaDinh.objects.annotate(
             so_lan_tham_gia=Count(
-                'thamgiasinhhoat', 
+                'tham_gia_hoat_dong', 
                 filter=Q(
-                    thamgiasinhhoat__lich_sinh_hoat_id__in=meeting_ids,
-                    thamgiasinhhoat__da_tham_gia=True
+                    tham_gia_hoat_dong__lich_sinh_hoat_id__in=meeting_ids,
+                    tham_gia_hoat_dong__da_tham_gia=True
                 )
             )
         )

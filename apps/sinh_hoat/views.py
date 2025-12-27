@@ -152,25 +152,35 @@ def tich_diem_danh_tung_nguoi(request):
 @permission_classes([IsAuthenticated])
 def lay_danh_sach_diem_danh(request, lich_sinh_hoat_id):
     """
-    Trả về danh sách tất cả các hộ kèm trạng thái đã tham gia hay chưa của buổi họp đó
+    Trả về danh sách TẤT CẢ các hộ kèm trạng thái đã tham gia hay chưa của buổi họp đó.
+    Luôn trả về tất cả hộ, không chỉ những hộ đã điểm danh.
     """
-    # Nếu chưa điểm danh bao giờ, trả về list hộ để người dùng tích
-    # Nếu đã điểm danh rồi, trả về kết quả cũ
+    # Lấy tất cả hộ gia đình
+    all_households = HoGiaDinh.objects.all()
     
-    records = ThamGiaSinhHoat.objects.filter(lich_sinh_hoat_id=lich_sinh_hoat_id).select_related('ho_gia_dinh')
+    # Lấy bản ghi ThamGiaSinhHoat cho buổi này
+    participation_records = ThamGiaSinhHoat.objects.filter(
+        lich_sinh_hoat_id=lich_sinh_hoat_id
+    ).select_related('ho_gia_dinh')
     
-    if not records.exists():
-        # Trường hợp chưa điểm danh lần nào: Trả về danh sách hộ gia đình thô
-        # Frontend sẽ hiển thị tất cả là chưa tích
-        ds_ho = HoGiaDinh.objects.all()
-        data = [{'ho_gia_dinh': ho.id, 
-                 'ten_chu_ho': ho.ho_ten_chu_ho, 
-                 'so_ho_khau': ho.so_ho_khau, 
-                 'da_tham_gia': False} for ho in ds_ho]
-        return Response(data)
+    # Tạo dict để lookup nhanh
+    participation_dict = {
+        record.ho_gia_dinh_id: record.da_tham_gia 
+        for record in participation_records
+    }
     
-    serializer = ThamGiaSinhHoatSerializer(records, many=True)
-    return Response(serializer.data)
+    # Trả về danh sách tất cả hộ với trạng thái tham gia
+    data = []
+    for ho in all_households:
+        da_tham_gia = participation_dict.get(ho.id, False)
+        data.append({
+            'ho_gia_dinh': ho.id,
+            'ten_chu_ho': ho.ho_ten_chu_ho,
+            'so_ho_khau': ho.so_ho_khau,
+            'da_tham_gia': da_tham_gia
+        })
+    
+    return Response(data)
 
 
 # ============ API GỬI THƯ MỜI ============
@@ -527,18 +537,75 @@ def xem_danh_sach_gia_dinh_van_hoa(request, nam):
     API để xem danh sách các hộ gia đình đạt "Gia đình văn hóa" của một năm
     Query params:
     - dat_chuan: true/false để lọc đạt hoặc chưa đạt
+    
+    This endpoint calculates participation dynamically from ThamGiaSinhHoat records
+    for the given year, not from ChungChiGiaDinhVanHoa table.
     """
+    from django.db.models import Count, Q
+    from datetime import datetime
+    
     dat_chuan_param = request.query_params.get('dat_chuan', None)
-
-    chung_chi = ChungChiGiaDinhVanHoa.objects.filter(nam=nam)
-
+    tieu_chi_param = request.query_params.get('tieu_chi', '80')
+    
+    try:
+        tieu_chi = int(tieu_chi_param)
+    except:
+        tieu_chi = 80
+    
+    # 1. Lấy tất cả buổi sinh hoạt trong năm
+    meetings_query = LichSinhHoat.objects.filter(ngay_to_chuc__year=nam)
+    total_meetings = meetings_query.count()
+    
+    # Nếu không có buổi sinh hoạt nào, trả về danh sách rỗng
+    if total_meetings == 0:
+        return Response({
+            "nam": nam,
+            "danh_sach": [],
+            "tong_so": 0
+        })
+    
+    # 2. Lấy tất cả hộ gia đình với số lần tham gia được tính trong năm
+    meeting_ids = list(meetings_query.values_list('id', flat=True))
+    
+    all_ho = HoGiaDinh.objects.annotate(
+        so_lan_tham_gia=Count(
+            'tham_gia_hoat_dong',
+            filter=Q(
+                tham_gia_hoat_dong__lich_sinh_hoat_id__in=meeting_ids,
+                tham_gia_hoat_dong__da_tham_gia=True
+            )
+        )
+    )
+    
+    # 3. Tính tỷ lệ và lọc theo tiêu chí
+    danh_sach = []
+    for ho in all_ho:
+        ty_le = (ho.so_lan_tham_gia / total_meetings * 100) if total_meetings > 0 else 0
+        dat_chuan = ty_le >= tieu_chi
+        
+        # Chỉ thêm vào nếu có tham gia hoặc đạt tiêu chí
+        if ho.so_lan_tham_gia > 0 or dat_chuan:
+            item = {
+                'id': ho.id,
+                'ho_gia_dinh': ho.id,
+                'ten_chu_ho': ho.ho_ten_chu_ho if ho.ho_ten_chu_ho else "Chưa xác định",
+                'so_ho_khau': ho.so_ho_khau,
+                'nam': nam,
+                'so_lan_tham_gia': ho.so_lan_tham_gia,
+                'tong_so_buoi_sinh_hoat': total_meetings,
+                'tieu_chi_tham_gia': tieu_chi,
+                'ty_le_tham_gia': round(ty_le, 2),
+                'dat_chuan': dat_chuan
+            }
+            danh_sach.append(item)
+    
+    # 4. Lọc theo dat_chuan nếu có
     if dat_chuan_param is not None:
-        dat_chuan = dat_chuan_param.lower() == 'true'
-        chung_chi = chung_chi.filter(dat_chuan=dat_chuan)
-
-    serializer = ChungChiGiaDinhVanHoaSerializer(chung_chi, many=True)
+        dat_chuan_bool = dat_chuan_param.lower() == 'true'
+        danh_sach = [h for h in danh_sach if h['dat_chuan'] == dat_chuan_bool]
+    
     return Response({
         "nam": nam,
-        "danh_sach": serializer.data,
-        "tong_so": chung_chi.count()
+        "danh_sach": danh_sach,
+        "tong_so": len(danh_sach)
     })

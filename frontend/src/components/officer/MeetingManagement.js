@@ -207,12 +207,33 @@ const MeetingManagement = () => {
         const payload = await res.json().catch(() => null);
         throw new Error(payload?.error || payload?.detail || 'Không thể cập nhật điểm danh');
       }
-      // update local state
-      setAttendanceList((prev) => prev.map((r) => {
+      
+      // update local state for attendance list
+      const updatedAttendanceList = attendanceList.map((r) => {
         const rid = r.ho_gia_dinh ? (typeof r.ho_gia_dinh === 'object' ? r.ho_gia_dinh.id : r.ho_gia_dinh) : r.id;
         if (rid === parseInt(hoId)) return { ...r, da_tham_gia: checked };
         return r;
+      });
+      setAttendanceList(updatedAttendanceList);
+      
+      // Calculate new participation count
+      const newCount = updatedAttendanceList.filter((r) => r.da_tham_gia).length;
+      
+      // Update selectedMeeting with new count
+      setSelectedMeeting((prev) => ({
+        ...prev,
+        so_luong_tham_gia: newCount,
       }));
+      
+      // Update meetings list with new count
+      setMeetings((prev) =>
+        prev.map((m) => {
+          if (m.id === selectedMeeting.id) {
+            return { ...m, so_luong_tham_gia: newCount };
+          }
+          return m;
+        })
+      );
     } catch (err) {
       setError(err.message);
     }
@@ -256,7 +277,6 @@ const MeetingManagement = () => {
                 <button onClick={() => handleView(m)}>Xem</button>
                 <button onClick={() => handleEdit(m)}>Sửa</button>
                 <button onClick={() => handleDelete(m.id)}>Xóa</button>
-                <button onClick={() => loadAttendance(m)}>Điểm danh</button>
               </td>
             </tr>
           ))}
