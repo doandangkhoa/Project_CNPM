@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/TamTruForm.css';
 
 const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
@@ -15,9 +16,11 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [createdItem, setCreatedItem] = useState(null);
   const [nhanKhauInfo, setNhanKhauInfo] = useState(
     currentUser?.nhan_khau || null
   );
+  const navigate = useNavigate();
 
   // Kiểm tra xem người dùng có linked nhan_khau không
   useEffect(() => {
@@ -145,8 +148,8 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
         );
 
         setFormData({
-          nhan_khau: '',
-          loai_phieu: 'tam_tru',
+          nhan_khau: currentUser?.nhan_khau?.id || '',
+          loai_phieu: loaiPhieu || 'tam_tru',
           ngay_bat_dau: '',
           ngay_ket_thuc: '',
           ly_do: '',
@@ -154,11 +157,10 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
           ghi_chu: '',
         });
 
-        if (onSuccess) {
-          onSuccess(data.data);
-        }
-
-        setTimeout(() => setSuccess(''), 3000);
+        // Lưu object vừa tạo lại, hiển thị thông báo thành công và
+        // gọi onSuccess chỉ khi người dùng nhấn "Quay lại".
+        setCreatedItem(data.data || null);
+        setTimeout(() => setSuccess(''), 6000);
       } else {
         setError(
           data.message ||
@@ -175,7 +177,7 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
   };
 
   return (
-    <div className="tam-tru-form-container">
+      <div className="tam-tru-form-container">
       <h2>
         {formData.loai_phieu === 'tam_tru'
           ? 'Đăng ký Tạm trú'
@@ -183,7 +185,25 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
       </h2>
 
       {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+      {success && (
+        <div className="alert alert-success">
+          <div>{success}</div>
+          <div style={{ marginTop: '8px' }}>
+            <button
+              className="btn btn-outline-primary"
+              onClick={() => {
+                if (onSuccess && createdItem) {
+                  onSuccess(createdItem);
+                } else {
+                  navigate(-1);
+                }
+              }}
+            >
+              Quay lại
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="tam-tru-form">
         {/* Loại phiếu (display-only) */}
