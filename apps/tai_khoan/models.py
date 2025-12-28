@@ -14,15 +14,16 @@ class TaiKhoan(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='nguoi_dan')
     chuc_vu = models.CharField(max_length=20, choices=CHUC_VU, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    cccd = models.CharField(max_length=20, unique=True, blank=True, null=True, verbose_name='Số CCCD')
-    # Link to NhanKhau via CCCD
-    nhan_khau = models.OneToOneField(
+    cccd = models.CharField(max_length=12, unique=True, blank=True, null=True, verbose_name='Số CCCD')
+
+    # Thêm liên kết đến nhân khẩu (có thể null)
+    nhan_khau = models.ForeignKey(
         'nhan_khau.NhanKhau',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='tai_khoan',
-        help_text='Liên kết thông tin nhân khẩu'
+        verbose_name='Nhân khẩu',
     )
 
     # Override để tránh xung đột với auth.User

@@ -5,6 +5,7 @@ from apps.nhan_khau.models import BienDongNhanKhau
 
 class PhieuTamTruTamVangSerializer(serializers.ModelSerializer):
     nhan_khau_ho_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
+    nhan_khau_cccd = serializers.CharField(source='nhan_khau.so_cccd', read_only=True)
     dang_hieu_luc = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -13,6 +14,7 @@ class PhieuTamTruTamVangSerializer(serializers.ModelSerializer):
             'id',
             'nhan_khau',
             'nhan_khau_ho_ten',
+            'nhan_khau_cccd',
             'loai_phieu',
             'ngay_bat_dau',
             'ngay_ket_thuc',
@@ -20,14 +22,12 @@ class PhieuTamTruTamVangSerializer(serializers.ModelSerializer):
             'dia_chi_tam_tru',
             'ghi_chu',
             'dang_hieu_luc',
+            'trang_thai',
         ]
 
     def create(self, validated_data):
+        # Luôn tạo phiếu với trạng thái 'cho_duyet'
+        validated_data['trang_thai'] = 'cho_duyet'
         phieu = PhieuTamTruTamVang.objects.create(**validated_data)
-
-        BienDongNhanKhau.objects.create(
-            nhan_khau=validated_data['nhan_khau'],
-            loai_bien_dong='TAM_TRU' if validated_data['loai_phieu'] == 'tam_tru' else 'TAM_VANG',
-            mo_ta=validated_data.get('ly_do', ""),
-        )
+        # Không tạo biến động nhân khẩu ở đây, chỉ tạo khi duyệt
         return phieu

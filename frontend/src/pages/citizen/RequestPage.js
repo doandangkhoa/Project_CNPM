@@ -76,7 +76,7 @@ const TamTruPageContent = ({ currentUser, onLogout }) => {
           <>
             {/* Action Section */}
             <div className="action-section">
-              <h2>Đăng ký Tạm trú / Tạm vắng</h2>
+              <h2>Đăng ký thủ tục</h2>
               <div className="register-form-wrapper">
                 <div className="form-group-inline">
                   <label htmlFor="loai_phieu">Chọn loại đăng ký:</label>
@@ -97,81 +97,6 @@ const TamTruPageContent = ({ currentUser, onLogout }) => {
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Danh sách phiếu */}
-            <div className="danh-sach-section">
-              <h2>Danh sách phiếu đã đăng ký</h2>
-
-              {error && <div className="alert alert-danger">{error}</div>}
-
-              {loading ? (
-                <div className="loading">Đang tải dữ liệu...</div>
-              ) : phieuList.length === 0 ? (
-                <div className="empty-state">
-                  <p>Bạn chưa có phiếu tạm trú hoặc tạm vắng nào</p>
-                  <p className="text-muted">
-                    Hãy bấm vào nút bên trên để đăng ký phiếu mới
-                  </p>
-                </div>
-              ) : (
-                <div className="phieu-list">
-                  {phieuList.map((phieu) => (
-                    <div key={phieu.id} className="phieu-card">
-                      <div className="phieu-header">
-                        <div className="phieu-title">
-                          <h3>{phieu.nhan_khau_ho_ten}</h3>
-                          <span className="phieu-loai">
-                            {getLoaiPhieuLabel(phieu.loai_phieu)}
-                          </span>
-                        </div>
-                        <div className="phieu-status">
-                          {getStatusBadge(phieu)}
-                        </div>
-                      </div>
-
-                      <div className="phieu-content">
-                        <div className="phieu-info-row">
-                          <span className="label">Ngày bắt đầu:</span>
-                          <span className="value">
-                            {formatDate(phieu.ngay_bat_dau)}
-                          </span>
-                        </div>
-
-                        {phieu.ngay_ket_thuc && (
-                          <div className="phieu-info-row">
-                            <span className="label">Ngày kết thúc:</span>
-                            <span className="value">
-                              {formatDate(phieu.ngay_ket_thuc)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="phieu-info-row">
-                          <span className="label">Lý do:</span>
-                          <span className="value">{phieu.ly_do}</span>
-                        </div>
-
-                        {phieu.dia_chi_tam_tru && (
-                          <div className="phieu-info-row">
-                            <span className="label">Địa chỉ tạm trú:</span>
-                            <span className="value">
-                              {phieu.dia_chi_tam_tru}
-                            </span>
-                          </div>
-                        )}
-
-                        {phieu.ghi_chu && (
-                          <div className="phieu-info-row">
-                            <span className="label">Ghi chú:</span>
-                            <span className="value">{phieu.ghi_chu}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </>
         ) : (

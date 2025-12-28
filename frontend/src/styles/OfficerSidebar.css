@@ -2,7 +2,7 @@
 
 .officer-sidebar {
   width: 260px;
-  height: 100vh;
+  min-height: 100vh;
   background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
   border-right: 1px solid #3b82f6;
   display: flex;
@@ -13,6 +13,10 @@
   scrollbar-color: #60a5fa #1e40af;
   color: white;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
 }
 
 .officer-sidebar::-webkit-scrollbar {

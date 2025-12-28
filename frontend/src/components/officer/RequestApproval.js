@@ -3,81 +3,64 @@ import '../../styles/OfficerRequestApproval.css';
 
 const OfficerRequestApproval = () => {
   const [requests, setRequests] = useState([]);
-  const [filterStatus, setFilterStatus] = useState('pending');
+  const [filterStatus, setFilterStatus] = useState('cho_duyet');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [approvalNotes, setApprovalNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Mock data
+  // Load thực tế từ API
   useEffect(() => {
-    const mockRequests = [
-      {
-        id: 'REQ-2024-001',
-        type: 'tam_tru',
-        name: 'Nguyễn Văn A',
-        cccd: '12345678901',
-        content: 'Đăng ký tạm trú tại địa chỉ 123 Đường Lê Lợi',
-        old_info: '',
-        new_info: 'Tạm trú từ 2024-12-15 đến 2024-12-31',
-        status: 'pending',
-        created_at: '2024-12-14 10:30:00',
-        reason: 'Công tác',
-      },
-      {
-        id: 'REQ-2024-002',
-        type: 'update_info',
-        name: 'Trần Thị B',
-        cccd: '12345678902',
-        content: 'Báo sai thông tin',
-        old_info: 'Địa chỉ: 456 Đường Cũ',
-        new_info: 'Địa chỉ: 456 Đường Mới, Phường 2',
-        status: 'pending',
-        created_at: '2024-12-14 11:15:00',
-        reason: 'Chuyển nhà',
-      },
-      {
-        id: 'REQ-2024-003',
-        type: 'tam_vang',
-        name: 'Lê Văn C',
-        cccd: '12345678903',
-        content: 'Khai báo tạm vắng',
-        old_info: '',
-        new_info: 'Tạm vắng từ 2024-12-15 đến 2025-01-15',
-        status: 'pending',
-        created_at: '2024-12-14 12:00:00',
-        reason: 'Đi làm ăn',
-      },
-      {
-        id: 'REQ-2024-004',
-        type: 'update_info',
-        name: 'Phạm Thị D',
-        cccd: '12345678904',
-        content: 'Báo sai thông tin',
-        old_info: 'Nghề nghiệp: Giáo viên',
-        new_info: 'Nghề nghiệp: Kiểm toán viên',
-        status: 'approved',
-        created_at: '2024-12-13 09:30:00',
-        reason: 'Thay đổi công việc',
-      },
-      {
-        id: 'REQ-2024-005',
-        type: 'tam_tru',
-        name: 'Hoàng Anh E',
-        cccd: '12345678905',
-        content: 'Đăng ký tạm trú',
-        old_info: '',
-        new_info: 'Tạm trú từ 2024-12-16 đến 2024-12-20',
-        status: 'rejected',
-        created_at: '2024-12-13 14:20:00',
-        reason: 'Du lịch',
-      },
-    ];
-    setRequests(mockRequests);
+    console.log('DEBUG: OfficerRequestApproval mounted, fetching from API...');
+    fetchRequests();
+    // eslint-disable-next-line
   }, []);
 
-  const filteredRequests = requests.filter(req => {
+  const fetchRequests = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(
+        'http://localhost:8000/api/officer/tam-tru-tam-vang/',
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        console.log('DEBUG: API response', data);
+        setRequests(Array.isArray(data) ? data : data.results || []);
+      } else {
+        setError('Không thể tải danh sách phiếu');
+      }
+    } catch (err) {
+      setError('Lỗi kết nối: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCookie = (name) => {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + '=') {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  const filteredRequests = requests.filter((req) => {
     if (filterStatus === 'all') return true;
-    return req.status === filterStatus;
+    return req.trang_thai === filterStatus;
   });
 
   const handleViewDetail = (request) => {
@@ -86,33 +69,109 @@ const OfficerRequestApproval = () => {
     setApprovalNotes('');
   };
 
-  const handleApprove = () => {
-    if (selectedRequest) {
-      setRequests(
-        requests.map(req =>
-          req.id === selectedRequest.id
-            ? { ...req, status: 'approved' }
-            : req
-        )
+  const handleApprove = async () => {
+    if (!selectedRequest) return;
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/officer/tam-tru-tam-vang/${selectedRequest.id}/duyet/`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ action: 'approve' }),
+        }
       );
-      setShowDetail(false);
-      alert('Yêu cầu đã được duyệt!');
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        setRequests(
+          requests.map((req) =>
+            req.id === selectedRequest.id
+              ? { ...req, trang_thai: 'da_duyet' }
+              : req
+          )
+        );
+        setShowDetail(false);
+        alert('Yêu cầu đã được duyệt!');
+      } else {
+        alert(data.message || 'Duyệt thất bại!');
+      }
+    } catch (err) {
+      alert('Lỗi kết nối server: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleReject = () => {
-    if (selectedRequest && approvalNotes.trim()) {
-      setRequests(
-        requests.map(req =>
-          req.id === selectedRequest.id
-            ? { ...req, status: 'rejected' }
-            : req
-        )
-      );
-      setShowDetail(false);
-      alert('Yêu cầu đã bị từ chối!');
-    } else {
+  const handleReject = async () => {
+    if (!selectedRequest || !approvalNotes.trim()) {
       alert('Vui lòng nhập lý do từ chối!');
+      return;
+    }
+    setLoading(true);
+    try {
+      console.log('DEBUG - Gửi từ chối:', {
+        id: selectedRequest.id,
+        action: 'reject',
+        note: approvalNotes,
+      });
+
+      const response = await fetch(
+        `http://localhost:8000/api/officer/tam-tru-tam-vang/${selectedRequest.id}/duyet/`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'), // Thêm CSRF token nếu cần
+          },
+          credentials: 'include',
+          body: JSON.stringify({ action: 'reject', note: approvalNotes }),
+        }
+      );
+
+      // Đọc phản hồi dạng text trước để không bị lỗi parse JSON
+      const responseText = await response.text();
+      console.log('DEBUG - Phản hồi thô từ server:', responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText); // Cố gắng parse thành JSON
+      } catch (e) {
+        console.error('DEBUG - Không thể parse JSON:', e);
+        alert(`Server trả về lỗi không phải JSON:\n${responseText}`);
+        return;
+      }
+
+      // Kiểm tra mã HTTP và thông báo từ server
+      if (response.ok && data.status === 'success') {
+        // Cập nhật UI
+        setRequests(
+          requests.map((req) =>
+            req.id === selectedRequest.id
+              ? { ...req, trang_thai: 'tu_choi', ghi_chu: approvalNotes }
+              : req
+          )
+        );
+        setShowDetail(false);
+        setApprovalNotes(''); // Reset ô ghi chú
+        alert('Yêu cầu đã bị từ chối!');
+      } else {
+        // Hiển thị lỗi CHI TIẾT từ server
+        alert(
+          `Từ chối thất bại! (Mã ${response.status})\nLý do: ${
+            data.message || JSON.stringify(data)
+          }`
+        );
+      }
+    } catch (err) {
+      // Lỗi mạng hoặc lỗi nghiêm trọng khác
+      console.error('DEBUG - Lỗi kết nối:', err);
+      alert('Lỗi kết nối server: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -131,11 +190,11 @@ const OfficerRequestApproval = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'pending':
+      case 'cho_duyet':
         return <span className="status-badge pending">⏳ Chờ Duyệt</span>;
-      case 'approved':
+      case 'da_duyet':
         return <span className="status-badge approved">✓ Đã Duyệt</span>;
-      case 'rejected':
+      case 'tu_choi':
         return <span className="status-badge rejected">✗ Từ Chối</span>;
       default:
         return <span className="status-badge">{status}</span>;
@@ -146,31 +205,36 @@ const OfficerRequestApproval = () => {
     <div className="officer-request-approval">
       <div className="section-header">
         <h2>Phê Duyệt Yêu Cầu</h2>
-        <p className="subtitle">
-          Duyệt hoặc từ chối yêu cầu từ người dân
-        </p>
+        <p className="subtitle">Duyệt hoặc từ chối yêu cầu từ người dân</p>
       </div>
-
-      {/* Filters */}
       <div className="filter-section">
         <div className="filter-buttons">
           <button
-            className={`filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('pending')}
+            className={`filter-btn ${
+              filterStatus === 'cho_duyet' ? 'active' : ''
+            }`}
+            onClick={() => setFilterStatus('cho_duyet')}
           >
-            ⏳ Chờ Duyệt ({requests.filter(r => r.status === 'pending').length})
+            ⏳ Chờ Duyệt (
+            {requests.filter((r) => r.trang_thai === 'cho_duyet').length})
           </button>
           <button
-            className={`filter-btn ${filterStatus === 'approved' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('approved')}
+            className={`filter-btn ${
+              filterStatus === 'da_duyet' ? 'active' : ''
+            }`}
+            onClick={() => setFilterStatus('da_duyet')}
           >
-            ✓ Đã Duyệt ({requests.filter(r => r.status === 'approved').length})
+            ✓ Đã Duyệt (
+            {requests.filter((r) => r.trang_thai === 'da_duyet').length})
           </button>
           <button
-            className={`filter-btn ${filterStatus === 'rejected' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('rejected')}
+            className={`filter-btn ${
+              filterStatus === 'tu_choi' ? 'active' : ''
+            }`}
+            onClick={() => setFilterStatus('tu_choi')}
           >
-            ✗ Từ Chối ({requests.filter(r => r.status === 'rejected').length})
+            ✗ Từ Chối (
+            {requests.filter((r) => r.trang_thai === 'tu_choi').length})
           </button>
           <button
             className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
@@ -180,58 +244,54 @@ const OfficerRequestApproval = () => {
           </button>
         </div>
       </div>
-
-      {/* Requests List */}
+      {error && <div className="alert alert-danger">{error}</div>}
+      {loading && <div className="loading">Đang tải dữ liệu...</div>}
       <div className="requests-list">
-        {filteredRequests.map(request => (
-          <div key={request.id} className={`request-card status-${request.status}`}>
+        {filteredRequests.map((request) => (
+          <div
+            key={request.id}
+            className={`request-card status-${request.trang_thai}`}
+          >
             <div className="request-header">
               <div className="request-title">
-                <h4>{request.name}</h4>
-                <p className="request-id">{request.id}</p>
+                <h4>{request.nhan_khau_ho_ten || request.name}</h4>
+                <p className="request-id">#{request.id}</p>
               </div>
               <div className="request-badges">
-                {getRequestTypeBadge(request.type)}
-                {getStatusBadge(request.status)}
+                {getRequestTypeBadge(request.loai_phieu || request.type)}
+                {getStatusBadge(request.trang_thai)}
               </div>
             </div>
-
             <div className="request-body">
               <div className="request-info">
                 <p>
-                  <strong>CCCD:</strong> {request.cccd}
+                  <strong>CCCD:</strong> {request.nhan_khau_cccd || ''}
                 </p>
                 <p>
-                  <strong>Loại yêu cầu:</strong> {request.content}
+                  <strong>Loại yêu cầu:</strong>{' '}
+                  {request.ly_do || request.content}
                 </p>
                 <p>
-                  <strong>Ngày gửi:</strong> {request.created_at}
+                  <strong>Ngày gửi:</strong>{' '}
+                  {request.ngay_bat_dau || request.created_at}
                 </p>
               </div>
-
-              {request.old_info && (
-                <div className="comparison">
-                  <div className="old-info">
-                    <strong>Thông tin cũ:</strong>
-                    <p>{request.old_info}</p>
-                  </div>
-                  <div className="new-info">
-                    <strong>Thông tin mới:</strong>
-                    <p>{request.new_info}</p>
-                  </div>
+              {/* Có thể bổ sung so sánh thông tin nếu cần */}
+              {request.dia_chi_tam_tru && (
+                <div className="new-info">
+                  <strong>Địa chỉ tạm trú:</strong>
+                  <p>{request.dia_chi_tam_tru}</p>
                 </div>
               )}
-
-              {!request.old_info && (
+              {request.ghi_chu && (
                 <div className="new-info">
-                  <strong>Thông tin:</strong>
-                  <p>{request.new_info}</p>
+                  <strong>Ghi chú:</strong>
+                  <p>{request.ghi_chu}</p>
                 </div>
               )}
             </div>
-
             <div className="request-footer">
-              {request.status === 'pending' && (
+              {request.trang_thai === 'cho_duyet' && (
                 <button
                   className="btn btn-action"
                   onClick={() => handleViewDetail(request)}
@@ -239,9 +299,9 @@ const OfficerRequestApproval = () => {
                   Xem Chi Tiết & Duyệt
                 </button>
               )}
-              {request.status !== 'pending' && (
+              {request.trang_thai !== 'cho_duyet' && (
                 <span className="status-info">
-                  {request.status === 'approved'
+                  {request.trang_thai === 'da_duyet'
                     ? 'Yêu cầu này đã được duyệt'
                     : 'Yêu cầu này đã bị từ chối'}
                 </span>
@@ -249,29 +309,32 @@ const OfficerRequestApproval = () => {
             </div>
           </div>
         ))}
-
         {filteredRequests.length === 0 && (
           <div className="empty-state">
             <p>
-              {filterStatus === 'pending'
+              {filterStatus === 'cho_duyet'
                 ? 'Không có yêu cầu nào chờ duyệt'
                 : `Không có yêu cầu ${filterStatus}`}
             </p>
           </div>
         )}
       </div>
-
       {/* Detail Modal */}
       {showDetail && selectedRequest && (
         <div className="modal-overlay" onClick={() => setShowDetail(false)}>
-          <div className="modal-content approval-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-content approval-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
-              <h3>Phê Duyệt Yêu Cầu {selectedRequest.id}</h3>
-              <button className="close-btn" onClick={() => setShowDetail(false)}>
+              <h3>Phê Duyệt Yêu Cầu #{selectedRequest.id}</h3>
+              <button
+                className="close-btn"
+                onClick={() => setShowDetail(false)}
+              >
                 ✕
               </button>
             </div>
-
             <div className="modal-body">
               <div className="request-detail">
                 <h4>Thông Tin Yêu Cầu</h4>
@@ -283,51 +346,40 @@ const OfficerRequestApproval = () => {
                     </tr>
                     <tr>
                       <td className="label">Người Gửi:</td>
-                      <td>{selectedRequest.name}</td>
-                    </tr>
-                    <tr>
-                      <td className="label">CCCD:</td>
-                      <td>{selectedRequest.cccd}</td>
+                      <td>
+                        {selectedRequest.nhan_khau_ho_ten ||
+                          selectedRequest.name}
+                      </td>
                     </tr>
                     <tr>
                       <td className="label">Loại Yêu Cầu:</td>
-                      <td>{selectedRequest.content}</td>
+                      <td>
+                        {selectedRequest.loai_phieu || selectedRequest.type}
+                      </td>
                     </tr>
                     <tr>
                       <td className="label">Lý Do:</td>
-                      <td>{selectedRequest.reason}</td>
+                      <td>{selectedRequest.ly_do || ''}</td>
                     </tr>
                     <tr>
                       <td className="label">Ngày Gửi:</td>
-                      <td>{selectedRequest.created_at}</td>
+                      <td>{selectedRequest.ngay_bat_dau || ''}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-
-              {selectedRequest.old_info && (
-                <div className="comparison-detail">
-                  <h4>So Sánh Thông Tin</h4>
-                  <div className="comparison-grid">
-                    <div className="old-section">
-                      <h5>Thông Tin Cũ</h5>
-                      <p>{selectedRequest.old_info}</p>
-                    </div>
-                    <div className="new-section">
-                      <h5>Thông Tin Mới</h5>
-                      <p>{selectedRequest.new_info}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {!selectedRequest.old_info && (
+              {selectedRequest.dia_chi_tam_tru && (
                 <div className="info-detail">
-                  <h4>Chi Tiết Yêu Cầu</h4>
-                  <p>{selectedRequest.new_info}</p>
+                  <h4>Địa chỉ tạm trú</h4>
+                  <p>{selectedRequest.dia_chi_tam_tru}</p>
                 </div>
               )}
-
+              {selectedRequest.ghi_chu && (
+                <div className="info-detail">
+                  <h4>Ghi chú</h4>
+                  <p>{selectedRequest.ghi_chu}</p>
+                </div>
+              )}
               <div className="approval-actions">
                 <h4>Quyết Định</h4>
                 <div className="form-group">
@@ -341,7 +393,6 @@ const OfficerRequestApproval = () => {
                 </div>
               </div>
             </div>
-
             <div className="modal-footer">
               <button
                 className="btn btn-secondary"
@@ -349,16 +400,10 @@ const OfficerRequestApproval = () => {
               >
                 Hủy
               </button>
-              <button
-                className="btn btn-danger"
-                onClick={handleReject}
-              >
+              <button className="btn btn-danger" onClick={handleReject}>
                 ✗ Từ Chối
               </button>
-              <button
-                className="btn btn-success"
-                onClick={handleApprove}
-              >
+              <button className="btn btn-success" onClick={handleApprove}>
                 ✓ Duyệt
               </button>
             </div>
