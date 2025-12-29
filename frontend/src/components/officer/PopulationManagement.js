@@ -1099,29 +1099,7 @@ const OfficerPopulationManagement = () => {
                 </div>
               </div>
 
-              {/* Relocation Info - Only show when status is "chuyen_di" */}
-              {selectedPopulation.trang_thai === 'chuyen_di' && (
-                <div className="detail-section">
-                  <h4>Thông Tin Chuyển Đi</h4>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <label>Ngày Chuyển Đi:</label>
-                      <span>
-                        {selectedPopulation.ngay_chuyen_di
-                          ? new Date(
-                              selectedPopulation.ngay_chuyen_di
-                            ).toLocaleDateString('vi-VN')
-                          : '-'}
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Nơi Chuyển:</label>
-                      <span>{selectedPopulation.noi_chuyen || '-'}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+            
               <div className="detail-section">
                 <h4>Thông Tin Hệ Thống</h4>
                 <div className="detail-grid">
@@ -1207,28 +1185,20 @@ const OfficerPopulationManagement = () => {
           >
             <div className="modal-header">
               <h3>
-                {isEditMode ? 'Cập Nhật Nhân Khẩu' : 'Thêm Nhân Khẩu Mới'}
+                {isEditMode ? 'Chỉnh Sửa Nhân Khẩu' : 'Thêm Nhân Khẩu Mới'}
               </h3>
               <button className="close-btn" onClick={handleCloseForm}>
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleFormSubmit}>
-              <div className="modal-body">
+            <div className="modal-body">
+              <form onSubmit={handleFormSubmit}>
                 <div className="form-section">
                   <h4>Thông Tin Cơ Bản</h4>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '12px',
-                    }}
-                  >
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Họ Tên *
-                      </label>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <label>Họ Tên *</label>
                       <input
                         type="text"
                         name="ho_ten"
@@ -1247,10 +1217,8 @@ const OfficerPopulationManagement = () => {
                       )}
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Biệt Danh
-                      </label>
+                    <div className="detail-item">
+                      <label>Biệt Danh</label>
                       <input
                         type="text"
                         name="bi_danh"
@@ -1265,10 +1233,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Giới Tính
-                      </label>
+                    <div className="detail-item">
+                      <label>Giới Tính</label>
                       <select
                         name="gioi_tinh"
                         value={formData.gioi_tinh}
@@ -1284,10 +1250,8 @@ const OfficerPopulationManagement = () => {
                       </select>
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Ngày Sinh *
-                      </label>
+                    <div className="detail-item">
+                      <label>Ngày Sinh *</label>
                       <input
                         type="date"
                         name="ngay_sinh"
@@ -1307,10 +1271,8 @@ const OfficerPopulationManagement = () => {
                       )}
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Nơi Sinh
-                      </label>
+                    <div className="detail-item">
+                      <label>Nơi Sinh</label>
                       <input
                         type="text"
                         name="noi_sinh"
@@ -1325,10 +1287,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Quê Quán
-                      </label>
+                    <div className="detail-item">
+                      <label>Quê Quán</label>
                       <input
                         type="text"
                         name="nguyen_quan"
@@ -1343,10 +1303,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Dân Tộc
-                      </label>
+                    <div className="detail-item">
+                      <label>Dân Tộc</label>
                       <input
                         type="text"
                         name="dan_toc"
@@ -1361,10 +1319,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        CCCD
-                      </label>
+                    <div className="detail-item">
+                      <label>CCCD</label>
                       <input
                         type="text"
                         name="so_cccd"
@@ -1379,10 +1335,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Ngày Cấp CCCD
-                      </label>
+                    <div className="detail-item">
+                      <label>Ngày Cấp CCCD</label>
                       <input
                         type="date"
                         name="ngay_cap"
@@ -1396,10 +1350,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Nơi Cấp CCCD
-                      </label>
+                    <div className="detail-item">
+                      <label>Nơi Cấp CCCD</label>
                       <input
                         type="text"
                         name="noi_cap"
@@ -1418,17 +1370,9 @@ const OfficerPopulationManagement = () => {
 
                 <div className="form-section">
                   <h4>Thông Tin Công Việc & Nơi Ở</h4>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '12px',
-                    }}
-                  >
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Nghề Nghiệp
-                      </label>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <label>Nghề Nghiệp</label>
                       <input
                         type="text"
                         name="nghe_nghiep"
@@ -1443,10 +1387,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Nơi Làm Việc
-                      </label>
+                    <div className="detail-item">
+                      <label>Nơi Làm Việc</label>
                       <input
                         type="text"
                         name="noi_lam_viec"
@@ -1461,10 +1403,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Hộ Khẩu
-                      </label>
+                    <div className="detail-item">
+                      <label>Hộ Khẩu</label>
                       <select
                         name="ho_gia_dinh_select"
                         value={selectedHouseholdOption}
@@ -1486,14 +1426,10 @@ const OfficerPopulationManagement = () => {
                           );
                         })}
                       </select>
-
-                      
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Quan Hệ với Chủ Hộ
-                      </label>
+                    <div className="detail-item">
+                      <label>Quan Hệ với Chủ Hộ</label>
                       <input
                         type="text"
                         name="quan_he_voi_chu_ho"
@@ -1508,17 +1444,14 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Địa Chỉ Hộ Khẩu
-                      </label>
+                    <div className="detail-item">
+                      <label>Hộ Khẩu (Tên)</label>
                       <input
                         type="text"
-                        name="dia_chi_ho_khau"
-                        value={formData.dia_chi_ho_khau || ''}
-                        onChange={handleFormChange}
-                        placeholder="Địa chỉ hộ khẩu (tự động điền khi chọn hộ)"
+                        name="ho_gia_dinh_ten"
+                        value={formData.ten_ho_khau || ''}
                         readOnly
+                        placeholder="Tên hộ khẩu"
                         style={{
                           width: '100%',
                           padding: '6px',
@@ -1528,16 +1461,31 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Địa Chỉ Thường Trú Trước Đây
-                      </label>
+                    <div className="detail-item">
+                      <label>Địa Chỉ Hộ Khẩu</label>
+                      <input
+                        type="text"
+                        name="dia_chi_ho_khau"
+                        value={formData.dia_chi_ho_khau || ''}
+                        readOnly
+                        placeholder="Địa chỉ hộ khẩu"
+                        style={{
+                          width: '100%',
+                          padding: '6px',
+                          boxSizing: 'border-box',
+                          backgroundColor: '#f5f5f5',
+                        }}
+                      />
+                    </div>
+
+                    <div className="detail-item">
+                      <label>Địa Chỉ Thường Trú Trước Đây</label>
                       <input
                         type="text"
                         name="dia_chi_thuong_tru_truoc_day"
                         value={formData.dia_chi_thuong_tru_truoc_day}
                         onChange={handleFormChange}
-                        placeholder="Địa chỉ thường trú trước đây"
+                        placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
                         style={{
                           width: '100%',
                           padding: '6px',
@@ -1546,10 +1494,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Thời Gian Đăng Kí Thường Trú
-                      </label>
+                    <div className="detail-item">
+                      <label>Thời Gian Đăng Kí Thường Trú</label>
                       <input
                         type="date"
                         name="thoi_gian_dang_ki_thuong_tru"
@@ -1563,10 +1509,8 @@ const OfficerPopulationManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '6px' }}>
-                        Trạng Thái
-                      </label>
+                    <div className="detail-item">
+                      <label>Trạng Thái</label>
                       <select
                         name="trang_thai"
                         value={formData.trang_thai}
@@ -1585,85 +1529,120 @@ const OfficerPopulationManagement = () => {
                       </select>
                     </div>
                   </div>
-                </div>
 
-                {/* Relocation Info - show when status is "chuyen_di", "tam_tru" or "tam_vang" */}
-                {(formData.trang_thai === 'chuyen_di' ||
-                  formData.trang_thai === 'tam_tru' ||
-                  formData.trang_thai === 'tam_vang') && (
-                  <div className="form-section">
-                    <h4>Thông Tin Chuyển Đi</h4>
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: '12px',
-                      }}
-                    >
-                            <div>
-                              <label
-                                style={{ display: 'block', marginBottom: '6px' }}
-                              >
-                                Ngày Bắt Đầu
-                              </label>
-                              <input
-                                type="date"
-                                name="ngay_bat_dau"
-                                value={formData.ngay_bat_dau}
-                                onChange={handleFormChange}
-                                style={{
-                                  width: '100%',
-                                  padding: '6px',
-                                  boxSizing: 'border-box',
-                                }}
-                              />
-                            </div>
-
-                            <div>
-                              <label
-                                style={{ display: 'block', marginBottom: '6px' }}
-                              >
-                                Ngày Kết Thúc
-                              </label>
-                              <input
-                                type="date"
-                                name="ngay_ket_thuc"
-                                value={formData.ngay_ket_thuc}
-                                onChange={handleFormChange}
-                                style={{
-                                  width: '100%',
-                                  padding: '6px',
-                                  boxSizing: 'border-box',
-                                }}
-                              />
-                            </div>
-
-                            <div>
-                              <label
-                                style={{ display: 'block', marginBottom: '6px' }}
-                              >
-                                Nơi Chuyển
-                              </label>
-                              <input
-                                type="text"
-                                name="noi_chuyen"
-                                value={formData.noi_chuyen}
-                                onChange={handleFormChange}
-                                placeholder="Nơi chuyển đi"
-                                style={{
-                                  width: '100%',
-                                  padding: '6px',
-                                  boxSizing: 'border-box',
-                                }}
-                              />
-                            </div>
+                  {/* Time Fields for Status Changes */}
+                  {formData.trang_thai === 'da_chet' && (
+                    <div className="detail-grid">
+                      <div className="detail-item">
+                        <label>Ngày Sự Kiện *</label>
+                        <input
+                          type="date"
+                          name="ngay_bat_dau"
+                          value={formData.ngay_bat_dau}
+                          onChange={handleFormChange}
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {(formData.trang_thai === 'tam_tru' ||
+                    formData.trang_thai === 'tam_vang') && (
+                    <div className="detail-grid">
+                      <div className="detail-item">
+                        <label>Ngày Bắt Đầu *</label>
+                        <input
+                          type="date"
+                          name="ngay_bat_dau"
+                          value={formData.ngay_bat_dau}
+                          onChange={handleFormChange}
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                      <div className="detail-item">
+                        <label>Ngày Kết Thúc</label>
+                        <input
+                          type="date"
+                          name="ngay_ket_thuc"
+                          value={formData.ngay_ket_thuc}
+                          onChange={handleFormChange}
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                      <div
+                        className="detail-item"
+                        style={{ gridColumn: '1 / -1' }}
+                      >
+                        <label>Nơi Chuyển</label>
+                        <input
+                          type="text"
+                          name="noi_chuyen"
+                          value={formData.noi_chuyen}
+                          onChange={handleFormChange}
+                          placeholder="Nơi chuyển"
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.trang_thai === 'chuyen_di' && (
+                    <div className="detail-grid">
+                      <div className="detail-item">
+                        <label>Ngày Sự Kiện *</label>
+                        <input
+                          type="date"
+                          name="ngay_bat_dau"
+                          value={formData.ngay_bat_dau}
+                          onChange={handleFormChange}
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                      <div
+                        className="detail-item"
+                        style={{ gridColumn: '1 / -1' }}
+                      >
+                        <label>Nơi Chuyển Đi *</label>
+                        <input
+                          type="text"
+                          name="noi_chuyen"
+                          value={formData.noi_chuyen}
+                          onChange={handleFormChange}
+                          placeholder="Nơi chuyển đi"
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <div className="form-section">
                   <h4>Ghi Chú</h4>
-                  <div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <textarea
                       name="ghi_chu"
                       value={formData.ghi_chu}
@@ -1678,30 +1657,30 @@ const OfficerPopulationManagement = () => {
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={handleCloseForm}
-                  disabled={loading}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={loading}
-                >
-                  {loading
-                    ? 'Đang xử lý...'
-                    : isEditMode
-                    ? 'Cập Nhật'
-                    : 'Thêm Mới'}
-                </button>
-              </div>
-            </form>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleCloseForm}
+                    disabled={loading}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? 'Đang lưu...'
+                      : isEditMode
+                      ? 'Cập Nhật'
+                      : 'Thêm Mới'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
