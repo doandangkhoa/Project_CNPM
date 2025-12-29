@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/MeetingManagement.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 // Helper: get CSRF token from cookie (Django default)
 const getCsrfToken = () => {
@@ -44,8 +45,10 @@ const MeetingManagement = () => {
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (query.chu_de || search) params.append('chu_de', query.chu_de || search);
-      if (query.ngay_to_chuc || dateSearch) params.append('ngay_to_chuc', query.ngay_to_chuc || dateSearch);
+      if (query.chu_de || search)
+        params.append('chu_de', query.chu_de || search);
+      if (query.ngay_to_chuc || dateSearch)
+        params.append('ngay_to_chuc', query.ngay_to_chuc || dateSearch);
 
       const url = params.toString()
         ? `${API_BASE_URL}/sinh-hoat/tim-kiem/?${params}`
@@ -77,7 +80,13 @@ const MeetingManagement = () => {
   }, [search, dateSearch]);
 
   const openCreate = () => {
-    setFormData({ chu_de: '', ngay_to_chuc: '', gio_to_chuc: '', dia_diem: '', noi_dung: '' });
+    setFormData({
+      chu_de: '',
+      ngay_to_chuc: '',
+      gio_to_chuc: '',
+      dia_diem: '',
+      noi_dung: '',
+    });
     setEditingId(null);
     setFormErrors(null);
     setShowForm(true);
@@ -100,7 +109,10 @@ const MeetingManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/sinh-hoat/${meeting.id}/chi-tiet/`, { credentials: 'include' });
+      const res = await fetch(
+        `${API_BASE_URL}/sinh-hoat/${meeting.id}/chi-tiet/`,
+        { credentials: 'include' }
+      );
       if (!res.ok) throw new Error('Không thể tải chi tiết');
       const data = await res.json();
       setSelectedMeeting(data);
@@ -139,7 +151,9 @@ const MeetingManagement = () => {
     setFormErrors(null);
     try {
       const csrf = getCsrfToken();
-      const url = editingId ? `${API_BASE_URL}/sinh-hoat/${editingId}/cap-nhat/` : `${API_BASE_URL}/sinh-hoat/them-moi/`;
+      const url = editingId
+        ? `${API_BASE_URL}/sinh-hoat/${editingId}/cap-nhat/`
+        : `${API_BASE_URL}/sinh-hoat/them-moi/`;
       const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
@@ -169,7 +183,10 @@ const MeetingManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/sinh-hoat/diem-danh/${meeting.id}/`, { credentials: 'include' });
+      const res = await fetch(
+        `${API_BASE_URL}/sinh-hoat/diem-danh/${meeting.id}/`,
+        { credentials: 'include' }
+      );
       if (!res.ok) throw new Error('Không thể tải danh sách điểm danh');
       const data = await res.json();
       setAttendanceList(Array.isArray(data) ? data : data.results || []);
@@ -205,26 +222,34 @@ const MeetingManagement = () => {
       });
       if (!res.ok) {
         const payload = await res.json().catch(() => null);
-        throw new Error(payload?.error || payload?.detail || 'Không thể cập nhật điểm danh');
+        throw new Error(
+          payload?.error || payload?.detail || 'Không thể cập nhật điểm danh'
+        );
       }
-      
+
       // update local state for attendance list
       const updatedAttendanceList = attendanceList.map((r) => {
-        const rid = r.ho_gia_dinh ? (typeof r.ho_gia_dinh === 'object' ? r.ho_gia_dinh.id : r.ho_gia_dinh) : r.id;
+        const rid = r.ho_gia_dinh
+          ? typeof r.ho_gia_dinh === 'object'
+            ? r.ho_gia_dinh.id
+            : r.ho_gia_dinh
+          : r.id;
         if (rid === parseInt(hoId)) return { ...r, da_tham_gia: checked };
         return r;
       });
       setAttendanceList(updatedAttendanceList);
-      
+
       // Calculate new participation count
-      const newCount = updatedAttendanceList.filter((r) => r.da_tham_gia).length;
-      
+      const newCount = updatedAttendanceList.filter(
+        (r) => r.da_tham_gia
+      ).length;
+
       // Update selectedMeeting with new count
       setSelectedMeeting((prev) => ({
         ...prev,
         so_luong_tham_gia: newCount,
       }));
-      
+
       // Update meetings list with new count
       setMeetings((prev) =>
         prev.map((m) => {
@@ -244,8 +269,16 @@ const MeetingManagement = () => {
       <header className="mm-header">
         <h2>Quản Lý Buổi Sinh Hoạt</h2>
         <div className="mm-controls">
-          <input placeholder="Tìm theo chủ đề" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <input type="date" value={dateSearch} onChange={(e) => setDateSearch(e.target.value)} />
+          <input
+            placeholder="Tìm theo chủ đề"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <input
+            type="date"
+            value={dateSearch}
+            onChange={(e) => setDateSearch(e.target.value)}
+          />
           <button onClick={() => fetchMeetings()}>Tìm</button>
           <button onClick={openCreate}>Tạo mới</button>
         </div>
@@ -281,7 +314,11 @@ const MeetingManagement = () => {
             </tr>
           ))}
           {meetings.length === 0 && (
-            <tr><td colSpan={6} style={{ textAlign: 'center' }}>Không có buổi sinh hoạt</td></tr>
+            <tr>
+              <td colSpan={6} style={{ textAlign: 'center' }}>
+                Không có buổi sinh hoạt
+              </td>
+            </tr>
           )}
         </tbody>
       </table>
@@ -294,30 +331,75 @@ const MeetingManagement = () => {
               <h3>{editingId ? 'Cập nhật' : 'Tạo mới'} buổi sinh hoạt</h3>
               <label>
                 Chủ đề
-                <input name="chu_de" value={formData.chu_de} onChange={(e) => setFormData({ ...formData, chu_de: e.target.value })} required />
-                {formErrors?.chu_de && <div className="mm-field-error">{formErrors.chu_de}</div>}
+                <input
+                  name="chu_de"
+                  value={formData.chu_de}
+                  onChange={(e) =>
+                    setFormData({ ...formData, chu_de: e.target.value })
+                  }
+                  required
+                />
+                {formErrors?.chu_de && (
+                  <div className="mm-field-error">{formErrors.chu_de}</div>
+                )}
               </label>
               <label>
                 Ngày tổ chức
-                <input type="date" name="ngay_to_chuc" value={formData.ngay_to_chuc} onChange={(e) => setFormData({ ...formData, ngay_to_chuc: e.target.value })} required />
-                {formErrors?.ngay_to_chuc && <div className="mm-field-error">{formErrors.ngay_to_chuc}</div>}
+                <input
+                  type="date"
+                  name="ngay_to_chuc"
+                  value={formData.ngay_to_chuc}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ngay_to_chuc: e.target.value })
+                  }
+                  required
+                />
+                {formErrors?.ngay_to_chuc && (
+                  <div className="mm-field-error">
+                    {formErrors.ngay_to_chuc}
+                  </div>
+                )}
               </label>
               <label>
                 Giờ tổ chức
-                <input type="time" name="gio_to_chuc" value={formData.gio_to_chuc} onChange={(e) => setFormData({ ...formData, gio_to_chuc: e.target.value })} required />
-                {formErrors?.gio_to_chuc && <div className="mm-field-error">{formErrors.gio_to_chuc}</div>}
+                <input
+                  type="time"
+                  name="gio_to_chuc"
+                  value={formData.gio_to_chuc}
+                  onChange={(e) =>
+                    setFormData({ ...formData, gio_to_chuc: e.target.value })
+                  }
+                  required
+                />
+                {formErrors?.gio_to_chuc && (
+                  <div className="mm-field-error">{formErrors.gio_to_chuc}</div>
+                )}
               </label>
               <label>
                 Địa điểm
-                <input name="dia_diem" value={formData.dia_diem} onChange={(e) => setFormData({ ...formData, dia_diem: e.target.value })} />
+                <input
+                  name="dia_diem"
+                  value={formData.dia_diem}
+                  onChange={(e) =>
+                    setFormData({ ...formData, dia_diem: e.target.value })
+                  }
+                />
               </label>
               <label>
                 Nội dung
-                <textarea name="noi_dung" value={formData.noi_dung} onChange={(e) => setFormData({ ...formData, noi_dung: e.target.value })} />
+                <textarea
+                  name="noi_dung"
+                  value={formData.noi_dung}
+                  onChange={(e) =>
+                    setFormData({ ...formData, noi_dung: e.target.value })
+                  }
+                />
               </label>
               <div className="mm-form-actions">
                 <button type="submit">Lưu</button>
-                <button type="button" onClick={() => setShowForm(false)}>Hủy</button>
+                <button type="button" onClick={() => setShowForm(false)}>
+                  Hủy
+                </button>
               </div>
             </form>
           </div>
@@ -328,18 +410,33 @@ const MeetingManagement = () => {
       {selectedMeeting && (
         <div className="mm-detail">
           <h3>Chi tiết buổi sinh hoạt: </h3>
-          <p><strong>Chủ đề:</strong> {selectedMeeting.chu_de}</p>
-          <p><strong>Ngày:</strong> {selectedMeeting.ngay_to_chuc}</p>
-          <p><strong>Giờ:</strong> {selectedMeeting.gio_to_chuc}</p>
-          <p><strong>Địa điểm:</strong> {selectedMeeting.dia_diem}</p>
-          <p><strong>Nội dung:</strong> {selectedMeeting.noi_dung}</p>
+          <p>
+            <strong>Chủ đề:</strong> {selectedMeeting.chu_de}
+          </p>
+          <p>
+            <strong>Ngày:</strong> {selectedMeeting.ngay_to_chuc}
+          </p>
+          <p>
+            <strong>Giờ:</strong> {selectedMeeting.gio_to_chuc}
+          </p>
+          <p>
+            <strong>Địa điểm:</strong> {selectedMeeting.dia_diem}
+          </p>
+          <p>
+            <strong>Nội dung:</strong> {selectedMeeting.noi_dung}
+          </p>
 
           {showAttendance ? (
             <div className="mm-attendance">
               <h4>Danh sách điểm danh</h4>
               <table>
                 <thead>
-                  <tr><th>Hộ</th><th>Tên</th><th>Số hộ khẩu</th><th>Đã tham gia</th></tr>
+                  <tr>
+                    <th>Hộ</th>
+                    <th>Tên</th>
+                    <th>Số hộ khẩu</th>
+                    <th>Đã tham gia</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {attendanceList.map((r, idx) => {
@@ -347,12 +444,14 @@ const MeetingManagement = () => {
                     let hoId = null;
                     let tenChuHo = '-';
                     let soHoKhau = '-';
-                    
+
                     if (r.ho_gia_dinh) {
                       // If ho_gia_dinh is an object
                       if (typeof r.ho_gia_dinh === 'object') {
                         hoId = r.ho_gia_dinh.id;
-                        tenChuHo = r.ho_gia_dinh.ho_ten_chu_ho || r.ho_gia_dinh.ten_chu_ho;
+                        tenChuHo =
+                          r.ho_gia_dinh.ho_ten_chu_ho ||
+                          r.ho_gia_dinh.ten_chu_ho;
                         soHoKhau = r.ho_gia_dinh.so_ho_khau;
                       } else {
                         // If ho_gia_dinh is an ID
@@ -366,15 +465,21 @@ const MeetingManagement = () => {
                       tenChuHo = r.ho_ten_chu_ho || r.ten_chu_ho;
                       soHoKhau = r.so_ho_khau;
                     }
-                    
-                    const da = !!(r.da_tham_gia);
+
+                    const da = !!r.da_tham_gia;
                     return (
                       <tr key={idx}>
                         <td>{hoId ?? '-'}</td>
                         <td>{tenChuHo}</td>
                         <td>{soHoKhau}</td>
                         <td>
-                          <input type="checkbox" checked={da} onChange={(e) => toggleAttendance(hoId, e.target.checked)} />
+                          <input
+                            type="checkbox"
+                            checked={da}
+                            onChange={(e) =>
+                              toggleAttendance(hoId, e.target.checked)
+                            }
+                          />
                         </td>
                       </tr>
                     );
@@ -384,12 +489,21 @@ const MeetingManagement = () => {
             </div>
           ) : (
             <div className="mm-detail-actions">
-              <button onClick={() => loadAttendance(selectedMeeting)}>Danh sách tham gia</button>
+              <button onClick={() => loadAttendance(selectedMeeting)}>
+                Danh sách tham gia
+              </button>
             </div>
           )}
 
           <div className="mm-close">
-            <button onClick={() => { setSelectedMeeting(null); setShowAttendance(false); }}>Đóng</button>
+            <button
+              onClick={() => {
+                setSelectedMeeting(null);
+                setShowAttendance(false);
+              }}
+            >
+              Đóng
+            </button>
           </div>
         </div>
       )}

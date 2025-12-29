@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CitizenLayout from '../../layouts/CitizenLayout';
 import TamTruForm from '../../components/citizen/TamTruForm';
-import '../../styles/CitizenTamTruPage.css';
+import '../../styles/CitizenLayout.css';
 
 const TamTruPageContent = ({ currentUser, onLogout }) => {
   const navigate = useNavigate();
@@ -68,6 +68,16 @@ const TamTruPageContent = ({ currentUser, onLogout }) => {
     fetchPhieuList();
   };
 
+  const handleSelectAndNavigate = () => {
+    if (loaiPhieu === 'bao_sai_thong_tin') {
+      navigate('/citizen/bao-sai-thong-tin');
+    } else if (loaiPhieu === 'xin_cap_giay_xac_nhan') {
+      navigate('/citizen/xin-cap-giay-xac-nhan');
+    } else {
+      setShowForm(true);
+    }
+  };
+
   return (
     <div className="citizen-tam-tru-page">
       {/* Main Content */}
@@ -88,10 +98,14 @@ const TamTruPageContent = ({ currentUser, onLogout }) => {
                   >
                     <option value="tam_tru">Tạm trú</option>
                     <option value="tam_vang">Tạm vắng</option>
+                    <option value="bao_sai_thong_tin">Báo sai thông tin</option>
+                    <option value="xin_cap_giay_xac_nhan">
+                      Xin cấp giấy xác nhận
+                    </option>
                   </select>
                   <button
                     className="btn-submit-register"
-                    onClick={() => setShowForm(true)}
+                    onClick={handleSelectAndNavigate}
                   >
                     Nộp đơn
                   </button>

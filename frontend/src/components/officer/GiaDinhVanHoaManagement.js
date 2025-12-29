@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/GiaDinhVanHoaManagement.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 const getCsrfToken = () => {
   const name = 'csrftoken';
@@ -58,7 +59,10 @@ const GiaDinhVanHoaManagement = () => {
     try {
       const res = await fetch(
         `${API_BASE_URL}/sinh-hoat/gia-dinh-van-hoa/danh-sach/nam/${selectedYear}/?dat_chuan=false`,
-        { credentials: 'include' }
+        {
+          method: 'GET',
+          credentials: 'include',
+        }
       );
       if (!res.ok) throw new Error('Lỗi khi tải danh sách');
       const data = await res.json();
@@ -92,20 +96,22 @@ const GiaDinhVanHoaManagement = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken()
+            'X-CSRFToken': getCsrfToken(),
           },
           credentials: 'include',
           body: JSON.stringify({
             nam: year,
-            tieu_chi_tham_gia: criteria
-          })
+            tieu_chi_tham_gia: criteria,
+          }),
         }
       );
 
       if (!res.ok) throw new Error('Lỗi khi tính toán');
       const result = await res.json();
 
-      setSuccess(`Tính toán thành công! Đạt: ${result.dat_chuan}, Chưa đạt: ${result.chua_dat}`);
+      setSuccess(
+        `Tính toán thành công! Đạt: ${result.dat_chuan}, Chưa đạt: ${result.chua_dat}`
+      );
       setShowCalculateModal(false);
       fetchBothLists(year);
     } catch (err) {
@@ -133,15 +139,24 @@ const GiaDinhVanHoaManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {families.map(family => (
+              {families.map((family) => (
                 <tr key={family.id}>
                   <td>{family.ten_chu_ho}</td>
                   <td>{family.so_ho_khau}</td>
-                  <td>{family.so_lan_tham_gia} / {family.tong_so_buoi_sinh_hoat}</td>
-                  <td>{family.ty_le_tham_gia ? family.ty_le_tham_gia.toFixed(1) : 0}%</td>
+                  <td>
+                    {family.so_lan_tham_gia} / {family.tong_so_buoi_sinh_hoat}
+                  </td>
+                  <td>
+                    {family.ty_le_tham_gia
+                      ? family.ty_le_tham_gia.toFixed(1)
+                      : 0}
+                    %
+                  </td>
                   <td>
                     <span
-                      className={`status-badge ${family.dat_chuan ? 'qualified' : 'unqualified'}`}
+                      className={`status-badge ${
+                        family.dat_chuan ? 'qualified' : 'unqualified'
+                      }`}
                     >
                       {family.dat_chuan ? '✓ Đạt' : '✗ Chưa đạt'}
                     </span>
@@ -188,8 +203,10 @@ const GiaDinhVanHoaManagement = () => {
             value={year}
             onChange={(e) => setYear(parseInt(e.target.value))}
           >
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
             ))}
           </select>
         </div>
@@ -197,11 +214,15 @@ const GiaDinhVanHoaManagement = () => {
         <div className="stats">
           <div className="stat-item">
             <span className="stat-label">Đạt tiêu chí</span>
-            <span className="stat-value qualified">{qualifiedFamilies.length}</span>
+            <span className="stat-value qualified">
+              {qualifiedFamilies.length}
+            </span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Chưa đạt tiêu chí</span>
-            <span className="stat-value unqualified">{unqualifiedFamilies.length}</span>
+            <span className="stat-value unqualified">
+              {unqualifiedFamilies.length}
+            </span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Tổng cộng</span>
@@ -231,14 +252,23 @@ const GiaDinhVanHoaManagement = () => {
         {loading ? (
           <div className="loading">Đang tải dữ liệu...</div>
         ) : activeTab === 'qualified' ? (
-          <FamilyTable families={qualifiedFamilies} title="Danh Sách Gia Đình Đạt Tiêu Chí" />
+          <FamilyTable
+            families={qualifiedFamilies}
+            title="Danh Sách Gia Đình Đạt Tiêu Chí"
+          />
         ) : (
-          <FamilyTable families={unqualifiedFamilies} title="Danh Sách Gia Đình Chưa Đạt Tiêu Chí" />
+          <FamilyTable
+            families={unqualifiedFamilies}
+            title="Danh Sách Gia Đình Chưa Đạt Tiêu Chí"
+          />
         )}
       </div>
 
       {showCalculateModal && (
-        <div className="modal-overlay" onClick={() => setShowCalculateModal(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCalculateModal(false)}
+        >
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Tính Toán Lại Gia Đình Văn Hóa</h3>
 
@@ -248,8 +278,10 @@ const GiaDinhVanHoaManagement = () => {
                 value={year}
                 onChange={(e) => setYear(parseInt(e.target.value))}
               >
-                {years.map(y => (
-                  <option key={y} value={y}>{y}</option>
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
                 ))}
               </select>
             </div>
@@ -263,12 +295,16 @@ const GiaDinhVanHoaManagement = () => {
                 value={criteria}
                 onChange={(e) => setCriteria(parseInt(e.target.value))}
               />
-              <small>Tỷ lệ phần trăm tham gia so với tổng số buổi sinh hoạt để đạt tiêu chí gia đình văn hóa</small>
+              <small>
+                Tỷ lệ phần trăm tham gia so với tổng số buổi sinh hoạt để đạt
+                tiêu chí gia đình văn hóa
+              </small>
             </div>
 
             <p className="modal-info">
-              Hệ thống sẽ tính lại cho tất cả hộ gia đình trong năm {year}.
-              Các hộ có số lần tham gia ≥ {criteria}% tổng số buổi sinh hoạt sẽ được ghi nhận đạt tiêu chí.
+              Hệ thống sẽ tính lại cho tất cả hộ gia đình trong năm {year}. Các
+              hộ có số lần tham gia ≥ {criteria}% tổng số buổi sinh hoạt sẽ được
+              ghi nhận đạt tiêu chí.
             </p>
 
             <div className="modal-actions">

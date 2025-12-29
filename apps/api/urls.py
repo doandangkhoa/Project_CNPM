@@ -31,6 +31,16 @@ urlpatterns = [
     path('nhan-khau/bien-dong/ho-khau/<int:ho_khau_id>/', nhan_khau_views.lich_su_thay_doi_ho_khau, name='lich-su-ho-khau'),
     path('nhan-khau/danh-sach-ho-khau/', nhan_khau_views.danh_sach_ho_gia_dinh, name='danh-sach-ho-khau'),
     path('citizen/profile/', nhan_khau_views.get_citizen_profile, name='citizen-profile'),
+    path('bao-sai-thong-tin/', nhan_khau_views.get_bao_sai_thong_tin_list, name='danh-sach-bao-sai'),
+    path('bao-sai-thong-tin/tao-phieu/', nhan_khau_views.create_bao_sai_thong_tin, name='tao-phieu-bao-sai'),
+    path('bao-sai-thong-tin/<int:id>/duyet/', nhan_khau_views.approve_bao_sai_thong_tin, name='duyet-bao-sai'),
+    path('officer/bao-sai-thong-tin/', nhan_khau_views.officer_danh_sach_bao_sai_thong_tin, name='officer-danh-sach-bao-sai'),
+    
+    # xin cap giay xac nhan
+    path('xin-cap-giay-xac-nhan/', nhan_khau_views.get_xin_cap_giay_xac_nhan_list, name='citizen-danh-sach-xin-cap'),
+    path('xin-cap-giay-xac-nhan/tao-phieu/', nhan_khau_views.create_xin_cap_giay_xac_nhan, name='tao-phieu-xin-cap'),
+    path('xin-cap-giay-xac-nhan/<int:id>/duyet/', nhan_khau_views.approve_xin_cap_giay_xac_nhan, name='duyet-xin-cap'),
+    path('officer/xin-cap-giay-xac-nhan/', nhan_khau_views.officer_danh_sach_xin_cap_giay_xac_nhan, name='officer-danh-sach-xin-cap'),
     
     # ho gia dinh
     path('ho-gia-dinh/', ho_gia_dinh_views.tim_kiem_ho_gia_dinh, name='danh-sach-ho-gia-dinh'),
