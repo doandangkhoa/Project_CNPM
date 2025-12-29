@@ -37,6 +37,8 @@ def them_moi_ho_gia_dinh(request):
         }, status=status.HTTP_403_FORBIDDEN)
 
     data = request.data.copy()
+    cccd_chu_ho = data.pop('id_chu_ho', None)  # Lấy CCCD nếu có
+    data['id_chu_ho'] = None  # Đảm bảo id_chu_ho được set là None trước serialize
     
     # Dùng Serializer CreateUpdate để validate input
     serializer = HoGiaDinhCreateUpdateSerializer(data=data)
@@ -45,6 +47,26 @@ def them_moi_ho_gia_dinh(request):
         try:
             with transaction.atomic():
                 ho_gia_dinh = serializer.save()
+                
+                # Nếu có CCCD chủ hộ, tìm và link nhân khẩu
+                if cccd_chu_ho:
+                    try:
+                        # Tìm nhân khẩu với CCCD này
+                        nhan_khau = NhanKhau.objects.get(so_cccd=cccd_chu_ho)
+                        
+                        # Kiểm tra nhân khẩu chưa thuộc hộ khẩu nào
+                        if not nhan_khau.ho_gia_dinh:
+                            # Cập nhật nhân khẩu thuộc vào hộ mới
+                            nhan_khau.ho_gia_dinh = ho_gia_dinh
+                            nhan_khau.quan_he_voi_chu_ho = 'Chủ hộ'
+                            nhan_khau.save()
+                            
+                            # Cập nhật id_chu_ho cho hộ
+                            ho_gia_dinh.id_chu_ho = nhan_khau
+                            ho_gia_dinh.save()
+                    except NhanKhau.DoesNotExist:
+                        # Nhân khẩu không tồn tại với CCCD này - không lỗi, chỉ bỏ qua
+                        pass
                 
                 # Trả về dữ liệu đầy đủ bằng Serializer hiển thị
                 return Response({

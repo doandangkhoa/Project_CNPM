@@ -399,7 +399,16 @@ const OfficerPopulationManagement = () => {
   const handleHouseholdSelect = (e) => {
     const val = e.target.value;
     setSelectedHouseholdOption(val);
-    if (val) {
+    if (val === 'none') {
+      // Chưa có hộ khẩu
+      setFormData((prev) => ({
+        ...prev,
+        ho_gia_dinh: null,
+        ten_ho_khau: '',
+        dia_chi_ho_khau: '',
+        quan_he_voi_chu_ho: '',
+      }));
+    } else if (val) {
       const household = households.find((h) => String(h.id) === String(val));
       if (household) {
         const hk = household.so_ho_khau || household.ma_ho_khau || '';
@@ -1416,6 +1425,7 @@ const OfficerPopulationManagement = () => {
                         }}
                       >
                         <option value="">-- Chọn hộ khẩu --</option>
+                        <option value="none">Chưa có hộ khẩu</option>
                         {households.map((h) => {
                           const hk = h.so_ho_khau || '';
                           const name = h.ho_ten_chu_ho || h.ten_chu_ho || '';
@@ -1428,106 +1438,125 @@ const OfficerPopulationManagement = () => {
                       </select>
                     </div>
 
-                    <div className="detail-item">
-                      <label>Quan Hệ với Chủ Hộ</label>
-                      <input
-                        type="text"
-                        name="quan_he_voi_chu_ho"
-                        value={formData.quan_he_voi_chu_ho}
-                        onChange={handleFormChange}
-                        placeholder="Ví dụ: Chủ hộ, Vợ, Con"
-                        style={{
-                          width: '100%',
-                          padding: '6px',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    </div>
+                    {selectedHouseholdOption && selectedHouseholdOption !== 'new' && selectedHouseholdOption !== 'none' && (
+                      <>
+                        <div className="detail-item">
+                          <label>Quan Hệ với Chủ Hộ</label>
+                          <input
+                            type="text"
+                            name="quan_he_voi_chu_ho"
+                            value={formData.quan_he_voi_chu_ho}
+                            onChange={handleFormChange}
+                            placeholder="Ví dụ: Chủ hộ, Vợ, Con"
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        </div>
 
-                    <div className="detail-item">
-                      <label>Hộ Khẩu (Tên)</label>
-                      <input
-                        type="text"
-                        name="ho_gia_dinh_ten"
-                        value={formData.ten_ho_khau || ''}
-                        readOnly
-                        placeholder="Tên hộ khẩu"
-                        style={{
-                          width: '100%',
-                          padding: '6px',
-                          boxSizing: 'border-box',
-                          backgroundColor: '#f5f5f5',
-                        }}
-                      />
-                    </div>
+                        <div className="detail-item">
+                          <label>Tên Chủ Hộ</label>
+                          <input
+                            type="text"
+                            name="ho_gia_dinh_ten"
+                            value={formData.ten_ho_khau || ''}
+                            readOnly
+                            placeholder="Tên chủ hộ"
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              boxSizing: 'border-box',
+                              backgroundColor: '#f5f5f5',
+                            }}
+                          />
+                        </div>
 
-                    <div className="detail-item">
-                      <label>Địa Chỉ Hộ Khẩu</label>
-                      <input
-                        type="text"
-                        name="dia_chi_ho_khau"
-                        value={formData.dia_chi_ho_khau || ''}
-                        readOnly
-                        placeholder="Địa chỉ hộ khẩu"
-                        style={{
-                          width: '100%',
-                          padding: '6px',
-                          boxSizing: 'border-box',
-                          backgroundColor: '#f5f5f5',
-                        }}
-                      />
-                    </div>
+                        <div className="detail-item">
+                          <label>Địa Chỉ Hộ Khẩu</label>
+                          <input
+                            type="text"
+                            name="dia_chi_ho_khau"
+                            value={formData.dia_chi_ho_khau || ''}
+                            readOnly
+                            placeholder="Địa chỉ hộ khẩu"
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              boxSizing: 'border-box',
+                              backgroundColor: '#f5f5f5',
+                            }}
+                          />
+                        </div>
 
-                    <div className="detail-item">
-                      <label>Địa Chỉ Thường Trú Trước Đây</label>
-                      <input
-                        type="text"
-                        name="dia_chi_thuong_tru_truoc_day"
-                        value={formData.dia_chi_thuong_tru_truoc_day}
-                        onChange={handleFormChange}
-                        placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
-                        style={{
-                          width: '100%',
-                          padding: '6px',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    </div>
+                        <div className="detail-item">
+                          <label>Địa Chỉ Thường Trú Trước Đây</label>
+                          <input
+                            type="text"
+                            name="dia_chi_thuong_tru_truoc_day"
+                            value={formData.dia_chi_thuong_tru_truoc_day}
+                            onChange={handleFormChange}
+                            placeholder="Địa chỉ thường trú trước đây (Ví dụ: Mới sinh)"
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        </div>
 
-                    <div className="detail-item">
-                      <label>Thời Gian Đăng Kí Thường Trú</label>
-                      <input
-                        type="date"
-                        name="thoi_gian_dang_ki_thuong_tru"
-                        value={formData.thoi_gian_dang_ki_thuong_tru}
-                        onChange={handleFormChange}
-                        style={{
-                          width: '100%',
-                          padding: '6px',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    </div>
+                        <div className="detail-item">
+                          <label>Thời Gian Đăng Kí Thường Trú</label>
+                          <input
+                            type="date"
+                            name="thoi_gian_dang_ki_thuong_tru"
+                            value={formData.thoi_gian_dang_ki_thuong_tru}
+                            onChange={handleFormChange}
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
 
-                    <div className="detail-item">
-                      <label>Trạng Thái</label>
-                      <select
-                        name="trang_thai"
-                        value={formData.trang_thai}
-                        onChange={handleFormChange}
-                        style={{
-                          width: '100%',
-                          padding: '6px',
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <option value="thuong_tru">Thường trú</option>
-                        <option value="da_chet">Đã mất</option>
-                        <option value="tam_tru">Tạm trú</option>
-                        <option value="tam_vang">Tạm vắng</option>
-                        <option value="chuyen_di">Chuyển đi</option>
-                      </select>
-                    </div>
+                    {(selectedHouseholdOption && selectedHouseholdOption !== 'new') && (
+                      <div className="detail-item">
+                        <label>Trạng Thái</label>
+                        <select
+                          name="trang_thai"
+                          value={formData.trang_thai}
+                          onChange={handleFormChange}
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            boxSizing: 'border-box',
+                          }}
+                          >
+                            <option value="thuong_tru">Thường trú</option>
+                            <option value="da_chet">Đã mất</option>
+                            <option value="tam_tru">Tạm trú</option>
+                            <option value="tam_vang">Tạm vắng</option>
+                            <option value="chuyen_di">Chuyển đi</option>
+                          </select>
+                      </div>
+                    )}
+
+                    {!selectedHouseholdOption && (
+                      <div style={{
+                        padding: '12px',
+                        backgroundColor: '#fff3cd',
+                        borderRadius: '4px',
+                        color: '#856404',
+                        fontSize: '14px',
+                        marginTop: '10px'
+                      }}>
+                        ⓘ Hãy chọn hộ khẩu để hiển thị thông tin quan hệ và địa chỉ
+                      </div>
+                    )}
                   </div>
 
                   {/* Time Fields for Status Changes */}

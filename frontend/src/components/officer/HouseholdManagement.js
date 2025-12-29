@@ -1452,19 +1452,20 @@ const HouseholdManagement = () => {
                         </div>
 
                         <div className="detail-item">
-                          <label>ID Chủ Hộ (Nhân Khẩu)</label>
+                          <label>CCCD Chủ Hộ</label>
                           <input
-                            type="number"
+                            type="text"
                             name="id_chu_ho"
                             value={formData.id_chu_ho}
                             onChange={handleFormChange}
-                            placeholder="ID của chủ hộ (nếu có)"
+                            placeholder="Số CCCD của chủ hộ"
                             style={{
                               width: '100%',
                               padding: '6px',
                               boxSizing: 'border-box',
                             }}
                           />
+                          <small style={{color: '#666', marginTop: '4px', display: 'block'}}>Nhân khẩu có CCCD này sẽ được thêm vào hộ (nếu chưa thuộc hộ nào)</small>
                         </div>
                       </div>
                     </div>
