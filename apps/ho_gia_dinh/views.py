@@ -301,14 +301,16 @@ def tach_ho_gia_dinh(request, pk):
                 nhan_khau.quan_he_voi_chu_ho = quan_he.get(str(nhan_khau.id), 'Khác')
                 nhan_khau.save()
                 
-                # Tạo BienDongNhanKhau record cho hộ CŨ
+                # Tạo BienDongNhanKhau record cho hộ CŨ - TACH_HO
                 BienDongNhanKhau.objects.create(
                     nhan_khau=nhan_khau,
                     ho_khau=ho_gia_dinh_cu,  # Lưu ở hộ cũ
                     loai_bien_dong='TACH_HO',
                     mo_ta=f"{nhan_khau.ho_ten} được tách sang hộ mới: {ho_gia_dinh_moi.so_ho_khau} - {ho_gia_dinh_moi.ho_ten_chu_ho}",
-                    ngay_bat_dau=date.today()
+                    ngay_bat_dau=date.today(),
+                    noi_chuyen=ho_gia_dinh_moi.dia_chi  # Địa chỉ hộ mới tách ra
                 )
+                
         
         return Response({
             'status': 'success',

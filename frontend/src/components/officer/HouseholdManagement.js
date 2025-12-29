@@ -2260,13 +2260,19 @@ const HouseholdManagement = () => {
                             }
                           >
                             <option value="">-- Chọn quan hệ --</option>
-                            <option value="Vợ/Chồng">Vợ/Chồng</option>
+                            <option value="Chồng">Chồng</option>
+                            <option value="Vợ">Vợ</option>
                             <option value="Con">Con</option>
-                            <option value="Con dâu/Rể">Con dâu/Rể</option>
+                            <option value="Con Dâu">Con Dâu</option>
+                            <option value="Con Rể">Con Rể</option>
                             <option value="Cháu">Cháu</option>
-                            <option value="Bố/Mẹ">Bố/Mẹ</option>
-                            <option value="Ông/Bà">Ông/Bà</option>
-                            <option value="Anh/Chị/Em">Anh/Chị/Em</option>
+                            <option value="Bố">Bố</option>
+                            <option value="Mẹ">Mẹ</option>
+                            <option value="Ông">Ông</option>
+                            <option value="Bà">Bà</option>
+                            <option value="Anh">Anh</option>
+                            <option value="Chị">Chị</option>
+                            <option value="Em">Em</option>
                             <option value="Khác">Khác</option>
                           </select>
                         </div>
