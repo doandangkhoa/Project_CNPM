@@ -340,7 +340,7 @@ const OfficerPopulationManagement = () => {
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
       ho_gia_dinh: '',
-      ten_ho_khau: '',
+      ho_ten_chu_ho: '',
       dia_chi_ho_khau: '',
       ngay_bat_dau: '',
       ngay_ket_thuc: '',
@@ -404,22 +404,19 @@ const OfficerPopulationManagement = () => {
       setFormData((prev) => ({
         ...prev,
         ho_gia_dinh: null,
-        ten_ho_khau: '',
+        ho_ten_chu_ho: '',
         dia_chi_ho_khau: '',
         quan_he_voi_chu_ho: '',
       }));
     } else if (val) {
       const household = households.find((h) => String(h.id) === String(val));
       if (household) {
-        const hk = household.so_ho_khau || household.ma_ho_khau || '';
-        const name = household.ho_ten_chu_ho || household.ten_chu_ho || '';
-        const display = hk + (name ? ` - ${name}` : '');
         console.debug('Selected household:', household);
         console.debug('Setting ho_gia_dinh to:', household.id, '(type:', typeof household.id, ')');
         setFormData((prev) => ({
           ...prev,
           ho_gia_dinh: household.id, // Use numeric ID
-          ten_ho_khau: display,
+          ho_ten_chu_ho: household.ho_ten_chu_ho || '',
           dia_chi_ho_khau: household.dia_chi || household.dia_chi_ho_khau || '',
         }));
       } else {
@@ -427,10 +424,10 @@ const OfficerPopulationManagement = () => {
         setFormData((prev) => ({ ...prev, ho_gia_dinh: val }));
       }
     } else {
-      setFormData((prev) => ({ ...prev, ho_gia_dinh: '', ten_ho_khau: '', dia_chi_ho_khau: '' }));
+      setFormData((prev) => ({ ...prev, ho_gia_dinh: '', ho_ten_chu_ho: '', dia_chi_ho_khau: '' }));
     }
     // Clear related errors
-    setFormErrors((prev) => ({ ...prev, ten_ho_khau: null, dia_chi_ho_khau: null }));
+    setFormErrors((prev) => ({ ...prev, ho_ten_chu_ho: null, dia_chi_ho_khau: null }));
   };
 
   // Handle form input changes
@@ -1461,7 +1458,7 @@ const OfficerPopulationManagement = () => {
                           <input
                             type="text"
                             name="ho_gia_dinh_ten"
-                            value={formData.ten_ho_khau || ''}
+                            value={formData.ho_ten_chu_ho || ''}
                             readOnly
                             placeholder="Tên chủ hộ"
                             style={{

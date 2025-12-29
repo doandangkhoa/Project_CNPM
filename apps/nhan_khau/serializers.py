@@ -7,6 +7,7 @@ from django.db import transaction # Cần cái này để đảm bảo dữ li�
 class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
     # Allow frontend to send household name to find and link the household
     ten_ho_khau = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    ho_ten_chu_ho = serializers.CharField(source='ho_gia_dinh.ho_ten_chu_ho', read_only=True)
     dia_chi_ho_khau = serializers.CharField(write_only=True, required=False, allow_blank=True)
     # Fields for BienDongNhanKhau when status changes
     ngay_bat_dau = serializers.DateField(write_only=True, required=False, allow_null=True)
@@ -18,7 +19,7 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
         fields = ['id', 'ho_ten', 'bi_danh', 'gioi_tinh', 'ngay_sinh', 'noi_sinh', 'nguyen_quan', 
                   'dan_toc', 'nghe_nghiep', 'noi_lam_viec', 'so_cccd', 'ngay_cap', 'noi_cap',
                   'quan_he_voi_chu_ho', 'thoi_gian_dang_ki_thuong_tru', 'dia_chi_thuong_tru_truoc_day',
-                  'trang_thai', 'ghi_chu', 'ho_gia_dinh',
+                  'trang_thai', 'ghi_chu', 'ho_gia_dinh', 'ho_ten_chu_ho',
                   'created_at', 'updated_at', 'ten_ho_khau', 'dia_chi_ho_khau',
                   'ngay_bat_dau', 'ngay_ket_thuc', 'noi_chuyen']
         extra_kwargs = {
