@@ -51,6 +51,7 @@ const OfficerPopulationManagement = () => {
   const [formErrors, setFormErrors] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [households, setHouseholds] = useState([]);
+  const [selectedHouseholdOption, setSelectedHouseholdOption] = useState('');
   const searchTimeoutRef = useRef(null);
 
   const itemsPerPage = 10;
@@ -74,7 +75,15 @@ const OfficerPopulationManagement = () => {
       }
 
       const data = await response.json();
-      setHouseholds(data.data || []);
+      const list = data.data || [];
+      console.debug('Households API response:', list);
+      // Ensure each household has an ID for the select value
+      const normalized = (list || []).map((h) => ({
+        ...h,
+        id: h.id || h.ho_gia_dinh_id, // fallback to alternative ID field
+      }));
+      console.debug('Households with IDs:', normalized);
+      setHouseholds(normalized);
     } catch (err) {
       console.error('Error fetching households:', err);
     }
@@ -331,10 +340,13 @@ const OfficerPopulationManagement = () => {
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
       ho_gia_dinh: '',
+      ten_ho_khau: '',
+      dia_chi_ho_khau: '',
       ngay_bat_dau: '',
       ngay_ket_thuc: '',
       noi_chuyen: '',
     });
+    setSelectedHouseholdOption('');
     setIsEditMode(false);
     setFormErrors({});
     setShowFormModal(true);
@@ -362,6 +374,8 @@ const OfficerPopulationManagement = () => {
         population.dia_chi_thuong_tru_truoc_day || '',
       ghi_chu: population.ghi_chu || '',
       ho_gia_dinh: population.ho_gia_dinh?.id || population.ho_gia_dinh || '',
+      ten_ho_khau: population.ten_ho_khau || '',
+      dia_chi_ho_khau: population.dia_chi_ho_khau || '',
       ngay_bat_dau: '',
       ngay_ket_thuc: '',
       noi_chuyen: '',
@@ -371,6 +385,43 @@ const OfficerPopulationManagement = () => {
     setFormErrors({});
     setShowFormModal(true);
     setShowDetail(false);
+    // set the select option corresponding to this population's household
+    if (population.ho_gia_dinh?.id) {
+      setSelectedHouseholdOption(String(population.ho_gia_dinh.id));
+    } else if (population.ten_ho_khau) {
+      setSelectedHouseholdOption('new');
+    } else {
+      setSelectedHouseholdOption('');
+    }
+  };
+
+  // Handle household selection (existing or create new)
+  const handleHouseholdSelect = (e) => {
+    const val = e.target.value;
+    setSelectedHouseholdOption(val);
+    if (val) {
+      const household = households.find((h) => String(h.id) === String(val));
+      if (household) {
+        const hk = household.so_ho_khau || household.ma_ho_khau || '';
+        const name = household.ho_ten_chu_ho || household.ten_chu_ho || '';
+        const display = hk + (name ? ` - ${name}` : '');
+        console.debug('Selected household:', household);
+        console.debug('Setting ho_gia_dinh to:', household.id, '(type:', typeof household.id, ')');
+        setFormData((prev) => ({
+          ...prev,
+          ho_gia_dinh: household.id, // Use numeric ID
+          ten_ho_khau: display,
+          dia_chi_ho_khau: household.dia_chi || household.dia_chi_ho_khau || '',
+        }));
+      } else {
+        console.warn('Household not found for val:', val);
+        setFormData((prev) => ({ ...prev, ho_gia_dinh: val }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, ho_gia_dinh: '', ten_ho_khau: '', dia_chi_ho_khau: '' }));
+    }
+    // Clear related errors
+    setFormErrors((prev) => ({ ...prev, ten_ho_khau: null, dia_chi_ho_khau: null }));
   };
 
   // Handle form input changes
@@ -394,11 +445,17 @@ const OfficerPopulationManagement = () => {
     e.preventDefault();
 
     // Basic validation
-    if (!formData.ho_ten || !formData.ngay_sinh) {
-      setFormErrors({
-        ho_ten: !formData.ho_ten ? 'Họ tên là bắt buộc' : null,
-        ngay_sinh: !formData.ngay_sinh ? 'Ngày sinh là bắt buộc' : null,
-      });
+    const errors = {};
+    if (!formData.ho_ten) errors.ho_ten = 'Họ tên là bắt buộc';
+    if (!formData.ngay_sinh) errors.ngay_sinh = 'Ngày sinh là bắt buộc';
+
+    // Require selecting an existing household
+    if (!selectedHouseholdOption) {
+      errors.ho_gia_dinh = 'Vui lòng chọn 1 hộ khẩu có sẵn';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
@@ -421,17 +478,29 @@ const OfficerPopulationManagement = () => {
       // Prepare data with proper date handling
       // Convert empty strings to null for date fields
       const submitData = {
-        ...formData,
+        dan_toc: formData.dan_toc || '',
+        dia_chi_thuong_tru_truoc_day: formData.dia_chi_thuong_tru_truoc_day || null,
+        gioi_tinh: formData.gioi_tinh || 'Nam',
+        ghi_chu: formData.ghi_chu || null,
+        ho_gia_dinh: formData.ho_gia_dinh ? parseInt(formData.ho_gia_dinh) : null,
+        ho_ten: formData.ho_ten || '',
         ngay_sinh: formData.ngay_sinh || null,
         ngay_cap: formData.ngay_cap || null,
-        thoi_gian_dang_ki_thuong_tru:
-          formData.thoi_gian_dang_ki_thuong_tru || null,
-        ngay_bat_dau: formData.ngay_bat_dau || null,
-        ngay_ket_thuc: formData.ngay_ket_thuc || null,
-        noi_chuyen: formData.noi_chuyen || '',
+        nghe_nghiep: formData.nghe_nghiep || null,
+        nguyen_quan: formData.nguyen_quan || null,
+        noi_cap: formData.noi_cap || null,
+        noi_lam_viec: formData.noi_lam_viec || null,
+        noi_sinh: formData.noi_sinh || null,
+        quan_he_voi_chu_ho: formData.quan_he_voi_chu_ho || '',
+        so_cccd: formData.so_cccd || null,
+        thoi_gian_dang_ki_thuong_tru: formData.thoi_gian_dang_ki_thuong_tru || null,
+        trang_thai: formData.trang_thai || 'thuong_tru',
       };
+      // For new records, don't send relocation fields (they go in BienDong, not NhanKhau)
+      // Only include them for edit mode when needed
 
       console.log('Sending data:', submitData);
+      console.log('ho_gia_dinh value:', submitData.ho_gia_dinh, 'type:', typeof submitData.ho_gia_dinh);
       console.log('CSRF Token:', csrfToken);
       console.log('URL:', url);
       console.log('Method:', method);
@@ -1396,20 +1465,29 @@ const OfficerPopulationManagement = () => {
                       <label style={{ display: 'block', marginBottom: '6px' }}>
                         Hộ Khẩu
                       </label>
-                      <input
-                        type="text"
-                        name="ten_ho_khau"
-                        value={formData.ten_ho_khau || ''}
-                        onChange={handleFormChange}
-                        placeholder="Hộ khẩu"
-                        readOnly
+                      <select
+                        name="ho_gia_dinh_select"
+                        value={selectedHouseholdOption}
+                        onChange={handleHouseholdSelect}
                         style={{
                           width: '100%',
                           padding: '6px',
                           boxSizing: 'border-box',
-                          backgroundColor: '#f5f5f5',
                         }}
-                      />
+                      >
+                        <option value="">-- Chọn hộ khẩu --</option>
+                        {households.map((h) => {
+                          const hk = h.so_ho_khau || '';
+                          const name = h.ho_ten_chu_ho || h.ten_chu_ho || '';
+                          return (
+                            <option key={h.id} value={h.id}>
+                              {hk}{name ? ` - ${name}` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+
+                      
                     </div>
 
                     <div>
@@ -1439,7 +1517,7 @@ const OfficerPopulationManagement = () => {
                         name="dia_chi_ho_khau"
                         value={formData.dia_chi_ho_khau || ''}
                         onChange={handleFormChange}
-                        placeholder="Địa chỉ hộ khẩu"
+                        placeholder="Địa chỉ hộ khẩu (tự động điền khi chọn hộ)"
                         readOnly
                         style={{
                           width: '100%',
