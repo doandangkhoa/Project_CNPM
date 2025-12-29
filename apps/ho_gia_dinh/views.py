@@ -140,10 +140,13 @@ def chi_tiet_ho_gia_dinh(request, pk):
 @permission_classes([IsAuthenticated])
 def tim_kiem_ho_gia_dinh(request):
     # Tối ưu query ngay từ đầu và annotate số thành viên
+    # Chỉ đếm những thành viên có trang_thai = 'thuong_tru' (thường trú)
+    from django.db.models import Q
     queryset = HoGiaDinh.objects.select_related('id_chu_ho')\
                                 .prefetch_related('nhan_khau')\
-                                .annotate(so_luong_thanh_vien=Count('nhan_khau'))\
-                                .all()
+                                .annotate(so_luong_thanh_vien=Count('nhan_khau', filter=Q(nhan_khau__trang_thai__in=['thuong_tru', 'tam_tru', 'tam_vang'])))\
+                                .all()\
+                                .order_by('so_ho_khau')
     
     # Fix lỗi: dùng get(..., '') để tránh lỗi NoneType has no attribute 'strip'
     so_ho_khau = request.query_params.get('so_ho_khau', '').strip()

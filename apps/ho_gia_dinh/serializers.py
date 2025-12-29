@@ -71,4 +71,5 @@ class HoGiaDinhSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'ngay_tao', 'ten_chu_ho_thuc', 'so_luong_thanh_vien', 'danh_sach_thanh_vien']
     
     def get_so_luong_thanh_vien(self, obj):
-        return obj.nhan_khau.count()
+        # Chỉ đếm những thành viên có trang_thai = 'thuong_tru' (thường trú)
+        return obj.nhan_khau.filter(trang_thai__in=['thuong_tru', 'tam_tru', 'tam_vang']).count()
