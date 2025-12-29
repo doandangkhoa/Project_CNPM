@@ -7,6 +7,7 @@ import './ReportPage.css';
 const ReportPage = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [criteria, setCriteria] = useState(80); // Tỷ lệ tối thiểu
   const [kpiData, setKpiData] = useState(null);
   const [ageChartData, setAgeChartData] = useState(null);
   const [culturalFamilies, setCulturalFamilies] = useState(null);
@@ -129,17 +130,35 @@ const ReportPage = () => {
       // Handle cultural families - always expect success even if empty
       if (cultural.status === 'success') {
         console.log('Cultural families data:', cultural);
+        // Filter families based on criteria
+        const all_families = cultural.danh_sach || [];
+        const qualified = all_families.filter(f => {
+          const tyLe = parseFloat(f.ty_le_dat) || 0;
+          return tyLe >= criteria;
+        });
+        const unqualified = all_families.filter(f => {
+          const tyLe = parseFloat(f.ty_le_dat) || 0;
+          return tyLe < criteria;
+        });
         setCulturalFamilies({
           tong_so_buoi_hop: cultural.tong_so_buoi_hop || 0,
-          so_ho_dat_tieu_chuan: cultural.so_ho_dat_tieu_chuan || 0,
-          danh_sach: cultural.danh_sach || []
+          so_ho_dat_tieu_chuan: qualified.length,
+          so_ho_chua_dat_tieu_chuan: unqualified.length,
+          tong_so_ho: all_families.length,
+          danh_sach: all_families,
+          qualified: qualified,
+          unqualified: unqualified
         });
       } else {
         console.warn('Cultural families error:', cultural);
         setCulturalFamilies({ 
           tong_so_buoi_hop: 0,
-          so_ho_dat_tieu_chuan: 0, 
-          danh_sach: [] 
+          so_ho_dat_tieu_chuan: 0,
+          so_ho_chua_dat_tieu_chuan: 0,
+          tong_so_ho: 0,
+          danh_sach: [],
+          qualified: [],
+          unqualified: []
         });
       }
       
@@ -178,6 +197,28 @@ const ReportPage = () => {
     fetchAllData();
   }, []);
 
+  // Re-filter cultural families when criteria changes
+  useEffect(() => {
+    if (culturalFamilies && culturalFamilies.danh_sach) {
+      const all_families = culturalFamilies.danh_sach;
+      const qualified = all_families.filter(f => {
+        const tyLe = parseFloat(f.ty_le_dat) || 0;
+        return tyLe >= criteria;
+      });
+      const unqualified = all_families.filter(f => {
+        const tyLe = parseFloat(f.ty_le_dat) || 0;
+        return tyLe < criteria;
+      });
+      setCulturalFamilies(prev => ({
+        ...prev,
+        so_ho_dat_tieu_chuan: qualified.length,
+        so_ho_chua_dat_tieu_chuan: unqualified.length,
+        qualified: qualified,
+        unqualified: unqualified
+      }));
+    }
+  }, [criteria]);
+
   const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'];
 
   return (
@@ -208,6 +249,17 @@ const ReportPage = () => {
                     <label>Đến ngày</label>
                     <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
                   </div>
+                  {/* <div>
+                    <label>Tỷ Lệ Tối Thiểu  (%)</label>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      max="100" 
+                      value={criteria} 
+                      onChange={(e) => setCriteria(parseInt(e.target.value))}
+                      style={{ width: '80px' }}
+                    />
+                  </div> */}
                 </div>
 
                 <div className="preset-buttons">
@@ -353,9 +405,9 @@ const ReportPage = () => {
                               },
                               {
                                 name: 'Chưa đạt',
-                                value: Math.max(
+                                value: culturalFamilies.so_ho_chua_dat_tieu_chuan || Math.max(
                                   0,
-                                  (culturalFamilies.danh_sach?.length || 1) - (culturalFamilies.so_ho_dat_tieu_chuan || 0)
+                                  (culturalFamilies.tong_so_ho || culturalFamilies.danh_sach?.length || 1) - (culturalFamilies.so_ho_dat_tieu_chuan || 0)
                                 )
                               }
                             ]}
@@ -390,7 +442,7 @@ const ReportPage = () => {
                         </div>
                         <span className="summary-separator">/</span>
                         <div className="summary-stat total">
-                          <span className="summary-number">{culturalFamilies.danh_sach?.length || 0}</span>
+                          <span className="summary-number">{culturalFamilies.tong_so_ho || culturalFamilies.danh_sach?.length || 0}</span>
                           <span className="summary-text">tổng hộ</span>
                         </div>
                       </div>

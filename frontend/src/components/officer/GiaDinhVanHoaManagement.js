@@ -32,53 +32,44 @@ const GiaDinhVanHoaManagement = () => {
     years.push(y);
   }
 
-  // Fetch qualified families
-  const fetchQualifiedFamilies = async (selectedYear) => {
+  // Fetch both lists từ API thống kê
+  const fetchBothLists = async (selectedYear, selectedCriteria) => {
     setLoading(true);
     setError(null);
     try {
+      const startDate = `01-01-${selectedYear}`;
+      const endDate = `31-12-${selectedYear}`;
+      
       const res = await fetch(
-        `${API_BASE_URL}/sinh-hoat/gia-dinh-van-hoa/danh-sach/nam/${selectedYear}/?dat_chuan=true`,
+        `${API_BASE_URL}/thong-ke/gia-dinh-van-hoa/?tu_ngay=${startDate}&den_ngay=${endDate}`,
         { credentials: 'include' }
       );
       if (!res.ok) throw new Error('Lỗi khi tải danh sách');
       const data = await res.json();
-      setQualifiedFamilies(data.danh_sach || []);
+      
+      // Tách danh sách thành đã đạt và chưa đạt dựa trên ty_le_dat so với criteria
+      const all_families = data.danh_sach || [];
+      const qualified = all_families.filter(f => {
+        const tyLe = parseFloat(f.ty_le_dat) || 0;
+        return tyLe >= selectedCriteria;
+      });
+      const unqualified = all_families.filter(f => {
+        const tyLe = parseFloat(f.ty_le_dat) || 0;
+        return tyLe < selectedCriteria;
+      });
+      
+      setQualifiedFamilies(qualified);
+      setUnqualifiedFamilies(unqualified);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fetch unqualified families
-  const fetchUnqualifiedFamilies = async (selectedYear) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}/sinh-hoat/gia-dinh-van-hoa/danh-sach/nam/${selectedYear}/?dat_chuan=false`,
-        { credentials: 'include' }
-      );
-      if (!res.ok) throw new Error('Lỗi khi tải danh sách');
-      const data = await res.json();
-      setUnqualifiedFamilies(data.danh_sach || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch both lists
-  const fetchBothLists = (selectedYear) => {
-    fetchQualifiedFamilies(selectedYear);
-    fetchUnqualifiedFamilies(selectedYear);
   };
 
   useEffect(() => {
-    fetchBothLists(year);
-  }, [year]);
+    fetchBothLists(year, criteria);
+  }, [year, criteria]);
 
   const handleCalculate = async () => {
     setLoading(true);
@@ -103,11 +94,15 @@ const GiaDinhVanHoaManagement = () => {
       );
 
       if (!res.ok) throw new Error('Lỗi khi tính toán');
-      const result = await res.json();
+      await res.json();
 
-      setSuccess(`Tính toán thành công! Đạt: ${result.dat_chuan}, Chưa đạt: ${result.chua_dat}`);
       setShowCalculateModal(false);
-      fetchBothLists(year);
+      
+      // Fetch updated data to show actual results
+      await fetchBothLists(year, criteria);
+      
+      // Success message will show after data is loaded
+      setSuccess(`Tính toán thành công!`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -115,7 +110,7 @@ const GiaDinhVanHoaManagement = () => {
     }
   };
 
-  const FamilyTable = ({ families, title }) => (
+  const FamilyTable = ({ families, title, isQualified }) => (
     <div className="family-table-section">
       <h3>{title}</h3>
       {families.length === 0 ? (
@@ -126,7 +121,7 @@ const GiaDinhVanHoaManagement = () => {
             <thead>
               <tr>
                 <th>Tên Chủ Hộ</th>
-                <th>Số Hộ Khẩu</th>
+                <th>Địa Chỉ</th>
                 <th>Số Lần Tham Gia</th>
                 <th>Tỷ Lệ Tham Gia</th>
                 <th>Trạng Thái</th>
@@ -135,15 +130,15 @@ const GiaDinhVanHoaManagement = () => {
             <tbody>
               {families.map(family => (
                 <tr key={family.id}>
-                  <td>{family.ten_chu_ho}</td>
-                  <td>{family.so_ho_khau}</td>
-                  <td>{family.so_lan_tham_gia} / {family.tong_so_buoi_sinh_hoat}</td>
-                  <td>{family.ty_le_tham_gia ? family.ty_le_tham_gia.toFixed(1) : 0}%</td>
+                  <td>{family.chu_ho || 'Chưa xác định'}</td>
+                  <td>{family.dia_chi || '-'}</td>
+                  <td>{family.so_lan_tham_gia}</td>
+                  <td>{family.ty_le_dat || '0%'}</td>
                   <td>
                     <span
-                      className={`status-badge ${family.dat_chuan ? 'qualified' : 'unqualified'}`}
+                      className={`status-badge ${isQualified ? 'qualified' : 'unqualified'}`}
                     >
-                      {family.dat_chuan ? '✓ Đạt' : '✗ Chưa đạt'}
+                      {isQualified ? '✓ Đạt' : '✗ Chưa đạt'}
                     </span>
                   </td>
                 </tr>
@@ -231,9 +226,9 @@ const GiaDinhVanHoaManagement = () => {
         {loading ? (
           <div className="loading">Đang tải dữ liệu...</div>
         ) : activeTab === 'qualified' ? (
-          <FamilyTable families={qualifiedFamilies} title="Danh Sách Gia Đình Đạt Tiêu Chí" />
+          <FamilyTable families={qualifiedFamilies} title="Danh Sách Gia Đình Đạt Tiêu Chí" isQualified={true} />
         ) : (
-          <FamilyTable families={unqualifiedFamilies} title="Danh Sách Gia Đình Chưa Đạt Tiêu Chí" />
+          <FamilyTable families={unqualifiedFamilies} title="Danh Sách Gia Đình Chưa Đạt Tiêu Chí" isQualified={false} />
         )}
       </div>
 
@@ -263,7 +258,7 @@ const GiaDinhVanHoaManagement = () => {
                 value={criteria}
                 onChange={(e) => setCriteria(parseInt(e.target.value))}
               />
-              <small>Tỷ lệ phần trăm tham gia so với tổng số buổi sinh hoạt để đạt tiêu chí gia đình văn hóa</small>
+              <small>Tỷ lệ phần trăm tham gia so với tổng số buổi sinh hoạt để đạt tiêu chí gia đình văn hóa (danh sách sẽ cập nhật tự động)</small>
             </div>
 
             <p className="modal-info">

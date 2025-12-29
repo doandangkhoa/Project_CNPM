@@ -218,11 +218,16 @@ def xoa_ho_gia_dinh(request, pk):
             # Kiểm tra xem hộ còn nhân khẩu không
             so_thanh_vien = NhanKhau.objects.filter(ho_gia_dinh=ho_gia_dinh).count()
             
-            if so_thanh_vien > 0:
+            if so_thanh_vien > 1:
                 return Response({
                     'status':'error',
                     'message': f'Không thể xóa. Hộ này đang có {so_thanh_vien} nhân khẩu. Vui lòng tách/xóa nhân khẩu trước.'
                 }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Nếu hộ có 1 thành viên, xóa thành viên trước
+            if so_thanh_vien == 1:
+                nhan_khau = NhanKhau.objects.get(ho_gia_dinh=ho_gia_dinh)
+                nhan_khau.delete()
                 
             ho_gia_dinh.delete()
             

@@ -152,13 +152,35 @@ def xoa_thong_ke_view(request, pk):
 @permission_classes([AllowAny])
 def bao_cao_gia_dinh_van_hoa_view(request):
     try:
+        from datetime import datetime
         tu_ngay = request.query_params.get('tu_ngay', None)
         den_ngay = request.query_params.get('den_ngay', None)
         
+        # Convert date format from DD-MM-YYYY to YYYY-MM-DD if needed
+        if tu_ngay and '-' in tu_ngay:
+            try:
+                # Try parsing as DD-MM-YYYY
+                tu_ngay_parsed = datetime.strptime(tu_ngay, '%d-%m-%Y').date()
+            except ValueError:
+                # If fails, assume YYYY-MM-DD format
+                tu_ngay_parsed = datetime.strptime(tu_ngay, '%Y-%m-%d').date()
+        else:
+            tu_ngay_parsed = tu_ngay
+        
+        if den_ngay and '-' in den_ngay:
+            try:
+                # Try parsing as DD-MM-YYYY
+                den_ngay_parsed = datetime.strptime(den_ngay, '%d-%m-%Y').date()
+            except ValueError:
+                # If fails, assume YYYY-MM-DD format
+                den_ngay_parsed = datetime.strptime(den_ngay, '%Y-%m-%d').date()
+        else:
+            den_ngay_parsed = den_ngay
+        
         # 1. Lọc các buổi họp trong khoảng thời gian
         meetings_query = LichSinhHoat.objects.all()
-        if tu_ngay and den_ngay:
-            meetings_query = meetings_query.filter(ngay_to_chuc__range=[tu_ngay, den_ngay])
+        if tu_ngay_parsed and den_ngay_parsed:
+            meetings_query = meetings_query.filter(ngay_to_chuc__range=[tu_ngay_parsed, den_ngay_parsed])
         
         total_meetings = meetings_query.count()
         
@@ -169,6 +191,7 @@ def bao_cao_gia_dinh_van_hoa_view(request):
         if total_meetings == 0 or not meeting_ids:
             # Trả về danh sách tất cả hộ nhưng với 0 lần tham gia
             all_households = HoGiaDinh.objects.all()
+            total_households = all_households.count()
             danh_sach = [{
                 "id": ho.id,
                 "chu_ho": ho.ho_ten_chu_ho if ho.ho_ten_chu_ho else "Chưa xác định",
@@ -181,7 +204,9 @@ def bao_cao_gia_dinh_van_hoa_view(request):
                 "status": "success",
                 "message": "Chưa có cuộc họp nào trong khoảng thời gian này.",
                 "tong_so_buoi_hop": 0,
+                "tong_so_ho": total_households,
                 "so_ho_dat_tieu_chuan": 0,
+                "so_ho_chua_dat_tieu_chuan": total_households,
                 "danh_sach": danh_sach
             }, status=status.HTTP_200_OK)
 
@@ -198,6 +223,7 @@ def bao_cao_gia_dinh_van_hoa_view(request):
         )
 
         count_dat = 0
+        count_chua_dat = 0
         ds_ho_dat = []
         
         for ho in all_ho_gia_dinh:
@@ -205,21 +231,26 @@ def bao_cao_gia_dinh_van_hoa_view(request):
             
             if ty_le >= 0.8: # Tiêu chuẩn 80%
                 count_dat += 1
+            else:
+                count_chua_dat += 1
             
-            # Thêm vào danh sách nếu có tham gia hoặc đạt tiêu chuẩn
-            if ho.so_lan_tham_gia > 0 or ty_le >= 0.8:
-                ds_ho_dat.append({
-                    "id": ho.id,
-                    "chu_ho": ho.ho_ten_chu_ho if ho.ho_ten_chu_ho else "Chưa xác định",
-                    "dia_chi": ho.dia_chi,
-                    "so_lan_tham_gia": ho.so_lan_tham_gia,
-                    "ty_le_dat": f"{round(ty_le * 100, 1)}%"
-                })
+            # Thêm tất cả hộ vào danh sách
+            ds_ho_dat.append({
+                "id": ho.id,
+                "chu_ho": ho.ho_ten_chu_ho if ho.ho_ten_chu_ho else "Chưa xác định",
+                "dia_chi": ho.dia_chi,
+                "so_lan_tham_gia": ho.so_lan_tham_gia,
+                "ty_le_dat": f"{round(ty_le * 100, 1)}%"
+            })
+
+        total_households = all_ho_gia_dinh.count()
 
         return Response({
             "status": "success",
             "tong_so_buoi_hop": total_meetings,
+            "tong_so_ho": total_households,
             "so_ho_dat_tieu_chuan": count_dat,
+            "so_ho_chua_dat_tieu_chuan": count_chua_dat,
             "danh_sach": ds_ho_dat
         }, status=status.HTTP_200_OK)
 
