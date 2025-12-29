@@ -48,13 +48,26 @@ const Navbar = ({ collapsed = false, currentUser }) => {
       const data = await response.json();
 
       if (response.ok) {
+        // Clear all storage
         localStorage.removeItem('authToken');
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Replace current history entry to prevent back button access
+        window.history.replaceState(null, '', '/login');
+
+        // Navigate to login
         window.location.href = '/login';
       } else {
         console.error('Logout failed:', data);
       }
     } catch (error) {
       console.error('Error during logout:', error);
+      // Still redirect on error
+      localStorage.clear();
+      sessionStorage.clear();
+      window.history.replaceState(null, '', '/login');
+      window.location.href = '/login';
     }
   };
 

@@ -7,7 +7,30 @@ const UserMenu = ({ currentUser, onLogout }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    navigate('/login');
+    try {
+      // Call logout API to clear server session
+      await fetch('http://localhost:8000/api/auth/logout/', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+
+    // Clear client-side state
+    onLogout();
+
+    // Clear browser history and navigate
+    window.history.replaceState(null, '', '/login');
+    navigate('/login', { replace: true });
+
+    // Clear session/local storage
+    sessionStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
   };
 
   const handleViewProfile = () => {
