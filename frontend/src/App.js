@@ -28,6 +28,8 @@ import CitizenServicesPage from './pages/citizen/ServicesPage';
 import CitizenUserProfilePage from './pages/citizen/UserProfilePage';
 import RequestPage from './pages/citizen/RequestPage';
 import LichSuYeuCauPage from './pages/citizen/LichSuYeuCauPage';
+import BaoCaiThongTinPage from './pages/citizen/BaoCaiThongTinPage';
+import XinCapGiayXacNhanPage from './pages/citizen/XinCapGiayXacNhanPage';
 
 // User Pages
 import UserProfilePage from './pages/UserProfilePage';
@@ -52,7 +54,6 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
         <Route path="/register" element={<RegisterPage />} />
-
         {/* User Profile Routes */}
         <Route
           path="/user-profile"
@@ -73,7 +74,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         {/* Nhan Khau Routes */}
         <Route
           path="/nhan-khau"
@@ -91,7 +91,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         {/* Admin Routes */}
         <Route
           path="/admin/users"
@@ -104,7 +103,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         {/* Officer Routes */}
         <Route
           path="/officer/dashboard"
@@ -161,7 +159,8 @@ function App() {
               />
             </ProtectedRoute>
           }
-        />        <Route
+        />{' '}
+        <Route
           path="/officer/meetings"
           element={
             <ProtectedRoute
@@ -282,7 +281,34 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/citizen/bao-sai-thong-tin"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <BaoCaiThongTinPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen/xin-cap-giay-xac-nhan"
+          element={
+            <ProtectedRoute
+              currentUser={currentUser}
+              requiredRoles={['nguoi_dan']}
+            >
+              <XinCapGiayXacNhanPage
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          }
+        />
         {/* Redirects */}
         <Route
           path="/"

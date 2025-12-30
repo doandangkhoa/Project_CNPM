@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import NhanKhau, BienDongNhanKhau, TamTru, TamVang
+from .models import NhanKhau, BienDongNhanKhau, TamTru, TamVang, BaoCaiThongTin, XinCapGiayXacNhan
 from apps.can_bo.models import CanBo
 from apps.ho_gia_dinh.models import HoGiaDinh
 from django.db import transaction # Cần cái này để đảm bảo dữ liệu toàn vẹn
@@ -250,11 +250,63 @@ class TamTruSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TamTru
-        fields = '__all__'
+        fields = '_all_'
 
 class TamVangSerializer(serializers.ModelSerializer):
     nhan_khau_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
 
     class Meta:
         model = TamVang
-        fields = '__all__'
+        fields = '_all_'
+
+class BaoCaiThongTinSerializer(serializers.ModelSerializer):
+    nhan_khau_ho_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
+    nhan_khau_cccd = serializers.CharField(source='nhan_khau.so_cccd', read_only=True)
+
+    class Meta:
+        model = BaoCaiThongTin
+        fields = [
+            'id',
+            'nhan_khau',
+            'nhan_khau_ho_ten',
+            'nhan_khau_cccd',
+            'ngay_bat_dau',
+            'cac_truong_loi',
+            'ly_do',
+            'ghi_chu',
+            'trang_thai',
+            'created_at',
+            'updated_at',
+        ]
+
+    def create(self, validated_data):
+        # Luôn tạo báo cáo với trạng thái 'cho_duyet'
+        validated_data['trang_thai'] = 'cho_duyet'
+        bao_cao = BaoCaiThongTin.objects.create(**validated_data)
+        return bao_cao
+
+class XinCapGiayXacNhanSerializer(serializers.ModelSerializer):
+    nhan_khau_ho_ten = serializers.CharField(source='nhan_khau.ho_ten', read_only=True)
+    nhan_khau_cccd = serializers.CharField(source='nhan_khau.so_cccd', read_only=True)
+
+    class Meta:
+        model = XinCapGiayXacNhan
+        fields = [
+            'id',
+            'nhan_khau',
+            'nhan_khau_ho_ten',
+            'nhan_khau_cccd',
+            'loai_giay',
+            'so_luong',
+            'ly_do',
+            'ghi_chu',
+            'trang_thai',
+            'created_at',
+            'updated_at',
+        ]
+
+    def create(self, validated_data):
+        # Luôn tạo yêu cầu với trạng thái 'cho_duyet'
+        validated_data['trang_thai'] = 'cho_duyet'
+        xin_cap = XinCapGiayXacNhan.objects.create(**validated_data)
+        return xin_cap

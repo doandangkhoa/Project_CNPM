@@ -21,21 +21,64 @@ const OfficerRequestApproval = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(
-        'http://localhost:8000/api/officer/tam-tru-tam-vang/',
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        console.log('DEBUG: API response', data);
-        setRequests(Array.isArray(data) ? data : data.results || []);
-      } else {
-        setError('Không thể tải danh sách phiếu');
+      // Fetch cả tam trú/tam vắng, báo cáo sai thông tin và xin cấp giấy xác nhận
+      const [tamTruResponse, baoCaiResponse, giayXacNhanResponse] =
+        await Promise.all([
+          fetch('http://localhost:8000/api/officer/tam-tru-tam-vang/', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          }),
+          fetch('http://localhost:8000/api/officer/bao-sai-thong-tin/', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          }),
+          fetch('http://localhost:8000/api/officer/xin-cap-giay-xac-nhan/', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          }),
+        ]);
+
+      let combinedRequests = [];
+
+      if (tamTruResponse.ok) {
+        const tamTruData = await tamTruResponse.json();
+        const tamTruRequests = (
+          Array.isArray(tamTruData) ? tamTruData : tamTruData.results || []
+        ).map((req) => ({
+          ...req,
+          request_type: 'tam_tru_tam_vang',
+        }));
+        combinedRequests = combinedRequests.concat(tamTruRequests);
       }
+
+      if (baoCaiResponse.ok) {
+        const baoCaiData = await baoCaiResponse.json();
+        const baoCaiRequests = (
+          Array.isArray(baoCaiData) ? baoCaiData : baoCaiData.results || []
+        ).map((req) => ({
+          ...req,
+          request_type: 'bao_sai_thong_tin',
+        }));
+        combinedRequests = combinedRequests.concat(baoCaiRequests);
+      }
+
+      if (giayXacNhanResponse.ok) {
+        const giayXacNhanData = await giayXacNhanResponse.json();
+        const giayXacNhanRequests = (
+          Array.isArray(giayXacNhanData)
+            ? giayXacNhanData
+            : giayXacNhanData.results || []
+        ).map((req) => ({
+          ...req,
+          request_type: 'xin_cap_giay_xac_nhan',
+        }));
+        combinedRequests = combinedRequests.concat(giayXacNhanRequests);
+      }
+
+      setRequests(combinedRequests);
     } catch (err) {
       setError('Lỗi kết nối: ' + err.message);
     } finally {
@@ -73,18 +116,25 @@ const OfficerRequestApproval = () => {
     if (!selectedRequest) return;
     setLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/officer/tam-tru-tam-vang/${selectedRequest.id}/duyet/`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),
-          },
-          credentials: 'include',
-          body: JSON.stringify({ action: 'approve' }),
-        }
-      );
+      let endpoint;
+      if (selectedRequest.request_type === 'bao_sai_thong_tin') {
+        endpoint = `http://localhost:8000/api/bao-sai-thong-tin/${selectedRequest.id}/duyet/`;
+      } else if (selectedRequest.request_type === 'xin_cap_giay_xac_nhan') {
+        endpoint = `http://localhost:8000/api/xin-cap-giay-xac-nhan/${selectedRequest.id}/duyet/`;
+      } else {
+        endpoint = `http://localhost:8000/api/officer/tam-tru-tam-vang/${selectedRequest.id}/duyet/`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'approve' }),
+      });
+
       const data = await response.json();
       if (response.ok && data.status === 'success') {
         setRequests(
@@ -113,41 +163,35 @@ const OfficerRequestApproval = () => {
     }
     setLoading(true);
     try {
-      console.log('DEBUG - Gửi từ chối:', {
-        id: selectedRequest.id,
-        action: 'reject',
-        note: approvalNotes,
+      let endpoint;
+      if (selectedRequest.request_type === 'bao_sai_thong_tin') {
+        endpoint = `http://localhost:8000/api/bao-sai-thong-tin/${selectedRequest.id}/duyet/`;
+      } else if (selectedRequest.request_type === 'xin_cap_giay_xac_nhan') {
+        endpoint = `http://localhost:8000/api/xin-cap-giay-xac-nhan/${selectedRequest.id}/duyet/`;
+      } else {
+        endpoint = `http://localhost:8000/api/officer/tam-tru-tam-vang/${selectedRequest.id}/duyet/`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'reject', note: approvalNotes }),
       });
 
-      const response = await fetch(
-        `http://localhost:8000/api/officer/tam-tru-tam-vang/${selectedRequest.id}/duyet/`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'), // Thêm CSRF token nếu cần
-          },
-          credentials: 'include',
-          body: JSON.stringify({ action: 'reject', note: approvalNotes }),
-        }
-      );
-
-      // Đọc phản hồi dạng text trước để không bị lỗi parse JSON
       const responseText = await response.text();
-      console.log('DEBUG - Phản hồi thô từ server:', responseText);
-
       let data;
       try {
-        data = JSON.parse(responseText); // Cố gắng parse thành JSON
+        data = JSON.parse(responseText);
       } catch (e) {
-        console.error('DEBUG - Không thể parse JSON:', e);
         alert(`Server trả về lỗi không phải JSON:\n${responseText}`);
         return;
       }
 
-      // Kiểm tra mã HTTP và thông báo từ server
       if (response.ok && data.status === 'success') {
-        // Cập nhật UI
         setRequests(
           requests.map((req) =>
             req.id === selectedRequest.id
@@ -156,10 +200,9 @@ const OfficerRequestApproval = () => {
           )
         );
         setShowDetail(false);
-        setApprovalNotes(''); // Reset ô ghi chú
+        setApprovalNotes('');
         alert('Yêu cầu đã bị từ chối!');
       } else {
-        // Hiển thị lỗi CHI TIẾT từ server
         alert(
           `Từ chối thất bại! (Mã ${response.status})\nLý do: ${
             data.message || JSON.stringify(data)
@@ -167,15 +210,24 @@ const OfficerRequestApproval = () => {
         );
       }
     } catch (err) {
-      // Lỗi mạng hoặc lỗi nghiêm trọng khác
-      console.error('DEBUG - Lỗi kết nối:', err);
       alert('Lỗi kết nối server: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const getRequestTypeBadge = (type) => {
+  const getRequestTypeBadge = (request) => {
+    // Xác định loại request từ request_type
+    if (request.request_type === 'bao_sai_thong_tin') {
+      return <span className="type-badge bao-sai">⚠️ Báo Sai Thông Tin</span>;
+    }
+
+    if (request.request_type === 'xin_cap_giay_xac_nhan') {
+      return <span className="type-badge xin-cap">📋 Xin Cấp Giấy</span>;
+    }
+
+    // Nếu là tam_tru_tam_vang, sử dụng loai_phieu
+    const type = request.loai_phieu || request.type;
     switch (type) {
       case 'tam_tru':
         return <span className="type-badge tam-tru">Tạm Trú</span>;
@@ -186,6 +238,12 @@ const OfficerRequestApproval = () => {
       default:
         return <span className="type-badge">Khác</span>;
     }
+  };
+
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return 'Chưa xác định';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
   };
 
   const getStatusBadge = (status) => {
@@ -258,7 +316,7 @@ const OfficerRequestApproval = () => {
                 <p className="request-id">#{request.id}</p>
               </div>
               <div className="request-badges">
-                {getRequestTypeBadge(request.loai_phieu || request.type)}
+                {getRequestTypeBadge(request)}
                 {getStatusBadge(request.trang_thai)}
               </div>
             </div>
@@ -269,14 +327,47 @@ const OfficerRequestApproval = () => {
                 </p>
                 <p>
                   <strong>Loại yêu cầu:</strong>{' '}
-                  {request.ly_do || request.content}
+                  {request.request_type === 'bao_sai_thong_tin'
+                    ? 'Báo cáo sai thông tin'
+                    : request.ly_do || request.content}
                 </p>
                 <p>
                   <strong>Ngày gửi:</strong>{' '}
                   {request.ngay_bat_dau || request.created_at}
                 </p>
               </div>
-              {/* Có thể bổ sung so sánh thông tin nếu cần */}
+              {/* Hiển thị các trường sai nếu là báo cáo sai thông tin */}
+              {request.request_type === 'bao_sai_thong_tin' &&
+                request.cac_truong_loi && (
+                  <div className="fields-error">
+                    <strong>Các trường báo cáo sai:</strong>
+                    <ul>
+                      {request.cac_truong_loi.map((field, idx) => (
+                        <li key={idx}>
+                          {field.truong}: "{field.gia_tri_cu}" → "
+                          {field.gia_tri_moi}"
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              {/* Hiển thị thông tin giấy xác nhận nếu là xin cấp giấy */}
+              {request.request_type === 'xin_cap_giay_xac_nhan' && (
+                <div className="certificate-info">
+                  <strong>Loại giấy:</strong>
+                  <p>
+                    {request.loai_giay === 'nhan_khau' &&
+                      'Giấy xác nhận nhân khẩu'}
+                    {request.loai_giay === 'ho_khau' && 'Giấy xác nhận hộ khẩu'}
+                    {request.loai_giay === 'muc_dich_khac' && 'Mục đích khác'}
+                  </p>
+                  <strong>Số lượng:</strong>
+                  <p>{request.so_luong} bản</p>
+                  <strong>Ngày gửi:</strong>
+                  <p>{formatDateOnly(request.created_at)}</p>
+                </div>
+              )}
+              {/* Hiển thị địa chỉ tạm trú nếu là tạm trú/tạm vắng */}
               {request.dia_chi_tam_tru && (
                 <div className="new-info">
                   <strong>Địa chỉ tạm trú:</strong>
@@ -354,20 +445,79 @@ const OfficerRequestApproval = () => {
                     <tr>
                       <td className="label">Loại Yêu Cầu:</td>
                       <td>
-                        {selectedRequest.loai_phieu || selectedRequest.type}
+                        {selectedRequest.request_type === 'bao_sai_thong_tin'
+                          ? 'Báo cáo sai thông tin'
+                          : selectedRequest.request_type ===
+                            'xin_cap_giay_xac_nhan'
+                          ? 'Xin cấp giấy xác nhận'
+                          : selectedRequest.loai_phieu || selectedRequest.type}
                       </td>
                     </tr>
                     <tr>
                       <td className="label">Lý Do:</td>
                       <td>{selectedRequest.ly_do || ''}</td>
                     </tr>
+                    {selectedRequest.request_type ===
+                      'xin_cap_giay_xac_nhan' && (
+                      <>
+                        <tr>
+                          <td className="label">Loại Giấy:</td>
+                          <td>
+                            {selectedRequest.loai_giay === 'nhan_khau' &&
+                              'Giấy xác nhận nhân khẩu'}
+                            {selectedRequest.loai_giay === 'ho_khau' &&
+                              'Giấy xác nhận hộ khẩu'}
+                            {selectedRequest.loai_giay === 'muc_dich_khac' &&
+                              'Mục đích khác'}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="label">Số Lượng:</td>
+                          <td>{selectedRequest.so_luong} bản</td>
+                        </tr>
+                      </>
+                    )}
                     <tr>
                       <td className="label">Ngày Gửi:</td>
-                      <td>{selectedRequest.ngay_bat_dau || ''}</td>
+                      <td>
+                        {selectedRequest.request_type ===
+                        'xin_cap_giay_xac_nhan'
+                          ? formatDateOnly(selectedRequest.created_at)
+                          : selectedRequest.ngay_bat_dau ||
+                            selectedRequest.created_at}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+              {/* Hiển thị chi tiết các trường sai nếu là báo cáo */}
+              {selectedRequest.request_type === 'bao_sai_thong_tin' &&
+                selectedRequest.cac_truong_loi && (
+                  <div className="info-detail">
+                    <h4>Chi Tiết Các Trường Sai</h4>
+                    <div className="fields-list">
+                      {selectedRequest.cac_truong_loi.map((field, idx) => (
+                        <div key={idx} className="field-item">
+                          <p>
+                            <strong>Trường:</strong> {field.truong}
+                          </p>
+                          <p>
+                            <strong>Giá trị cũ:</strong>{' '}
+                            <span className="old-value">
+                              "{field.gia_tri_cu}"
+                            </span>
+                          </p>
+                          <p>
+                            <strong>Giá trị mới:</strong>{' '}
+                            <span className="new-value">
+                              "{field.gia_tri_moi}"
+                            </span>
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               {selectedRequest.dia_chi_tam_tru && (
                 <div className="info-detail">
                   <h4>Địa chỉ tạm trú</h4>

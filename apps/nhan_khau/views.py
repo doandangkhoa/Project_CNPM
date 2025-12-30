@@ -505,3 +505,358 @@ def get_citizen_profile(request):
             'status': 'error',
             'message': f'Lỗi server: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_bao_sai_thong_tin_list(request):
+    """
+    API lấy danh sách báo cáo sai thông tin của người dùng hiện tại
+    """
+    try:
+        user = request.user
+        # Lấy nhan_khau của user hiện tại
+        nhan_khau_id = getattr(user, 'nhan_khau_id', None)
+        
+        if not nhan_khau_id:
+            return Response({
+                'status': 'error',
+                'message': 'Bạn chưa liên kết nhân khẩu'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        from .models import BaoCaiThongTin
+        from .serializers import BaoCaiThongTinSerializer
+        
+        # Lấy tất cả báo cáo của người này
+        bao_cao_list = BaoCaiThongTin.objects.filter(nhan_khau_id=nhan_khau_id).order_by('-created_at')
+        serializer = BaoCaiThongTinSerializer(bao_cao_list, many=True)
+        
+        return Response({
+            'status': 'success',
+            'results': serializer.data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_bao_sai_thong_tin(request):
+    """
+    API tạo báo cáo sai thông tin
+    """
+    try:
+        from .models import BaoCaiThongTin
+        from .serializers import BaoCaiThongTinSerializer
+        
+        user = request.user
+        data = request.data.copy()
+        
+        # Tự động lấy nhan_khau của user
+        nhan_khau_id = getattr(user, 'nhan_khau_id', None)
+        
+        if not nhan_khau_id:
+            return Response({
+                'status': 'error',
+                'message': 'Bạn chưa liên kết nhân khẩu'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        data['nhan_khau'] = nhan_khau_id
+        
+        serializer = BaoCaiThongTinSerializer(data=data)
+        
+        if serializer.is_valid():
+            bao_cao = serializer.save()
+            return Response({
+                'status': 'success',
+                'message': 'Báo cáo sai thông tin đã được tạo',
+                'data': BaoCaiThongTinSerializer(bao_cao).data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                'status': 'error',
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def approve_bao_sai_thong_tin(request, id):
+    """
+    API phê duyệt báo cáo sai thông tin (cán bộ)
+    Khi duyệt, sẽ cập nhật NhanKhau với các giá trị mới
+    """
+    try:
+        from .models import BaoCaiThongTin
+        from .serializers import BaoCaiThongTinSerializer
+        
+        user = request.user
+        action = request.data.get('action', 'approve')
+        note = request.data.get('note', '')
+        
+        # Kiểm tra quyền
+        if not _user_is_authorized_can_bo(user):
+            return Response({
+                'status': 'error',
+                'message': 'User không có quyền phê duyệt'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        bao_cao = BaoCaiThongTin.objects.get(id=id)
+        
+        if action == 'approve':
+            # Cập nhật NhanKhau với các giá trị mới
+            nhan_khau = bao_cao.nhan_khau
+            for field_info in bao_cao.cac_truong_loi:
+                truong = field_info.get('truong')
+                gia_tri_moi = field_info.get('gia_tri_moi')
+                if truong and gia_tri_moi:
+                    setattr(nhan_khau, truong, gia_tri_moi)
+            nhan_khau.save()
+            
+            bao_cao.trang_thai = 'da_duyet'
+            bao_cao.ghi_chu = note or bao_cao.ghi_chu
+            bao_cao.save()
+            
+            return Response({
+                'status': 'success',
+                'message': 'Báo cáo đã được duyệt và áp dụng',
+                'data': BaoCaiThongTinSerializer(bao_cao).data
+            }, status=status.HTTP_200_OK)
+        
+        elif action == 'reject':
+            bao_cao.trang_thai = 'tu_choi'
+            bao_cao.ghi_chu = note
+            bao_cao.save()
+            
+            return Response({
+                'status': 'success',
+                'message': 'Báo cáo đã bị từ chối',
+                'data': BaoCaiThongTinSerializer(bao_cao).data
+            }, status=status.HTTP_200_OK)
+        
+        else:
+            return Response({
+                'status': 'error',
+                'message': 'Action không hợp lệ'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+    except BaoCaiThongTin.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Báo cáo không tồn tại'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def officer_danh_sach_bao_sai_thong_tin(request):
+    """
+    API cho cán bộ lấy danh sách tất cả báo cáo sai thông tin
+    """
+    try:
+        from .models import BaoCaiThongTin
+        from .serializers import BaoCaiThongTinSerializer
+        
+        trang_thai = request.query_params.get('trang_thai', None)
+        
+        reports_list = BaoCaiThongTin.objects.all()
+        
+        if trang_thai:
+            reports_list = reports_list.filter(trang_thai=trang_thai)
+        
+        reports_list = reports_list.order_by('-created_at')
+        serializer = BaoCaiThongTinSerializer(reports_list, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_xin_cap_giay_xac_nhan_list(request):
+    """
+    API lấy danh sách yêu cầu xin cấp giấy xác nhận của người dùng hiện tại
+    """
+    try:
+        from .models import XinCapGiayXacNhan
+        from .serializers import XinCapGiayXacNhanSerializer
+        
+        user = request.user
+        nhan_khau_id = getattr(user, 'nhan_khau_id', None)
+        
+        if not nhan_khau_id:
+            return Response({
+                'status': 'error',
+                'message': 'Bạn chưa liên kết nhân khẩu'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        requests_list = XinCapGiayXacNhan.objects.filter(nhan_khau_id=nhan_khau_id).order_by('-created_at')
+        serializer = XinCapGiayXacNhanSerializer(requests_list, many=True)
+        
+        return Response({
+            'status': 'success',
+            'results': serializer.data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_xin_cap_giay_xac_nhan(request):
+    """
+    API tạo yêu cầu xin cấp giấy xác nhận
+    """
+    try:
+        from .models import XinCapGiayXacNhan
+        from .serializers import XinCapGiayXacNhanSerializer
+        
+        user = request.user
+        data = request.data.copy()
+        
+        nhan_khau_id = getattr(user, 'nhan_khau_id', None)
+        
+        if not nhan_khau_id:
+            return Response({
+                'status': 'error',
+                'message': 'Bạn chưa liên kết nhân khẩu'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        data['nhan_khau'] = nhan_khau_id
+        
+        serializer = XinCapGiayXacNhanSerializer(data=data)
+        
+        if serializer.is_valid():
+            xin_cap = serializer.save()
+            return Response({
+                'status': 'success',
+                'message': 'Yêu cầu xin cấp giấy xác nhận đã được tạo',
+                'data': XinCapGiayXacNhanSerializer(xin_cap).data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                'status': 'error',
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def approve_xin_cap_giay_xac_nhan(request, id):
+    """
+    API phê duyệt yêu cầu xin cấp giấy xác nhận (cán bộ)
+    Chỉ cập nhật trạng thái, không thay đổi dữ liệu nhân khẩu
+    """
+    try:
+        from .models import XinCapGiayXacNhan
+        from .serializers import XinCapGiayXacNhanSerializer
+        
+        user = request.user
+        action = request.data.get('action', 'approve')
+        note = request.data.get('note', '')
+        
+        if not _user_is_authorized_can_bo(user):
+            return Response({
+                'status': 'error',
+                'message': 'User không có quyền phê duyệt'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        xin_cap = XinCapGiayXacNhan.objects.get(id=id)
+        
+        if action == 'approve':
+            xin_cap.trang_thai = 'da_duyet'
+            xin_cap.ghi_chu = note or xin_cap.ghi_chu
+            xin_cap.save()
+            
+            return Response({
+                'status': 'success',
+                'message': 'Yêu cầu đã được duyệt',
+                'data': XinCapGiayXacNhanSerializer(xin_cap).data
+            }, status=status.HTTP_200_OK)
+        
+        elif action == 'reject':
+            xin_cap.trang_thai = 'tu_choi'
+            xin_cap.ghi_chu = note
+            xin_cap.save()
+            
+            return Response({
+                'status': 'success',
+                'message': 'Yêu cầu đã bị từ chối',
+                'data': XinCapGiayXacNhanSerializer(xin_cap).data
+            }, status=status.HTTP_200_OK)
+        
+        else:
+            return Response({
+                'status': 'error',
+                'message': 'Action không hợp lệ'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+    except XinCapGiayXacNhan.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Yêu cầu không tồn tại'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def officer_danh_sach_xin_cap_giay_xac_nhan(request):
+    """
+    API cho cán bộ lấy danh sách tất cả yêu cầu xin cấp giấy xác nhận
+    """
+    try:
+        from .models import XinCapGiayXacNhan
+        from .serializers import XinCapGiayXacNhanSerializer
+        
+        trang_thai = request.query_params.get('trang_thai', None)
+        
+        requests_list = XinCapGiayXacNhan.objects.all()
+        
+        if trang_thai:
+            requests_list = requests_list.filter(trang_thai=trang_thai)
+        
+        requests_list = requests_list.order_by('-created_at')
+        serializer = XinCapGiayXacNhanSerializer(requests_list, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

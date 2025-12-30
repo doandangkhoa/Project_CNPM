@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import '../../styles/CitizenServices.css';
+import XinCapGiayXacNhanForm from './XinCapGiayXacNhanForm';
 
 const CitizenServices = ({ currentUser }) => {
-  const [serviceType, setServiceType] = useState('tam_tru');
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const typeFromQuery = queryParams.get('type') || 'tam_tru';
+
+  const [serviceType, setServiceType] = useState(typeFromQuery);
   const [formStep, setFormStep] = useState(1);
   const [formData, setFormData] = useState({
-    service_type: 'tam_tru',
+    service_type: typeFromQuery,
     member_id: '',
     content: '',
     details: {},
@@ -62,7 +68,7 @@ const CitizenServices = ({ currentUser }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       details: {
         ...prev.details,
@@ -121,7 +127,9 @@ const CitizenServices = ({ currentUser }) => {
           {Object.entries(services).map(([key, service]) => (
             <button
               key={key}
-              className={`service-option ${formData.service_type === key ? 'active' : ''}`}
+              className={`service-option ${
+                formData.service_type === key ? 'active' : ''
+              }`}
               onClick={() => handleServiceChange(key)}
             >
               <span className="icon">{service.icon}</span>
@@ -138,255 +146,281 @@ const CitizenServices = ({ currentUser }) => {
           <p className="description">{currentService.description}</p>
         </div>
 
-        {submitSuccess && (
-          <div className="success-message">
-            <div className="success-icon">✓</div>
-            <h4>Yêu cầu đã được gửi thành công!</h4>
-            <p>Mã yêu cầu: REQ-2024-{Math.floor(Math.random() * 9999)}</p>
-            <p>Vui lòng kiểm tra email hoặc quay lại trang này để theo dõi trạng thái</p>
-          </div>
+        {/* For xac_nhan service, use dedicated form component */}
+        {formData.service_type === 'xac_nhan' && (
+          <XinCapGiayXacNhanForm currentUser={currentUser} />
         )}
 
-        {!submitSuccess && (
-          <form onSubmit={handleSubmit}>
-            {/* Step 1: Member Selection */}
-            {formStep === 1 && (
-              <div className="form-step">
-                <h4>Bước 1: Chọn Thành Viên</h4>
-                <div className="form-group">
-                  <label>Thành Viên *</label>
-                  <select
-                    value={formData.member_id}
-                    onChange={(e) => setFormData({ ...formData, member_id: e.target.value })}
-                    required
-                  >
-                    <option value="">-- Chọn thành viên --</option>
-                    {members.map(member => (
-                      <option key={member.id} value={member.id}>
-                        {member.ho_ten}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        {formData.service_type !== 'xac_nhan' && (
+          <>
+            {submitSuccess && (
+              <div className="success-message">
+                <div className="success-icon">✓</div>
+                <h4>Yêu cầu đã được gửi thành công!</h4>
+                <p>Mã yêu cầu: REQ-2024-{Math.floor(Math.random() * 9999)}</p>
+                <p>
+                  Vui lòng kiểm tra email hoặc quay lại trang này để theo dõi
+                  trạng thái
+                </p>
               </div>
             )}
 
-            {/* Step 2: Details */}
-            {formStep === 2 && (
-              <div className="form-step">
-                <h4>Bước 2: Nhập Thông Tin Chi Tiết</h4>
-
-                {formData.service_type === 'tam_tru' && (
-                  <>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Từ Ngày *</label>
-                        <input
-                          type="date"
-                          name="từ_ngày"
-                          value={formData.details.từ_ngày || ''}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Đến Ngày *</label>
-                        <input
-                          type="date"
-                          name="đến_ngày"
-                          value={formData.details.đến_ngày || ''}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                    </div>
+            {!submitSuccess && (
+              <form onSubmit={handleSubmit}>
+                {/* Step 1: Member Selection */}
+                {formStep === 1 && (
+                  <div className="form-step">
+                    <h4>Bước 1: Chọn Thành Viên</h4>
                     <div className="form-group">
-                      <label>Địa Chỉ Tạm Trú *</label>
-                      <input
-                        type="text"
-                        name="địa_chỉ_tạm_trú"
-                        placeholder="Nhập địa chỉ tạm trú"
-                        value={formData.details.địa_chỉ_tạm_trú || ''}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Lý Do *</label>
-                      <textarea
-                        name="lý_do"
-                        placeholder="Nhập lý do tạm trú"
-                        rows="4"
-                        value={formData.details.lý_do || ''}
-                        onChange={handleInputChange}
-                        required
-                      ></textarea>
-                    </div>
-                  </>
-                )}
-
-                {formData.service_type === 'update_info' && (
-                  <>
-                    <div className="form-group">
-                      <label>Thông Tin Sai *</label>
-                      <textarea
-                        name="thông_tin_sai"
-                        placeholder="Nhập thông tin sai hiện tại"
-                        rows="3"
-                        value={formData.details.thông_tin_sai || ''}
-                        onChange={handleInputChange}
-                        required
-                      ></textarea>
-                    </div>
-                    <div className="form-group">
-                      <label>Thông Tin Đúng *</label>
-                      <textarea
-                        name="thông_tin_đúng"
-                        placeholder="Nhập thông tin đúng"
-                        rows="3"
-                        value={formData.details.thông_tin_đúng || ''}
-                        onChange={handleInputChange}
-                        required
-                      ></textarea>
-                    </div>
-                    <div className="form-group">
-                      <label>Lý Do *</label>
-                      <textarea
-                        name="lý_do"
-                        placeholder="Nhập lý do sai thông tin"
-                        rows="3"
-                        value={formData.details.lý_do || ''}
-                        onChange={handleInputChange}
-                        required
-                      ></textarea>
-                    </div>
-                  </>
-                )}
-
-                {formData.service_type === 'tam_vang' && (
-                  <>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Từ Ngày *</label>
-                        <input
-                          type="date"
-                          name="từ_ngày"
-                          value={formData.details.từ_ngày || ''}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Đến Ngày *</label>
-                        <input
-                          type="date"
-                          name="đến_ngày"
-                          value={formData.details.đến_ngày || ''}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label>Lý Do *</label>
-                      <textarea
-                        name="lý_do"
-                        placeholder="Nhập lý do tạm vắng"
-                        rows="4"
-                        value={formData.details.lý_do || ''}
-                        onChange={handleInputChange}
-                        required
-                      ></textarea>
-                    </div>
-                  </>
-                )}
-
-                {formData.service_type === 'xac_nhan' && (
-                  <>
-                    <div className="form-group">
-                      <label>Loại Giấy *</label>
+                      <label>Thành Viên *</label>
                       <select
-                        name="loại_giấy"
-                        value={formData.details.loại_giấy || ''}
-                        onChange={handleInputChange}
+                        value={formData.member_id}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            member_id: e.target.value,
+                          })
+                        }
                         required
                       >
-                        <option value="">-- Chọn loại giấy --</option>
-                        <option value="ho_khau">Xác nhận hộ khẩu</option>
-                        <option value="nhan_khau">Xác nhận nhân khẩu</option>
-                        <option value="tam_tru">Xác nhận tạm trú</option>
+                        <option value="">-- Chọn thành viên --</option>
+                        {members.map((member) => (
+                          <option key={member.id} value={member.id}>
+                            {member.ho_ten}
+                          </option>
+                        ))}
                       </select>
                     </div>
-                    <div className="form-group">
-                      <label>Số Lượng *</label>
-                      <input
-                        type="number"
-                        name="số_lượng"
-                        min="1"
-                        placeholder="Nhập số lượng bản"
-                        value={formData.details.số_lượng || ''}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Lý Do *</label>
-                      <textarea
-                        name="lý_do"
-                        placeholder="Nhập lý do cấp giấy"
-                        rows="3"
-                        value={formData.details.lý_do || ''}
-                        onChange={handleInputChange}
-                        required
-                      ></textarea>
-                    </div>
-                  </>
+                  </div>
                 )}
-              </div>
-            )}
 
-            {/* Step 3: Confirmation */}
-            {formStep === 3 && (
-              <div className="form-step">
-                <h4>Bước 3: Xác Nhận Thông Tin</h4>
-                <div className="confirmation">
-                  <p>
-                    <strong>Dịch Vụ:</strong> {currentService.title}
-                  </p>
-                  <p>
-                    <strong>Thành Viên:</strong>{' '}
-                    {members.find(m => m.id == formData.member_id)?.ho_ten}
-                  </p>
-                  <p className="notice">
-                    ℹ️ Yêu cầu của bạn sẽ được gửi đến cán bộ xử lý. Vui lòng chờ
-                    thông báo duyệt trong vòng 3-5 ngày làm việc.
-                  </p>
+                {/* Step 2: Details */}
+                {formStep === 2 && (
+                  <div className="form-step">
+                    <h4>Bước 2: Nhập Thông Tin Chi Tiết</h4>
+
+                    {formData.service_type === 'tam_tru' && (
+                      <>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Từ Ngày *</label>
+                            <input
+                              type="date"
+                              name="từ_ngày"
+                              value={formData.details.từ_ngày || ''}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Đến Ngày *</label>
+                            <input
+                              type="date"
+                              name="đến_ngày"
+                              value={formData.details.đến_ngày || ''}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label>Địa Chỉ Tạm Trú *</label>
+                          <input
+                            type="text"
+                            name="địa_chỉ_tạm_trú"
+                            placeholder="Nhập địa chỉ tạm trú"
+                            value={formData.details.địa_chỉ_tạm_trú || ''}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Lý Do *</label>
+                          <textarea
+                            name="lý_do"
+                            placeholder="Nhập lý do tạm trú"
+                            rows="4"
+                            value={formData.details.lý_do || ''}
+                            onChange={handleInputChange}
+                            required
+                          ></textarea>
+                        </div>
+                      </>
+                    )}
+
+                    {formData.service_type === 'update_info' && (
+                      <>
+                        <div className="form-group">
+                          <label>Thông Tin Sai *</label>
+                          <textarea
+                            name="thông_tin_sai"
+                            placeholder="Nhập thông tin sai hiện tại"
+                            rows="3"
+                            value={formData.details.thông_tin_sai || ''}
+                            onChange={handleInputChange}
+                            required
+                          ></textarea>
+                        </div>
+                        <div className="form-group">
+                          <label>Thông Tin Đúng *</label>
+                          <textarea
+                            name="thông_tin_đúng"
+                            placeholder="Nhập thông tin đúng"
+                            rows="3"
+                            value={formData.details.thông_tin_đúng || ''}
+                            onChange={handleInputChange}
+                            required
+                          ></textarea>
+                        </div>
+                        <div className="form-group">
+                          <label>Lý Do *</label>
+                          <textarea
+                            name="lý_do"
+                            placeholder="Nhập lý do sai thông tin"
+                            rows="3"
+                            value={formData.details.lý_do || ''}
+                            onChange={handleInputChange}
+                            required
+                          ></textarea>
+                        </div>
+                      </>
+                    )}
+
+                    {formData.service_type === 'tam_vang' && (
+                      <>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Từ Ngày *</label>
+                            <input
+                              type="date"
+                              name="từ_ngày"
+                              value={formData.details.từ_ngày || ''}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Đến Ngày *</label>
+                            <input
+                              type="date"
+                              name="đến_ngày"
+                              value={formData.details.đến_ngày || ''}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label>Lý Do *</label>
+                          <textarea
+                            name="lý_do"
+                            placeholder="Nhập lý do tạm vắng"
+                            rows="4"
+                            value={formData.details.lý_do || ''}
+                            onChange={handleInputChange}
+                            required
+                          ></textarea>
+                        </div>
+                      </>
+                    )}
+
+                    {formData.service_type === 'xac_nhan' && (
+                      <>
+                        <div className="form-group">
+                          <label>Loại Giấy *</label>
+                          <select
+                            name="loại_giấy"
+                            value={formData.details.loại_giấy || ''}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">-- Chọn loại giấy --</option>
+                            <option value="ho_khau">Xác nhận hộ khẩu</option>
+                            <option value="nhan_khau">
+                              Xác nhận nhân khẩu
+                            </option>
+                            <option value="tam_tru">Xác nhận tạm trú</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Số Lượng *</label>
+                          <input
+                            type="number"
+                            name="số_lượng"
+                            min="1"
+                            placeholder="Nhập số lượng bản"
+                            value={formData.details.số_lượng || ''}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Lý Do *</label>
+                          <textarea
+                            name="lý_do"
+                            placeholder="Nhập lý do cấp giấy"
+                            rows="3"
+                            value={formData.details.lý_do || ''}
+                            onChange={handleInputChange}
+                            required
+                          ></textarea>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 3: Confirmation */}
+                {formStep === 3 && (
+                  <div className="form-step">
+                    <h4>Bước 3: Xác Nhận Thông Tin</h4>
+                    <div className="confirmation">
+                      <p>
+                        <strong>Dịch Vụ:</strong> {currentService.title}
+                      </p>
+                      <p>
+                        <strong>Thành Viên:</strong>{' '}
+                        {
+                          members.find((m) => m.id == formData.member_id)
+                            ?.ho_ten
+                        }
+                      </p>
+                      <p className="notice">
+                        ℹ️ Yêu cầu của bạn sẽ được gửi đến cán bộ xử lý. Vui
+                        lòng chờ thông báo duyệt trong vòng 3-5 ngày làm việc.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Form Navigation */}
+                <div className="form-navigation">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handlePrevStep}
+                    disabled={formStep === 1}
+                  >
+                    ← Quay Lại
+                  </button>
+
+                  {formStep < 3 ? (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleNextStep}
+                    >
+                      Tiếp Theo →
+                    </button>
+                  ) : (
+                    <button type="submit" className="btn btn-success">
+                      ✓ Gửi Yêu Cầu
+                    </button>
+                  )}
                 </div>
-              </div>
+              </form>
             )}
-
-            {/* Form Navigation */}
-            <div className="form-navigation">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handlePrevStep}
-                disabled={formStep === 1}
-              >
-                ← Quay Lại
-              </button>
-
-              {formStep < 3 ? (
-                <button type="button" className="btn btn-primary" onClick={handleNextStep}>
-                  Tiếp Theo →
-                </button>
-              ) : (
-                <button type="submit" className="btn btn-success">
-                  ✓ Gửi Yêu Cầu
-                </button>
-              )}
-            </div>
-          </form>
+          </>
         )}
       </div>
     </div>

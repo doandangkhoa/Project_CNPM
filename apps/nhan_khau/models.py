@@ -132,4 +132,61 @@ class TamTru(models.Model):
 
     def __str__(self):
         return f"Giấy tạm trú: {self.nhan_khau.ho_ten} ({self.tu_ngay} - {self.den_ngay})"
+
+class BaoCaiThongTin(models.Model):
+    """
+    Báo cáo sai thông tin trong hồ sơ nhân khẩu
+    """
+    TRANG_THAI_CHOICES = [
+        ('cho_duyet', 'Chờ duyệt'),
+        ('da_duyet', 'Đã duyệt'),
+        ('tu_choi', 'Từ chối'),
+    ]
+
+    nhan_khau = models.ForeignKey(NhanKhau, on_delete=models.CASCADE, related_name='bao_sai_thong_tin')
+    ngay_bat_dau = models.DateField()
+    
+    # Có thể báo cáo nhiều lỗi cùng lúc - JSON array
+    # Format: [{"truong": "ho_ten", "gia_tri_cu": "...", "gia_tri_moi": "..."}, ...]
+    cac_truong_loi = models.JSONField(default=list, help_text="Array các trường cần sửa")
+    
+    ly_do = models.TextField(help_text="Mô tả chi tiết sai thông tin")
+    ghi_chu = models.TextField(null=True, blank=True)
+    trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_CHOICES, default='cho_duyet')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Báo sai: {self.nhan_khau.ho_ten} - {len(self.cac_truong_loi)} trường ({self.created_at.date()})"
+
+
+class XinCapGiayXacNhan(models.Model):
+    """
+    Yêu cầu cấp giấy xác nhận - chỉ cần phê duyệt, không thay đổi dữ liệu
+    """
+    LOAI_GIAY_CHOICES = [
+        ('nhan_khau', 'Giấy xác nhận nhân khẩu'),
+        ('ho_khau', 'Giấy xác nhận hộ khẩu'),
+        ('muc_dich_khac', 'Mục đích khác'),
+    ]
+    
+    TRANG_THAI_CHOICES = [
+        ('cho_duyet', 'Chờ duyệt'),
+        ('da_duyet', 'Đã duyệt'),
+        ('tu_choi', 'Từ chối'),
+    ]
+
+    nhan_khau = models.ForeignKey(NhanKhau, on_delete=models.CASCADE, related_name='xin_cap_giay_xac_nhan')
+    loai_giay = models.CharField(max_length=20, choices=LOAI_GIAY_CHOICES, default='nhan_khau')
+    so_luong = models.IntegerField(default=1)
+    ly_do = models.TextField()
+    ghi_chu = models.TextField(null=True, blank=True)
+    trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_CHOICES, default='cho_duyet')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Xin cấp: {self.nhan_khau.ho_ten} - {self.get_loai_giay_display()} ({self.created_at.date()})"
     

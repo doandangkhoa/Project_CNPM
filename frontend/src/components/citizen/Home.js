@@ -113,21 +113,18 @@ const CitizenHome = ({ currentUser }) => {
               <div className="service-icon">📜</div>
               <h3>Cấp Giấy Xác Nhận</h3>
               <p>Yêu cầu cấp giấy xác nhận thông tin</p>
-              <a href="/citizen/services?type=xac_nhan" className="service-btn">
+              <Link to="/citizen/xin-cap-giay-xac-nhan" className="service-btn">
                 Nộp Đơn
-              </a>
+              </Link>
             </div>
 
             <div className="service-card">
               <div className="service-icon">⚠️</div>
               <h3>Báo Sai Thông Tin</h3>
               <p>Báo cáo thông tin không chính xác</p>
-              <a
-                href="/citizen/services?type=update_info"
-                className="service-btn"
-              >
+              <Link to="/citizen/bao-sai-thong-tin" className="service-btn">
                 Nộp Đơn
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -146,22 +143,33 @@ const CitizenHome = ({ currentUser }) => {
             <div className="recent-list">
               {recentRequests.map((request) => (
                 <div key={request.id} className="recent-item">
-                  <div className={`item-status ${getStatusBadgeClass(request.trang_thai)}`}>
+                  <div
+                    className={`item-status ${getStatusBadgeClass(
+                      request.trang_thai
+                    )}`}
+                  >
                     {getStatusLabel(request.trang_thai)}
                   </div>
                   <div className="item-content">
                     <h4>{getLoaiPhieuLabel(request.loai_phieu)}</h4>
                     <p>
-                      {request.dia_chi_tam_tru || request.ly_do || 'Không có mô tả'}
+                      {request.dia_chi_tam_tru ||
+                        request.ly_do ||
+                        'Không có mô tả'}
                     </p>
                   </div>
-                  <div className="item-date">{formatDate(request.ngay_bat_dau)}</div>
+                  <div className="item-date">
+                    {formatDate(request.ngay_bat_dau)}
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="empty-state">
-              <p>Chưa có yêu cầu nào. <Link to="/citizen/request">Nộp yêu cầu mới</Link></p>
+              <p>
+                Chưa có yêu cầu nào.{' '}
+                <Link to="/citizen/request">Nộp yêu cầu mới</Link>
+              </p>
             </div>
           )}
         </section>

@@ -123,22 +123,26 @@ function LoginPage(props) {
           ),
 
         React.createElement(
-          'button',
-          {
-            type: 'submit',
-            className: 'btn-primary',
-          },
-          'Đăng nhập'
-        ),
+          'div',
+          { className: 'buttons-container' },
+          React.createElement(
+            'button',
+            {
+              type: 'submit',
+              className: 'btn-primary',
+            },
+            'Đăng nhập'
+          ),
 
-        React.createElement(
-          'button',
-          {
-            type: 'button',
-            className: 'btn-secondary',
-            onClick: goRegister,
-          },
-          'Đăng ký'
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              className: 'btn-secondary',
+              onClick: goRegister,
+            },
+            'Đăng ký'
+          )
         )
       )
     )

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/GiaDinhVanHoaManagement.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 const getCsrfToken = () => {
   const name = 'csrftoken';
@@ -83,13 +84,13 @@ const GiaDinhVanHoaManagement = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken()
+            'X-CSRFToken': getCsrfToken(),
           },
           credentials: 'include',
           body: JSON.stringify({
             nam: year,
-            tieu_chi_tham_gia: criteria
-          })
+            tieu_chi_tham_gia: criteria,
+          }),
         }
       );
 
@@ -128,7 +129,7 @@ const GiaDinhVanHoaManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {families.map(family => (
+              {families.map((family) => (
                 <tr key={family.id}>
                   <td>{family.chu_ho || 'Chưa xác định'}</td>
                   <td>{family.dia_chi || '-'}</td>
@@ -183,8 +184,10 @@ const GiaDinhVanHoaManagement = () => {
             value={year}
             onChange={(e) => setYear(parseInt(e.target.value))}
           >
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
             ))}
           </select>
         </div>
@@ -192,11 +195,15 @@ const GiaDinhVanHoaManagement = () => {
         <div className="stats">
           <div className="stat-item">
             <span className="stat-label">Đạt tiêu chí</span>
-            <span className="stat-value qualified">{qualifiedFamilies.length}</span>
+            <span className="stat-value qualified">
+              {qualifiedFamilies.length}
+            </span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Chưa đạt tiêu chí</span>
-            <span className="stat-value unqualified">{unqualifiedFamilies.length}</span>
+            <span className="stat-value unqualified">
+              {unqualifiedFamilies.length}
+            </span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Tổng cộng</span>
@@ -233,7 +240,10 @@ const GiaDinhVanHoaManagement = () => {
       </div>
 
       {showCalculateModal && (
-        <div className="modal-overlay" onClick={() => setShowCalculateModal(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCalculateModal(false)}
+        >
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Tính Toán Lại Gia Đình Văn Hóa</h3>
 
@@ -243,8 +253,10 @@ const GiaDinhVanHoaManagement = () => {
                 value={year}
                 onChange={(e) => setYear(parseInt(e.target.value))}
               >
-                {years.map(y => (
-                  <option key={y} value={y}>{y}</option>
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
                 ))}
               </select>
             </div>
@@ -262,8 +274,9 @@ const GiaDinhVanHoaManagement = () => {
             </div>
 
             <p className="modal-info">
-              Hệ thống sẽ tính lại cho tất cả hộ gia đình trong năm {year}.
-              Các hộ có số lần tham gia ≥ {criteria}% tổng số buổi sinh hoạt sẽ được ghi nhận đạt tiêu chí.
+              Hệ thống sẽ tính lại cho tất cả hộ gia đình trong năm {year}. Các
+              hộ có số lần tham gia ≥ {criteria}% tổng số buổi sinh hoạt sẽ được
+              ghi nhận đạt tiêu chí.
             </p>
 
             <div className="modal-actions">

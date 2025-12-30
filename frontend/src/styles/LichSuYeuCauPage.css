@@ -238,15 +238,21 @@
 }
 
 .badge-success {
-  background-color: #27ae60;
+  background-color: #1a6e2f;
   color: white;
-  box-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
+  box-shadow: 0 2px 4px rgba(26, 110, 47, 0.4);
+}
+
+.badge-warning {
+  background-color: #c67b0e;
+  color: white;
+  box-shadow: 0 2px 4px rgba(198, 123, 14, 0.4);
 }
 
 .badge-secondary {
-  background-color: #e74c3c;
+  background-color: #a41e04;
   color: white;
-  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+  box-shadow: 0 2px 4px rgba(164, 30, 4, 0.4);
 }
 
 .phieu-content {
@@ -275,6 +281,28 @@
   font-size: 14px;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+/* Fields List for Báo Cáo Sai Thông Tin */
+.fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.field-item {
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-left: 3px solid #667eea;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #333;
+}
+
+.field-item strong {
+  color: #667eea;
+  font-weight: 600;
 }
 
 /* Responsive */
