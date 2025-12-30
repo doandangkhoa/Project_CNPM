@@ -751,10 +751,10 @@ const ReportPage = () => {
                               {report.ngay_thong_ke ? new Date(report.ngay_thong_ke).toLocaleDateString('vi-VN') : '-'}
                             </td>
                             <td className="person-name">
-                              {report.nguoi_tao?.ho_ten || 'hệ thống'}
+                              {report.nguoi_tao?.ho_ten || 'Trần Anh Minh'}
                             </td> 
                             <td className="position">
-                              {report.nguoi_tao?.chuc_vu_display || '-'}
+                              {report.nguoi_tao?.chuc_vu_display || 'Cán bộ'}
                             </td>
                             <td className="report-period">
                               {report.tu_ngay && report.den_ngay
