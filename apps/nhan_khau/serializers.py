@@ -52,6 +52,10 @@ class NhanKhauCreateUpdateSerializer(serializers.ModelSerializer):
         # Extract household name if provided
         ten_ho_khau = validated_data.pop('ten_ho_khau', None)
         dia_chi_ho_khau = validated_data.pop('dia_chi_ho_khau', None)
+        # Extract BienDongNhanKhau related fields
+        ngay_bat_dau = validated_data.pop('ngay_bat_dau', None)
+        ngay_ket_thuc = validated_data.pop('ngay_ket_thuc', None)
+        noi_chuyen = validated_data.pop('noi_chuyen', None)
         
         # Find and link household if household name is provided
         if ten_ho_khau:
