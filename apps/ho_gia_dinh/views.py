@@ -246,10 +246,12 @@ def xoa_ho_gia_dinh(request, pk):
                     'message': f'Không thể xóa. Hộ này đang có {so_thanh_vien} nhân khẩu. Vui lòng tách/xóa nhân khẩu trước.'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Nếu hộ có 1 thành viên, xóa thành viên trước
+            # Nếu hộ có 1 thành viên, xóa quan hệ (không xóa nhân khẩu)
             if so_thanh_vien == 1:
                 nhan_khau = NhanKhau.objects.get(ho_gia_dinh=ho_gia_dinh)
-                nhan_khau.delete()
+                nhan_khau.ho_gia_dinh = None
+                nhan_khau.quan_he_voi_chu_ho = None
+                nhan_khau.save()
                 
             ho_gia_dinh.delete()
             
@@ -369,3 +371,72 @@ def tach_ho_gia_dinh(request, pk):
             'status': 'error',
             'message': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# --- 7. LẤY DANH SÁCH NHÂN KHẨU CHƯA CÓ HỘ KHẨU ---
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def danh_sach_nhan_khau_chua_co_ho_gia_dinh(request):
+    """
+    Lấy danh sách nhân khẩu chưa có hộ khẩu để chọn làm chủ hộ
+    """
+    try:
+        # Lấy những nhân khẩu chưa có hộ khẩu
+        nhan_khau_list = NhanKhau.objects.filter(ho_gia_dinh__isnull=True)
+        
+        # Chuyển đổi thành dạng dict để frontend dễ sử dụng
+        data = []
+        for nhan_khau in nhan_khau_list:
+            data.append({
+                'id': nhan_khau.id,
+                'ho_ten': nhan_khau.ho_ten,
+                'so_cccd': nhan_khau.so_cccd,
+                'ngay_sinh': nhan_khau.ngay_sinh,
+                'noi_sinh': nhan_khau.noi_sinh,
+                'gioi_tinh': nhan_khau.gioi_tinh,
+            })
+        
+        return Response({
+            'status': 'success',
+            'data': data
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def chi_tiet_nhan_khau_cho_ho_gia_dinh(request, nhan_khau_id):
+    """
+    Lấy chi tiết nhân khẩu để auto-fill thông tin hộ khẩu
+    """
+    try:
+        nhan_khau = NhanKhau.objects.get(id=nhan_khau_id)
+        
+        return Response({
+            'status': 'success',
+            'data': {
+                'id': nhan_khau.id,
+                'ho_ten': nhan_khau.ho_ten,
+                'so_cccd': nhan_khau.so_cccd,
+                'ngay_sinh': nhan_khau.ngay_sinh,
+                'noi_sinh': nhan_khau.noi_sinh,
+                'gioi_tinh': nhan_khau.gioi_tinh,
+                'dan_toc': nhan_khau.dan_toc,
+                'nguyen_quan': nhan_khau.nguyen_quan,
+                'dia_chi_thuong_tru_truoc_day': nhan_khau.dia_chi_thuong_tru_truoc_day,
+            }
+        }, status=status.HTTP_200_OK)
+    except NhanKhau.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Nhân khẩu không tồn tại'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -63,6 +63,8 @@ const HouseholdManagement = () => {
   const [editingId, setEditingId] = useState(null);
   const [populationChanges, setPopulationChanges] = useState([]);
   const [showBienDong, setShowBienDong] = useState(false);
+  const [nhanKhauList, setNhanKhauList] = useState([]);
+  const [loadingNhanKhau, setLoadingNhanKhau] = useState(false);
   const searchTimeoutRef = useRef(null);
 
   const itemsPerPage = 10;
@@ -260,6 +262,8 @@ const HouseholdManagement = () => {
       dia_chi_thuong_tru_truoc_day: '',
       ghi_chu: '',
       ho_gia_dinh: selectedHousehold.id,
+      ho_gia_dinh_ten: selectedHousehold.ho_ten_chu_ho || '',
+      dia_chi_ho_khau: selectedHousehold.dia_chi || '',
       ngay_bat_dau: '',
       ngay_ket_thuc: '',
       noi_chuyen: '',
@@ -342,6 +346,7 @@ const HouseholdManagement = () => {
     setFormData({
       so_ho_khau: '',
       ho_ten_chu_ho: '',
+      nhan_khau_id: '',
       id_chu_ho: '',
       so_dien_thoai: '',
       dia_chi: '',
@@ -350,7 +355,78 @@ const HouseholdManagement = () => {
     });
     setIsEditMode(false);
     setFormErrors({});
+    fetchNhanKhauChuaCoHo();
     setShowFormModal(true);
+  };
+
+  // Fetch citizen list without household
+  const fetchNhanKhauChuaCoHo = async () => {
+    try {
+      setLoadingNhanKhau(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API_BASE_URL}/ho-gia-dinh/nhan-khau-chua-co-ho/`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        setNhanKhauList(data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching citizen list:', err);
+      setNhanKhauList([]);
+    } finally {
+      setLoadingNhanKhau(false);
+    }
+  };
+
+  // Handle citizen selection and auto-fill
+  const handleChuHoSelect = async (nhanKhauId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API_BASE_URL}/ho-gia-dinh/nhan-khau/${nhanKhauId}/chi-tiet/`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        const nhanKhau = data.data;
+        // Auto-fill form data from selected citizen - chỉ fill tên và CCCD
+        setFormData(prev => ({
+          ...prev,
+          nhan_khau_id: nhanKhauId,
+          ho_ten_chu_ho: nhanKhau.ho_ten || '',
+          id_chu_ho: nhanKhau.so_cccd || '',
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching citizen details:', err);
+      setError('Lỗi khi tải thông tin nhân khẩu');
+    }
   };
 
   const handleEditHousehold = (household) => {
@@ -1368,19 +1444,66 @@ const HouseholdManagement = () => {
 
                         <div className="detail-item">
                           <label>Tên Chủ Hộ *</label>
-                          <input
-                            type="text"
-                            name="ho_ten_chu_ho"
-                            value={formData.ho_ten_chu_ho}
-                            onChange={handleFormChange}
-                            placeholder="Tên chủ hộ"
-                            className={formErrors.ho_ten_chu_ho ? 'error' : ''}
-                            style={{
-                              width: '100%',
-                              padding: '6px',
-                              boxSizing: 'border-box',
-                            }}
-                          />
+                          {!isEditMode ? (
+                            <>
+                              <select
+                                name="ho_ten_chu_ho"
+                                value={formData.nhan_khau_id || ''}
+                                onChange={(e) => {
+                                  const nhanKhauId = e.target.value;
+                                  if (nhanKhauId) {
+                                    handleChuHoSelect(nhanKhauId);
+                                  } else {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      nhan_khau_id: '',
+                                      ho_ten_chu_ho: '',
+                                      id_chu_ho: '',
+                                      dia_chi: '',
+                                      so_dien_thoai: '',
+                                      phuong_xa: '',
+                                    }));
+                                  }
+                                }}
+                                className={formErrors.ho_ten_chu_ho ? 'error' : ''}
+                                style={{
+                                  width: '100%',
+                                  padding: '6px',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                <option value="">-- Chọn nhân khẩu --</option>
+                                {loadingNhanKhau ? (
+                                  <option disabled>Đang tải...</option>
+                                ) : nhanKhauList.length > 0 ? (
+                                  nhanKhauList.map((nhan_khau) => (
+                                    <option key={nhan_khau.id} value={nhan_khau.id}>
+                                      {nhan_khau.ho_ten} {nhan_khau.so_cccd ? `- CCCD: ${nhan_khau.so_cccd}` : ''}
+                                    </option>
+                                  ))
+                                ) : (
+                                  <option disabled>Không có nhân khẩu chưa có hộ khẩu</option>
+                                )}
+                              </select>
+                              <small style={{color: '#666', marginTop: '4px', display: 'block'}}>
+                                Danh sách nhân khẩu chưa có hộ khẩu
+                              </small>
+                            </>
+                          ) : (
+                            <input
+                              type="text"
+                              name="ho_ten_chu_ho"
+                              value={formData.ho_ten_chu_ho}
+                              onChange={handleFormChange}
+                              placeholder="Tên chủ hộ"
+                              className={formErrors.ho_ten_chu_ho ? 'error' : ''}
+                              style={{
+                                width: '100%',
+                                padding: '6px',
+                                boxSizing: 'border-box',
+                              }}
+                            />
+                          )}
                           {formErrors.ho_ten_chu_ho && (
                             <span className="error-text">
                               {formErrors.ho_ten_chu_ho}

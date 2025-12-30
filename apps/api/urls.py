@@ -35,6 +35,8 @@ urlpatterns = [
     # ho gia dinh
     path('ho-gia-dinh/', ho_gia_dinh_views.tim_kiem_ho_gia_dinh, name='danh-sach-ho-gia-dinh'),
     path('ho-gia-dinh/them-moi/', ho_gia_dinh_views.them_moi_ho_gia_dinh, name='them-moi-ho-gia-dinh'),
+    path('ho-gia-dinh/nhan-khau-chua-co-ho/', ho_gia_dinh_views.danh_sach_nhan_khau_chua_co_ho_gia_dinh, name='danh-sach-nhan-khau-chua-co-ho'),
+    path('ho-gia-dinh/nhan-khau/<int:nhan_khau_id>/chi-tiet/', ho_gia_dinh_views.chi_tiet_nhan_khau_cho_ho_gia_dinh, name='chi-tiet-nhan-khau-cho-ho'),
     path('ho-gia-dinh/<int:pk>/cap-nhat/', ho_gia_dinh_views.cap_nhat_ho_gia_dinh, name='cap-nhat-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/chi-tiet/', ho_gia_dinh_views.chi_tiet_ho_gia_dinh, name='chi-tiet-ho-gia-dinh'),
     path('ho-gia-dinh/<int:pk>/xoa/', ho_gia_dinh_views.xoa_ho_gia_dinh, name='xoa-ho-gia-dinh'),

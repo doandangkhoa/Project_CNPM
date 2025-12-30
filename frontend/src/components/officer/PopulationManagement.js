@@ -349,6 +349,8 @@ const OfficerPopulationManagement = () => {
     setSelectedHouseholdOption('');
     setIsEditMode(false);
     setFormErrors({});
+    // Ensure households list is loaded
+    fetchHouseholds();
     setShowFormModal(true);
   };
 
@@ -416,7 +418,7 @@ const OfficerPopulationManagement = () => {
         setFormData((prev) => ({
           ...prev,
           ho_gia_dinh: household.id, // Use numeric ID
-          ho_ten_chu_ho: household.ho_ten_chu_ho || '',
+          ho_ten_chu_ho: household.ten_ho_khau || household.ho_ten_chu_ho || '',
           dia_chi_ho_khau: household.dia_chi || household.dia_chi_ho_khau || '',
         }));
       } else {

@@ -54,11 +54,51 @@ const ReportPage = () => {
     setSelectedReport(report);
     setViewMode('view');
     setKpiData({
-      tong_nhan_khau: report.tong_so_nhan_khau || 0,
+      tong_nhan_khau: report.tong_nhan_khau || 0,
       so_nam: report.so_nam || 0,
       so_nu: report.so_nu || 0,
       so_tam_tru: report.tam_tru || 0,
       so_tam_vang: report.tam_vang || 0
+    });
+    
+    // Load age chart data và cultural families cho báo cáo này
+    const tuNgay = report.tu_ngay || null;
+    const denNgay = report.den_ngay || null;
+    
+    Promise.all([
+      thongKeAPI.getAgeChart(tuNgay, denNgay),
+      thongKeAPI.getCulturalFamilies(tuNgay, denNgay)
+    ]).then(([ageResp, culturalResp]) => {
+      if (ageResp.status === 'success') {
+        const chartData = ageResp.labels.map((label, index) => ({
+          name: label,
+          value: ageResp.data[index]
+        }));
+        setAgeChartData(chartData);
+      }
+      
+      if (culturalResp.status === 'success') {
+        const all_families = culturalResp.danh_sach || [];
+        const qualified = all_families.filter(f => {
+          const tyLe = parseFloat(f.ty_le_dat) || 0;
+          return tyLe >= criteria;
+        });
+        const unqualified = all_families.filter(f => {
+          const tyLe = parseFloat(f.ty_le_dat) || 0;
+          return tyLe < criteria;
+        });
+        setCulturalFamilies({
+          tong_so_buoi_hop: culturalResp.tong_so_buoi_hop || 0,
+          so_ho_dat_tieu_chuan: qualified.length,
+          so_ho_chua_dat_tieu_chuan: unqualified.length,
+          tong_so_ho: all_families.length,
+          danh_sach: all_families,
+          qualified: qualified,
+          unqualified: unqualified
+        });
+      }
+    }).catch(err => {
+      console.error('Error loading report details:', err);
     });
   };
 
@@ -322,58 +362,286 @@ const ReportPage = () => {
 
         {!loading && (
           <>
-            {/* KPI Cards */}
-            <div className="kpi-container">
-              <Card className="kpi-card">
-                <Card.Body>
-                  <div className="kpi-number">{kpiData?.tong_nhan_khau?.toLocaleString() || '-'}</div>
-                  <div className="kpi-label">Tổng nhân khẩu</div>
-                </Card.Body>
-              </Card>
-
-              <Card className="kpi-card">
-                <Card.Body>
-                  <div className="kpi-stats">
-                    <div className="kpi-stat-item">
-                      <div className="kpi-stat-number" style={{ color: '#667eea' }}>
-                        {kpiData?.so_nam || 0}
-                      </div>
-                      <div className="kpi-stat-label">Nam</div>
-                    </div>
-                    <div className="kpi-stat-item">
-                      <div className="kpi-stat-number" style={{ color: '#f093fb' }}>
-                        {kpiData?.so_nu || 0}
-                      </div>
-                      <div className="kpi-stat-label">Nữ</div>
-                    </div>
+            {/* VIEW MODE - Report Details Modal */}
+            {viewMode === 'view' && selectedReport && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                overflowY: 'auto'
+              }}>
+                <Container style={{
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                  padding: '30px',
+                  maxWidth: '1200px',
+                  margin: '20px',
+                  maxHeight: '90vh',
+                  overflowY: 'auto'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '20px',
+                    borderBottom: '2px solid #667eea',
+                    paddingBottom: '15px'
+                  }}>
+                    <h2>📊 Chi Tiết Báo Cáo</h2>
+                    <button
+                      onClick={backToCreate}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#95a5a6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px'
+                      }}
+                    >
+                      ✕ Đóng
+                    </button>
                   </div>
-                </Card.Body>
-              </Card>
 
-              <Card className="kpi-card">
-                <Card.Body>
-                  <div className="kpi-number">{kpiData?.so_tam_tru || 0}</div>
-                  <div className="kpi-label">Tạm trú</div>
-                </Card.Body>
-              </Card>
+                  {/* Report Info */}
+                  <Card style={{ marginBottom: '20px' }}>
+                    <Card.Body>
+                      <Row>
+                        <Col md={3}>
+                          <strong>Ngày tạo:</strong>
+                          <p>{selectedReport.ngay_thong_ke ? new Date(selectedReport.ngay_thong_ke).toLocaleDateString('vi-VN') : '-'}</p>
+                        </Col>
+                        <Col md={3}>
+                          <strong>Người tạo:</strong>
+                          <p>{selectedReport.nguoi_tao?.ho_ten || selectedReport.nguoi_tao?.tai_khoan || 'Hệ thống'}</p>
+                        </Col>
+                        <Col md={3}>
+                          <strong>Từ ngày:</strong>
+                          <p>{selectedReport.tu_ngay || 'Không xác định'}</p>
+                        </Col>
+                        <Col md={3}>
+                          <strong>Đến ngày:</strong>
+                          <p>{selectedReport.den_ngay || 'Không xác định'}</p>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
 
-              <Card className="kpi-card">
-                <Card.Body>
-                  <div className="kpi-number">{kpiData?.so_tam_vang || 0}</div>
-                  <div className="kpi-label">Tạm vắng</div>
-                </Card.Body>
-              </Card>
-            </div>
+                  {/* KPI Cards */}
+                  <div className="kpi-container" style={{ marginBottom: '20px' }}>
+                    <Card className="kpi-card">
+                      <Card.Body>
+                        <div className="kpi-number">{kpiData?.tong_nhan_khau?.toLocaleString() || '-'}</div>
+                        <div className="kpi-label">Tổng nhân khẩu</div>
+                      </Card.Body>
+                    </Card>
 
-            {/* Charts */}
-            <div className="charts-container">
-              <Card className="chart-card">
-                <Card.Header>
-                  <Card.Title>Phân bố độ tuổi</Card.Title>
-                </Card.Header>
-                <Card.Body>
-                  {ageChartData ? (
-                    <ResponsiveContainer width="100%" height={300}>
+                    <Card className="kpi-card">
+                      <Card.Body>
+                        <div className="kpi-stats">
+                          <div className="kpi-stat-item">
+                            <div className="kpi-stat-number" style={{ color: '#667eea' }}>
+                              {kpiData?.so_nam || 0}
+                            </div>
+                            <div className="kpi-stat-label">Nam</div>
+                          </div>
+                          <div className="kpi-stat-item">
+                            <div className="kpi-stat-number" style={{ color: '#f093fb' }}>
+                              {kpiData?.so_nu || 0}
+                            </div>
+                            <div className="kpi-stat-label">Nữ</div>
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+
+                    <Card className="kpi-card">
+                      <Card.Body>
+                        <div className="kpi-number">{kpiData?.so_tam_tru || 0}</div>
+                        <div className="kpi-label">Tạm trú</div>
+                      </Card.Body>
+                    </Card>
+
+                    <Card className="kpi-card">
+                      <Card.Body>
+                        <div className="kpi-number">{kpiData?.so_tam_vang || 0}</div>
+                        <div className="kpi-label">Tạm vắng</div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+
+                  {/* Charts */}
+                  <div className="charts-container" style={{ marginBottom: '20px' }}>
+                    <Card className="chart-card">
+                      <Card.Header>
+                        <Card.Title>Phân bố độ tuổi</Card.Title>
+                      </Card.Header>
+                      <Card.Body>
+                        {ageChartData ? (
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={ageChartData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                              <YAxis />
+                              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                              <Bar dataKey="value" fill="#667eea" radius={[8, 8, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="chart-loading">Đang tải dữ liệu...</div>
+                        )}
+                      </Card.Body>
+                    </Card>
+
+                    <Card className="chart-card cultural-families-card">
+                      <Card.Header>
+                        <Card.Title>Gia đình văn hóa</Card.Title>
+                      </Card.Header>
+                      <Card.Body>
+                        {culturalFamilies ? (
+                          <div className="cultural-pie-container">
+                            <ResponsiveContainer width="100%" height={300}>
+                              <PieChart>
+                                <Pie
+                                  data={[
+                                    {
+                                      name: 'Đạt tiêu chuẩn',
+                                      value: culturalFamilies.so_ho_dat_tieu_chuan || 0
+                                    },
+                                    {
+                                      name: 'Chưa đạt',
+                                      value: culturalFamilies.so_ho_chua_dat_tieu_chuan || Math.max(
+                                        0,
+                                        (culturalFamilies.tong_so_ho || culturalFamilies.danh_sach?.length || 1) - (culturalFamilies.so_ho_dat_tieu_chuan || 0)
+                                      )
+                                    }
+                                  ]}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={70}
+                                  outerRadius={120}
+                                  paddingAngle={2}
+                                  dataKey="value"
+                                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                  labelLine={false}
+                                >
+                                  <Cell fill="#2ecc71" />
+                                  <Cell fill="#bdc3c7" />
+                                </Pie>
+                                <Tooltip
+                                  contentStyle={{
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    backgroundColor: '#fff'
+                                  }}
+                                  formatter={(value) => [value, 'Hộ']}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+
+                            <div className="cultural-summary">
+                              <div className="summary-stat achieved">
+                                <span className="summary-number">{culturalFamilies.so_ho_dat_tieu_chuan || 0}</span>
+                                <span className="summary-text">hộ đạt</span>
+                              </div>
+                              <span className="summary-separator">/</span>
+                              <div className="summary-stat total">
+                                <span className="summary-number">{culturalFamilies.tong_so_ho || culturalFamilies.danh_sach?.length || 0}</span>
+                                <span className="summary-text">tổng hộ</span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="chart-loading">⏳ Đang tải dữ liệu...</div>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      onClick={backToCreate}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#667eea',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px'
+                      }}
+                    >
+                      Quay lại
+                    </button>
+                  </div>
+                </Container>
+              </div>
+            )}
+
+            {/* CREATE MODE */}
+            {viewMode === 'create' && (
+              <>
+                {/* KPI Cards */}
+                <div className="kpi-container">
+                  <Card className="kpi-card">
+                    <Card.Body>
+                      <div className="kpi-number">{kpiData?.tong_nhan_khau?.toLocaleString() || '-'}</div>
+                      <div className="kpi-label">Tổng nhân khẩu</div>
+                    </Card.Body>
+                  </Card>
+
+                  <Card className="kpi-card">
+                    <Card.Body>
+                      <div className="kpi-stats">
+                        <div className="kpi-stat-item">
+                          <div className="kpi-stat-number" style={{ color: '#667eea' }}>
+                            {kpiData?.so_nam || 0}
+                          </div>
+                          <div className="kpi-stat-label">Nam</div>
+                        </div>
+                        <div className="kpi-stat-item">
+                          <div className="kpi-stat-number" style={{ color: '#f093fb' }}>
+                            {kpiData?.so_nu || 0}
+                          </div>
+                          <div className="kpi-stat-label">Nữ</div>
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </Card>
+
+                  <Card className="kpi-card">
+                    <Card.Body>
+                      <div className="kpi-number">{kpiData?.so_tam_tru || 0}</div>
+                      <div className="kpi-label">Tạm trú</div>
+                    </Card.Body>
+                  </Card>
+
+                  <Card className="kpi-card">
+                    <Card.Body>
+                      <div className="kpi-number">{kpiData?.so_tam_vang || 0}</div>
+                      <div className="kpi-label">Tạm vắng</div>
+                    </Card.Body>
+                  </Card>
+                </div>
+
+                {/* Charts */}
+                <div className="charts-container">
+                  <Card className="chart-card">
+                    <Card.Header>
+                      <Card.Title>Phân bố độ tuổi</Card.Title>
+                    </Card.Header>
+                    <Card.Body>
+                      {ageChartData ? (
+                        <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={ageChartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                         <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
@@ -453,12 +721,14 @@ const ReportPage = () => {
                 </Card.Body>
               </Card>
             </div>
+            </>
+            )}
 
             {/* Report History Table */}
             {reportHistory && reportHistory.length > 0 && (
               <Card className="history-card">
                 <Card.Header>
-                  <Card.Title>📋 Lịch sử báo cáo</Card.Title>
+                  <Card.Title>Lịch sử báo cáo</Card.Title>
                 </Card.Header>
                 <Card.Body>
                   <div className="table-responsive">
@@ -467,8 +737,8 @@ const ReportPage = () => {
                         <tr>
                           <th>#</th>
                           <th>Ngày tạo</th>
-                          <th>Người tạo</th>
-                          <th>Tổng nhân khẩu</th>
+                          <th>Người thực hiện</th>
+                          <th>Chức vụ</th>
                           <th>Thời gian báo cáo</th>
                           <th>Hành động</th>
                         </tr>
@@ -478,13 +748,13 @@ const ReportPage = () => {
                           <tr key={report.id} className="history-row">
                             <td className="row-index">{idx + 1}</td>
                             <td className="date-created">
-                              {report.created_at ? new Date(report.created_at).toLocaleDateString('vi-VN') : '-'}
+                              {report.ngay_thong_ke ? new Date(report.ngay_thong_ke).toLocaleDateString('vi-VN') : '-'}
                             </td>
-                            <td className="created-by">
-                              {report.nguoi_tao?.ho_ten || report.nguoi_tao?.tai_khoan || 'Hệ thống'}
-                            </td>
-                            <td className="total-population">
-                              <strong>{report.tong_so_nhan_khau || 0}</strong>
+                            <td className="person-name">
+                              {report.nguoi_tao?.ho_ten || 'hệ thống'}
+                            </td> 
+                            <td className="position">
+                              {report.nguoi_tao?.chuc_vu_display || '-'}
                             </td>
                             <td className="report-period">
                               {report.tu_ngay && report.den_ngay
@@ -515,11 +785,11 @@ const ReportPage = () => {
                 </Card.Body>
               </Card>
             )}
-          </>
-        )}
-      </Container>
-    </div>
-  );
-};
+            </>
+          )}
+        </Container>
+      </div>
+    );
+  };
 
-export default ReportPage;
+  export default ReportPage;
