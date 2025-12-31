@@ -23,11 +23,6 @@ class PhieuTamTruTamVangSerializer(serializers.ModelSerializer):
             'ghi_chu',
             'dang_hieu_luc',
             'trang_thai',
+            'created_at',
+            'updated_at',
         ]
-
-    def create(self, validated_data):
-        # Luôn tạo phiếu với trạng thái 'cho_duyet'
-        validated_data['trang_thai'] = 'cho_duyet'
-        phieu = PhieuTamTruTamVang.objects.create(**validated_data)
-        # Không tạo biến động nhân khẩu ở đây, chỉ tạo khi duyệt
-        return phieu

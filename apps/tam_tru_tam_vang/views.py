@@ -190,3 +190,37 @@ def yeu_cau_gan_day_view(request):
         "status": "success",
         "data": serializer.data
     }, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_phieu_tam_tru_tam_vang(request, id):
+    """
+    API xóa phiếu tạm trú/tạm vắng (chỉ xóa khi đã duyệt hoặc bị từ chối)
+    """
+    try:
+        phieu = PhieuTamTruTamVang.objects.get(id=id)
+        
+        # Chỉ cho phép xóa những phiếu đã duyệt hoặc từ chối
+        if phieu.trang_thai not in ['da_duyet', 'tu_choi']:
+            return Response({
+                "status": "error",
+                "message": "Chỉ có thể xóa phiếu đã duyệt hoặc bị từ chối"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        phieu.delete()
+        
+        return Response({
+            "status": "success",
+            "message": "Phiếu đã được xóa"
+        }, status=status.HTTP_204_NO_CONTENT)
+        
+    except PhieuTamTruTamVang.DoesNotExist:
+        return Response({
+            "status": "error",
+            "message": "Không tìm thấy phiếu"
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            "status": "error",
+            "message": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

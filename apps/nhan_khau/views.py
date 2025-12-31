@@ -860,3 +860,76 @@ def officer_danh_sach_xin_cap_giay_xac_nhan(request):
             'status': 'error',
             'message': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_bao_sai_thong_tin(request, id):
+    """
+    API xóa báo cáo sai thông tin (chỉ xóa khi đã duyệt)
+    """
+    try:
+        from .models import BaoCaiThongTin
+        
+        bao_cao = BaoCaiThongTin.objects.get(id=id)
+        
+        # Chỉ cho phép xóa những yêu cầu đã duyệt hoặc từ chối
+        if bao_cao.trang_thai not in ['da_duyet', 'tu_choi']:
+            return Response({
+                'status': 'error',
+                'message': 'Chỉ có thể xóa yêu cầu đã duyệt hoặc bị từ chối'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        bao_cao.delete()
+        
+        return Response({
+            'status': 'success',
+            'message': 'Yêu cầu đã được xóa'
+        }, status=status.HTTP_204_NO_CONTENT)
+        
+    except BaoCaiThongTin.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Yêu cầu không tồn tại'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_xin_cap_giay_xac_nhan(request, id):
+    """
+    API xóa yêu cầu xin cấp giấy xác nhận (chỉ xóa khi đã duyệt)
+    """
+    try:
+        from .models import XinCapGiayXacNhan
+        
+        xin_cap = XinCapGiayXacNhan.objects.get(id=id)
+        
+        # Chỉ cho phép xóa những yêu cầu đã duyệt hoặc từ chối
+        if xin_cap.trang_thai not in ['da_duyet', 'tu_choi']:
+            return Response({
+                'status': 'error',
+                'message': 'Chỉ có thể xóa yêu cầu đã duyệt hoặc bị từ chối'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        xin_cap.delete()
+        
+        return Response({
+            'status': 'success',
+            'message': 'Yêu cầu đã được xóa'
+        }, status=status.HTTP_204_NO_CONTENT)
+        
+    except XinCapGiayXacNhan.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Yêu cầu không tồn tại'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

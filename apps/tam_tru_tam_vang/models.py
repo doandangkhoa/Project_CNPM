@@ -22,6 +22,8 @@ class PhieuTamTruTamVang(models.Model):
         ('tu_choi', 'Từ chối'),
     ]
     trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_CHOICES, default='cho_duyet')
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
     
     def __str__(self):
         return f"{self.nhan_khau.ho_ten} - {self.get_loai_phieu_display()}"

@@ -216,6 +216,47 @@ const OfficerRequestApproval = () => {
     }
   };
 
+  const handleDeleteRequest = async () => {
+    if (!selectedRequest) return;
+    
+    if (!window.confirm('Bạn có chắc chắn muốn xóa yêu cầu này?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let endpoint;
+      if (selectedRequest.request_type === 'bao_sai_thong_tin') {
+        endpoint = `http://localhost:8000/api/bao-sai-thong-tin/${selectedRequest.id}/`;
+      } else if (selectedRequest.request_type === 'xin_cap_giay_xac_nhan') {
+        endpoint = `http://localhost:8000/api/xin-cap-giay-xac-nhan/${selectedRequest.id}/`;
+      } else {
+        endpoint = `http://localhost:8000/api/officer/tam-tru-tam-vang/${selectedRequest.id}/`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok || response.status === 204) {
+        setRequests(requests.filter((req) => req.id !== selectedRequest.id));
+        setShowDetail(false);
+        alert('Yêu cầu đã được xóa!');
+      } else {
+        alert(`Xóa thất bại! (Mã ${response.status})`);
+      }
+    } catch (err) {
+      alert('Lỗi kết nối server: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getRequestTypeBadge = (request) => {
     // Xác định loại request từ request_type
     if (request.request_type === 'bao_sai_thong_tin') {
@@ -257,6 +298,32 @@ const OfficerRequestApproval = () => {
       default:
         return <span className="status-badge">{status}</span>;
     }
+  };
+
+  const isValidityStatus = (request) => {
+    // Kiểm tra ngày kết thúc để xác định trạng thái còn hiệu lực
+    const endDate = request.ngay_ket_thuc;
+    if (!endDate) return null;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    
+    return end >= today;
+  };
+
+  const getValidityBadge = (request) => {
+    // Chỉ hiển thị cho các yêu cầu đã duyệt
+    if (request.trang_thai !== 'da_duyet') return null;
+    
+    const isValid = isValidityStatus(request);
+    if (isValid === null) return null;
+    
+    return isValid ? 
+      <span className="validity-badge valid">Còn Hiệu Lực</span> :
+      <span className="validity-badge expired">Hết Hiệu Lực</span>;
   };
 
   return (
@@ -318,10 +385,12 @@ const OfficerRequestApproval = () => {
               <div className="request-badges">
                 {getRequestTypeBadge(request)}
                 {getStatusBadge(request.trang_thai)}
+                
               </div>
             </div>
             <div className="request-body">
               <div className="request-info">
+                {getValidityBadge(request)}
                 <p>
                   <strong>CCCD:</strong> {request.nhan_khau_cccd || ''}
                 </p>
@@ -332,9 +401,21 @@ const OfficerRequestApproval = () => {
                     : request.ly_do || request.content}
                 </p>
                 <p>
-                  <strong>Ngày gửi:</strong>{' '}
-                  {request.ngay_bat_dau || request.created_at}
+                  <strong>Ngày tạo:</strong>{' '}
+                  {formatDateOnly(request.created_at)}
                 </p>
+                {(request.request_type === 'tam_tru_tam_vang' || !request.request_type) && request.ngay_bat_dau && (
+                  <p>
+                    <strong>Ngày bắt đầu:</strong>{' '}
+                    {formatDateOnly(request.ngay_bat_dau)}
+                  </p>
+                )}
+                {(request.request_type === 'tam_tru_tam_vang' || !request.request_type) && request.ngay_ket_thuc && (
+                  <p>
+                    <strong>Ngày kết thúc:</strong>{' '}
+                    {formatDateOnly(request.ngay_ket_thuc)}
+                  </p>
+                )}
               </div>
               {/* Hiển thị các trường sai nếu là báo cáo sai thông tin */}
               {request.request_type === 'bao_sai_thong_tin' &&
@@ -390,12 +471,33 @@ const OfficerRequestApproval = () => {
                   Xem Chi Tiết & Duyệt
                 </button>
               )}
-              {request.trang_thai !== 'cho_duyet' && (
-                <span className="status-info">
-                  {request.trang_thai === 'da_duyet'
-                    ? 'Yêu cầu này đã được duyệt'
-                    : 'Yêu cầu này đã bị từ chối'}
-                </span>
+              {request.trang_thai === 'da_duyet' && (
+                <div className="approved-actions">
+                  <button
+                    className="btn btn-delete"
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      handleDeleteRequest();
+                    }}
+                    title="Xóa yêu cầu này"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              )}
+              {request.trang_thai === 'tu_choi' && (
+                <div className="rejected-actions">
+                  <button
+                    className="btn btn-delete"
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      handleDeleteRequest();
+                    }}
+                    title="Xóa yêu cầu này"
+                  >
+                    🗑️ delete
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -478,15 +580,38 @@ const OfficerRequestApproval = () => {
                       </>
                     )}
                     <tr>
-                      <td className="label">Ngày Gửi:</td>
+                      <td className="label">Ngày Tạo:</td>
                       <td>
                         {selectedRequest.request_type ===
                         'xin_cap_giay_xac_nhan'
                           ? formatDateOnly(selectedRequest.created_at)
-                          : selectedRequest.ngay_bat_dau ||
-                            selectedRequest.created_at}
+                          : formatDateOnly(selectedRequest.created_at)}
                       </td>
                     </tr>
+                    {(selectedRequest.request_type === 'tam_tru_tam_vang' || !selectedRequest.request_type) && selectedRequest.ngay_bat_dau && (
+                      <tr>
+                        <td className="label">Ngày Bắt Đầu:</td>
+                        <td>{formatDateOnly(selectedRequest.ngay_bat_dau)}</td>
+                      </tr>
+                    )}
+                    {(selectedRequest.request_type === 'tam_tru_tam_vang' || !selectedRequest.request_type) && selectedRequest.ngay_ket_thuc && (
+                      <tr>
+                        <td className="label">Ngày Kết Thúc:</td>
+                        <td>{formatDateOnly(selectedRequest.ngay_ket_thuc)}</td>
+                      </tr>
+                    )}
+                    {selectedRequest.trang_thai === 'da_duyet' && selectedRequest.ngay_ket_thuc && (
+                      <tr>
+                        <td className="label">Trạng Thái Hiệu Lực:</td>
+                        <td>
+                          {isValidityStatus(selectedRequest) ? (
+                            <span style={{ color: 'green', fontWeight: 'bold' }}>✓ Còn Hiệu Lực</span>
+                          ) : (
+                            <span style={{ color: 'red', fontWeight: 'bold' }}>✗ Hết Hiệu Lực</span>
+                          )}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -550,12 +675,21 @@ const OfficerRequestApproval = () => {
               >
                 Hủy
               </button>
-              <button className="btn btn-danger" onClick={handleReject}>
-                ✗ Từ Chối
-              </button>
-              <button className="btn btn-success" onClick={handleApprove}>
-                ✓ Duyệt
-              </button>
+              {selectedRequest.trang_thai === 'cho_duyet' && (
+                <>
+                  <button className="btn btn-danger" onClick={handleReject}>
+                    ✗ Từ Chối
+                  </button>
+                  <button className="btn btn-success" onClick={handleApprove}>
+                    ✓ Duyệt
+                  </button>
+                </>
+              )}
+              {selectedRequest.trang_thai === 'da_duyet' && (
+                <button className="btn btn-danger" onClick={handleDeleteRequest}>
+                  🗑️ Xóa Yêu Cầu
+                </button>
+              )}
             </div>
           </div>
         </div>

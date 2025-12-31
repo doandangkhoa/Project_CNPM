@@ -58,19 +58,21 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
       setError('Vui lòng chọn ngày bắt đầu');
       return false;
     }
+    if (!formData.ngay_ket_thuc) {
+      setError('Vui lòng chọn ngày kết thúc');
+      return false;
+    }
     if (!formData.ly_do) {
       setError('Vui lòng nhập lý do');
       return false;
     }
 
-    // Validate ngay_ket_thuc >= ngay_bat_dau nếu có nhập
-    if (formData.ngay_ket_thuc) {
-      const startDate = new Date(formData.ngay_bat_dau);
-      const endDate = new Date(formData.ngay_ket_thuc);
-      if (endDate < startDate) {
-        setError('Ngày kết thúc phải >= ngày bắt đầu');
-        return false;
-      }
+    // Validate ngay_ket_thuc >= ngay_bat_dau
+    const startDate = new Date(formData.ngay_bat_dau);
+    const endDate = new Date(formData.ngay_ket_thuc);
+    if (endDate < startDate) {
+      setError('Ngày kết thúc phải >= ngày bắt đầu');
+      return false;
     }
 
     // Với tạm trú, bắt buộc có địa chỉ tạm trú
@@ -243,7 +245,7 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
 
         {/* Ngày kết thúc */}
         <div className="form-group">
-          <label htmlFor="ngay_ket_thuc">Ngày kết thúc (tùy chọn)</label>
+          <label htmlFor="ngay_ket_thuc">Ngày kết thúc *</label>
           <input
             type="date"
             id="ngay_ket_thuc"
@@ -252,10 +254,8 @@ const TamTruForm = ({ currentUser, onSuccess, loaiPhieu }) => {
             onChange={handleInputChange}
             disabled={loading}
             min={formData.ngay_bat_dau}
+            required
           />
-          <small className="text-muted">
-            Để trống nếu chưa biết ngày kết thúc
-          </small>
         </div>
 
         {/* Lý do */}
