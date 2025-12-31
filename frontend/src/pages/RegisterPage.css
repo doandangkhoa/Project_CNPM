@@ -60,29 +60,54 @@
 /* Nút */
 .register-box .btn {
   border-radius: 8px;
-  font-weight: 500;
-  padding: 10px 0;
+  font-weight: 600;
+  padding: 12px 20px;
   transition: all 0.3s ease;
+  font-size: 15px;
+  margin-bottom: 0;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .register-box .btn-primary {
-  background-color: #2575fc;
+  background-color: #4f46e5;
   border: none;
   color: white;
+  width: 48%;
+  margin-right: 2%;
 }
 
 .register-box .btn-primary:hover {
-  background-color: #1a5edb;
+  background-color: #4338ca;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
 }
 
 .register-box .btn-outline-secondary {
-  border-color: #2575fc;
-  color: #2575fc;
+  border: 2px solid #4f46e5;
+  color: #4f46e5;
   background: white;
+  width: 48%;
+  margin-left: 2%;
 }
 
 .register-box .btn-outline-secondary:hover {
-  background-color: #2575fc;
-  color: white;
-  border-color: #2575fc;
+  background-color: #f0f1ff;
+  color: #4338ca;
+  border-color: #4338ca;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(79, 70, 229, 0.2);
+}
+
+/* Override w-100 class */
+.register-box .btn.w-100 {
+  width: 48% !important;
+  margin-right: 2%;
+}
+
+.register-box .btn.w-100.btn-outline-secondary {
+  margin-right: 0;
+  margin-left: 0;
 }

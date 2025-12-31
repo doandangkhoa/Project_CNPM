@@ -914,7 +914,12 @@ const OfficerPopulationManagement = () => {
                     <td className="birth-date">
                       {new Date(pop.ngay_sinh).toLocaleDateString('vi-VN')}
                     </td>
-                    <td className="age">{calculateAge(pop.ngay_sinh)} tuổi</td>
+                    <td className="age">
+                      {(() => {
+                        const age = calculateAge(pop.ngay_sinh);
+                        return age === 0 ? "mới sinh" : `${age} tuổi`;
+                      })()}
+                    </td>
                     <td className="cccd">{pop.so_cccd || '-'}</td>
                     <td className="occupation">{pop.nghe_nghiep || '-'}</td>
                     <td>
